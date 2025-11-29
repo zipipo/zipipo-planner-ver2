@@ -22,12 +22,21 @@
         }
         
         /* Font Setting */
+        @font-face {
+            font-family: 'WandoCleanSea';
+            src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_20-04@2.1/WandoCleanSea.woff') format('woff');
+            font-weight: normal;
+            font-style: normal;
+        }
+        
         body, button, input, textarea, select {
             font-family: 'Gowun Dodum', sans-serif !important;
             color: var(--wood-text);
             -webkit-tap-highlight-color: transparent;
         }
         .font-hand { font-family: 'Kirang Haerang', cursive !important; }
+        .font-wando { font-family: 'WandoCleanSea', cursive !important; } 
+        
         body { background-color: var(--bg-ivory); }
 
         /* Sticky Header Wrapper */
@@ -62,18 +71,19 @@
         .timeline-container {
             position: relative;
             padding-left: 20px;
+            padding-bottom: 10px; 
         }
         .timeline-line {
             position: absolute;
             left: 7px;
-            top: 15px;
-            bottom: 0;
+            top: 10px; 
+            bottom: -10px; 
             width: 2px;
             background-color: var(--wood-text);
-            opacity: 0.3;
+            opacity: 0.2;
             border-radius: 2px;
         }
-        .timeline-item:last-child .timeline-line { display: none; }
+        .timeline-container:last-child .timeline-line { display: none; }
         .timeline-dot {
             position: absolute;
             left: 3px;
@@ -240,11 +250,9 @@
         <!-- Header -->
         <header class="px-6 pt-8 pb-2 flex justify-between items-center bg-[#FDFCF5]">
             <div class="flex items-center gap-2">
-                <!-- Flat House Icon -->
                 <svg class="w-8 h-8 text-[#8D6E63]" fill="currentColor" viewBox="0 0 24 24">
                     <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
                 </svg>
-                <!-- Text -->
                 <h1 class="font-hand text-4xl text-[#5D4037] pt-1">zipipo planner</h1>
             </div>
             <div id="headerDate" class="font-hand text-xl text-[#A1887F]"></div>
@@ -269,14 +277,14 @@
         <div class="flex justify-center gap-4 text-xs text-[#BCAAA4]">
             <!-- API Key Toggle -->
             <button onclick="toggleApiKeyInput()" class="hover:text-[#8D6E63] font-hand text-lg flex items-center gap-1">
-                <!-- 열쇠 아이콘 (Key SVG) -->
+                <!-- Key SVG -->
                 <svg class="w-4 h-4 text-[#D7CCC8]" fill="currentColor" viewBox="0 0 24 24">
                     <path d="M12.65 10C11.83 7.67 9.61 6 7 6c-3.31 0-6 2.69-6 6s2.69 6 6 6c2.61 0 4.83-1.67 5.65-4H17v4h4v-4h2v-4H12.65zM7 14c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z"/>
                 </svg>
                 Key Setting
             </button>
             
-            <!-- Google Login (Firebase) - Cloud Icon Style -->
+            <!-- Google Login (Firebase) -->
             <button onclick="handleAuthClick()" id="authBtn" class="hover:text-[#FF8A65] font-hand text-lg flex items-center gap-1">
                <!-- Cloud Icon -->
                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
@@ -328,13 +336,11 @@
         </div>
     </div>
 
-    <!-- Task Edit/Add Modal (Combined for Time & Date) -->
+    <!-- Task Edit/Add Modal -->
     <div id="addTaskModal" class="fixed inset-0 bg-black/20 z-[60] hidden flex items-center justify-center backdrop-blur-[1px]">
         <div class="bg-white p-6 rounded-2xl shadow-lg w-80 wood-frame modal-content text-center">
             <h3 id="taskModalTitle" class="font-hand text-xl text-[#8D6E63] mb-4">할 일 추가</h3>
-            
             <input type="text" id="manualTaskText" class="w-full border-b-2 border-[#D7CCC8] p-2 mb-4 focus:outline-none text-center text-sm" placeholder="할 일 내용">
-            
             <div id="dailyTimeInputWrapper" class="flex flex-col gap-3 mb-5">
                 <div class="flex items-center justify-center gap-2">
                     <span class="text-xs text-[#A1887F] w-8">시작</span>
@@ -345,12 +351,10 @@
                     <select id="endHour" class="time-select"></select> : <select id="endMin" class="time-select"></select>
                 </div>
             </div>
-
             <div id="weeklyDateInputWrapper" class="hidden mb-5">
                 <label class="text-xs text-[#A1887F] block mb-2">수행할 날짜 (선택)</label>
                 <input type="date" id="weeklyTaskDate" class="border border-[#EFEBE9] rounded p-2 text-sm text-[#5D4037] w-full bg-white">
             </div>
-
             <div class="flex gap-2 justify-center">
                 <button onclick="closeAddTaskModal()" class="px-4 py-2 bg-gray-100 rounded-lg text-xs text-gray-500 hover:bg-gray-200">취소</button>
                 <button onclick="confirmTaskAction()" class="px-4 py-2 bg-[#8D6E63] text-white rounded-lg text-xs font-bold hover:bg-[#6D4C41]">확인</button>
@@ -362,18 +366,14 @@
     <div id="projectInputModal" class="fixed inset-0 bg-black/20 z-[60] hidden flex items-center justify-center backdrop-blur-[1px]">
         <div class="bg-white p-6 rounded-2xl shadow-lg w-80 wood-frame modal-content">
             <h3 class="font-hand text-xl text-[#8D6E63] mb-4 text-center">새 프로젝트 심기 🌱</h3>
-            
             <label class="text-xs text-[#A1887F] mb-1 block">프로젝트 이름</label>
             <input type="text" id="projTitle" class="w-full border-b-2 border-[#D7CCC8] p-2 mb-3 focus:outline-none text-center text-sm" placeholder="">
-            
             <label class="text-xs text-[#A1887F] mb-1 block">내용</label>
             <textarea id="projDesc" class="w-full border-2 border-[#EFEBE9] rounded-xl p-2 mb-3 text-sm focus:outline-none focus:border-[#D7CCC8] resize-none" rows="2"></textarea>
-
             <div class="flex border-b border-[#EFEBE9] mb-3">
                 <div onclick="switchProjMode('range')" id="pm-range" class="flex-1 text-center modal-tab active">기간 지정</div>
                 <div onclick="switchProjMode('select')" id="pm-select" class="flex-1 text-center modal-tab">날짜 선택</div>
             </div>
-
             <div id="projModeRange">
                 <div class="flex gap-2 mb-2">
                     <div class="flex-1">
@@ -386,7 +386,6 @@
                     </div>
                 </div>
             </div>
-
             <div id="projModeSelect" class="hidden">
                 <div class="flex justify-between items-center mb-2 px-2">
                     <button onclick="moveProjCal(-1)" class="text-[#8D6E63]">◀</button>
@@ -399,7 +398,6 @@
                 <div id="projCalGrid" class="mini-cal-grid mb-2 min-h-[120px]"></div>
                 <div class="text-[10px] text-right text-[#8D6E63]"><span id="selectedCount">0</span>일 선택됨</div>
             </div>
-
             <div class="flex gap-2 justify-center mt-3">
                 <button onclick="closeProjectModal()" class="px-4 py-2 bg-gray-100 rounded-lg text-xs text-gray-500 hover:bg-gray-200">취소</button>
                 <button onclick="confirmCreateProject()" class="px-4 py-2 bg-[#556B2F] text-white rounded-lg text-xs font-bold hover:bg-[#33691E]">심기</button>
@@ -438,6 +436,7 @@
     let auth, db, user = null;
     let isFirebaseEnabled = false;
 
+    // 설정이 비어있지 않은지 확인
     if (firebaseConfig.apiKey && firebaseConfig.apiKey !== "API_KEY_HERE") {
         try {
             const app = initializeApp(firebaseConfig);
@@ -451,7 +450,7 @@
     }
 
     // --- Global Variables ---
-    window.appData = { daily: {}, weekly: {}, projects: [], analysisHistory: [] };
+    window.appData = { daily: {}, weekly: {}, projects: [], analysisHistory: [], dailySummaries: {} };
     let currentTab = 'home';
     let selectedDate = new Date().toISOString().split('T')[0];
     let calendarDate = new Date();
@@ -467,15 +466,15 @@
     const STORAGE_KEY_DATA = 'zipipo_v2_data'; 
     const GEMINI_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent';
 
-    // [아이콘 SVG 정의]
     const ICON_CLOUD = `<svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96z"/></svg>`;
     const ICON_EDIT = `<svg class="w-3 h-3 text-[#BCAAA4] hover:text-[#8D6E63]" fill="currentColor" viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>`;
 
     // --- Data Management ---
+    // [수정] Firestore 경로: users/{uid} (단순화)
     async function loadData() {
         if (isFirebaseEnabled && user) {
             try {
-                const docRef = doc(db, "users", user.uid, "planner", "data");
+                const docRef = doc(db, "users", user.uid);
                 const docSnap = await getDoc(docRef);
                 if (docSnap.exists()) {
                     window.appData = docSnap.data();
@@ -485,18 +484,24 @@
             const json = localStorage.getItem(STORAGE_KEY_DATA);
             if (json) window.appData = JSON.parse(json);
         }
+        // 초기화 (데이터가 없을 경우 대비)
         if (!window.appData.daily) window.appData.daily = {};
         if (!window.appData.weekly) window.appData.weekly = {};
         if (!window.appData.projects) window.appData.projects = [];
         if (!window.appData.analysisHistory) window.appData.analysisHistory = [];
+        if (!window.appData.dailySummaries) window.appData.dailySummaries = {};
     }
 
     async function saveData() {
         localStorage.setItem(STORAGE_KEY_DATA, JSON.stringify(window.appData));
         if (isFirebaseEnabled && user) {
             try {
-                await setDoc(doc(db, "users", user.uid, "planner", "data"), window.appData);
-            } catch(e) { console.error("Cloud save error", e); }
+                // [수정] Firestore 경로: users/{uid} 에 appData 전체 저장
+                await setDoc(doc(db, "users", user.uid), window.appData);
+            } catch(e) { 
+                console.error("Cloud save error", e);
+                alert("저장 오류: " + e.message + "\n(권한 문제가 있다면 Firebase Console > Firestore Database > Rules를 확인해주세요.)");
+            }
         }
     }
 
@@ -574,7 +579,6 @@
         }
     }
 
-    // [수정] renderHome 함수: Weekly 섹션을 캘린더형(요일별)으로 변경
     function renderHome(container) {
         const weekKey = getWeekKey(new Date());
         const weeklyData = window.appData.weekly[weekKey] || { tasks: [] };
@@ -596,7 +600,7 @@
         const weeklyMessages = weeklyData.tasks.filter(t => t.isMessage);
         if (weeklyMessages.length > 0) {
             const msgDiv = document.createElement('div');
-            msgDiv.className = 'mx-6 mt-1 mb-3 p-3 bg-white/60 rounded-xl border border-[#C5E1A5] text-sm text-[#556B2F] relative z-10 font-hand leading-relaxed';
+            msgDiv.className = 'mx-6 mt-1 mb-3 p-3 bg-white/60 rounded-xl border border-[#C5E1A5] text-sm text-[#556B2F] relative z-10 font-wando leading-relaxed';
             msgDiv.innerHTML = weeklyMessages.map(m => m.text).join('<br>');
             secWeekly.appendChild(msgDiv);
         }
@@ -684,7 +688,7 @@
         const messages = todayTasks.filter(t => t.isMessage);
         if (messages.length > 0) {
             const msgDiv = document.createElement('div');
-            msgDiv.className = 'mx-6 mt-2 mb-4 p-3 bg-white/60 rounded-xl border border-[#FFE0B2] text-sm text-[#5D4037] relative z-10 font-hand leading-relaxed';
+            msgDiv.className = 'mx-6 mt-2 mb-4 p-3 bg-white/60 rounded-xl border border-[#FFE0B2] text-sm text-[#5D4037] relative z-10 font-wando leading-relaxed';
             msgDiv.innerHTML = messages.map(m => m.text).join('<br>');
             secDaily.appendChild(msgDiv);
         }
@@ -717,16 +721,60 @@
             window.appData.projects.forEach(p => {
                 const card = document.createElement('div');
                 card.className = 'min-w-[130px] wood-frame p-3 bg-white flex-shrink-0 border border-[#C5E1A5]'; 
-                const doneCnt = p.tasks.filter(t=>t.done).length;
-                card.innerHTML = `
+                const advice = p.tasks.find(t => t.isAdvice);
+                const stages = p.tasks.filter(t => !t.isAdvice);
+                const doneCnt = stages.filter(t=>t.done).length;
+
+                let contentHtml = `
                     <div class="text-xs text-[#33691E] font-bold mb-1 truncate">${p.title}</div>
                     <div class="text-[9px] text-[#A1887F] mb-1 font-sans">${p.dateDisplay || ''}</div>
-                    <div class="text-[9px] text-[#8D6E63] mb-1 font-sans truncate">${p.desc || ''}</div>
-                    <div class="w-full bg-[#F1F8E9] h-1.5 rounded-full mt-1 overflow-hidden">
-                        <div class="bg-[#8FBC8F] h-full" style="width:${p.tasks.length ? (doneCnt/p.tasks.length)*100 : 0}%"></div>
-                    </div>
-                    <div class="text-[10px] text-[#558B2F] font-sans text-right mt-1">${doneCnt}/${p.tasks.length}</div>
                 `;
+
+                if(advice) {
+                     contentHtml += `<div class="text-[9px] text-[#8D6E63] mb-1 font-wando truncate border-b border-dashed border-[#C5E1A5] pb-1">${advice.text}</div>`;
+                } else {
+                     contentHtml += `<div class="text-[9px] text-[#8D6E63] mb-1 font-sans truncate">${p.desc || ''}</div>`;
+                }
+
+                contentHtml += `
+                    <div class="w-full bg-[#F1F8E9] h-1.5 rounded-full mt-1 overflow-hidden">
+                        <div class="bg-[#8FBC8F] h-full" style="width:${stages.length ? (doneCnt/stages.length)*100 : 0}%"></div>
+                    </div>
+                    <div class="text-[10px] text-[#558B2F] font-sans text-right mt-1">${doneCnt}/${stages.length}</div>
+                `;
+                card.innerHTML = contentHtml;
+                
+                // 다시 작성 (위의 innerHTML 덮어쓰기 방식 말고 append 방식 사용)
+                card.innerHTML = ''; // 초기화
+                const header = document.createElement('div');
+                header.className = 'flex flex-col gap-1 mb-3 pb-2 border-b border-[#F1F8E9]';
+                
+                let headerContent = `
+                    <div class="flex justify-between items-center">
+                        <h3 class="font-bold text-lg text-[#556B2F]">🌿 ${p.title}</h3>
+                        <div class="flex gap-1">
+                            <button onclick="generateProjectTasks('${p.id}', '${p.title}')" class="text-xs bg-[#8D6E63] text-white px-2 py-1 rounded hover:bg-[#6D4C41]">생성</button>
+                            <button onclick="deleteProject('${p.id}')" class="text-[#D7CCC8] hover:text-[#FF7F50] px-1">✕</button>
+                        </div>
+                    </div>
+                    <div class="text-xs text-[#A1887F] font-sans">${p.dateDisplay || ''}</div>
+                `;
+                
+                if(advice) {
+                    headerContent += `<div class="text-xs text-[#8D6E63] font-wando mt-1 p-2 bg-[#F1F8E9] rounded">💡 ${advice.text}</div>`;
+                }
+                header.innerHTML = headerContent;
+                card.appendChild(header);
+                
+                const ul = document.createElement('ul');
+                ul.className = 'pl-1 space-y-2'; 
+                if(p.tasks.length === 0) ul.innerHTML = `<li class="text-xs text-gray-300 italic text-center py-2">AI에게 계획을 요청해보세요</li>`;
+                
+                stages.forEach((t, i) => {
+                    ul.appendChild(createTaskEl(t, 'project', p.id, p.tasks.indexOf(t)));
+                });
+                card.appendChild(ul);
+
                 scrollDiv.appendChild(card);
             });
             secProj.appendChild(scrollDiv);
@@ -799,6 +847,9 @@
         
         const tasks = window.appData.daily[achievementViewDate] || [];
         const feedbacks = tasks.filter(t => t.feedback).map(t => t.feedback);
+        const completedTasks = tasks.filter(t => t.done && !t.isMessage);
+        const summary = window.appData.dailySummaries[achievementViewDate]; 
+
         const fbSection = document.createElement('div');
         fbSection.className = 'mt-auto pt-4 border-t border-[#EFEBE9]';
         
@@ -808,33 +859,55 @@
             </h3>
         `;
         
-        const realTasks = tasks.filter(t => !t.isMessage); 
+        if (summary) {
+            detailsHtml += `
+                <div class="mb-4 p-3 bg-[#F1F8E9] rounded-xl text-xs text-[#33691E] leading-relaxed font-wando border border-[#AED581]">
+                    <div class="font-bold mb-1">✨ AI 회고 요약</div>
+                    ${summary}
+                </div>
+            `;
+        } else if (completedTasks.length > 0 || feedbacks.length > 0) {
+             detailsHtml += `
+                <button onclick="generateDailySummary('${achievementViewDate}')" class="w-full mb-4 py-2 bg-white border border-[#D7CCC8] text-[#8D6E63] rounded-xl text-xs hover:bg-[#FDFCF5] transition flex items-center justify-center gap-1">
+                    <span>✨ AI 회고 정리</span>
+                </button>
+             `;
+        }
 
-        if (realTasks.length === 0) {
-            detailsHtml += `<p class="text-xs text-[#BCAAA4] italic text-center py-4">이 날은 기록된 일정이 없어요.</p>`;
+        if (completedTasks.length === 0) {
+             if (tasks.length > 0) {
+                 detailsHtml += `<p class="text-xs text-[#BCAAA4] italic text-center py-4">완료된 일정이 없어요.</p>`;
+             } else {
+                 detailsHtml += `<p class="text-xs text-[#BCAAA4] italic text-center py-4">기록된 일정이 없어요.</p>`;
+             }
         } else {
-            detailsHtml += `<div class="mb-4"><ul class="space-y-1">`;
-            realTasks.forEach(t => {
-                const checkMark = t.done ? '<span class="text-[#556B2F]">✔</span>' : '<span class="text-[#D7CCC8]">⬜</span>';
-                const textStyle = t.done ? 'text-gray-400 line-through' : 'text-[#5D4037]';
-                detailsHtml += `<li class="text-xs flex gap-1 items-center">${checkMark} <span class="${textStyle} truncate">${t.text}</span></li>`;
+            detailsHtml += `<div class="mb-4"><ul class="space-y-2">`;
+            completedTasks.forEach(t => {
+                let cleanText = t.text.replace(/\([^)]*\)/g, '').trim();
+                cleanText = cleanText.replace(/\|?\s*\d{1,2}:\d{2}.*?\d{1,2}:\d{2}\s*\|?/g, '').trim();
+                cleanText = cleanText.replace(/\|?---+\|?/g, '').trim();
+                cleanText = cleanText.replace(/^\|\s*/, '').replace(/\s*\|$/, '');
+                cleanText = cleanText.replace(/\*\*/g, '');
+                
+                const bullet = `<span class="w-1.5 h-1.5 rounded-full bg-[#A1887F] inline-block shrink-0 mt-1.5"></span>`;
+                detailsHtml += `<li class="text-xs flex gap-2 items-start text-[#5D4037]">${bullet} <span class="truncate leading-relaxed">${cleanText}</span></li>`;
             });
             detailsHtml += `</ul></div>`;
-            
-            detailsHtml += `<div class="mt-3 pt-2 border-t border-dashed border-[#EFEBE9]">
-                <h4 class="font-hand text-lg text-[#5D4037] mb-2">Today's Note</h4>`;
-            
-            if (feedbacks.length > 0) {
-                detailsHtml += `<ul class="space-y-2">`;
-                feedbacks.forEach(fb => {
-                    detailsHtml += `<li class="text-xs text-[#5D4037] bg-[#FAF8F5] p-2 rounded-lg border border-[#F5F5DC]">"${fb}"</li>`;
-                });
-                detailsHtml += `</ul>`;
-            } else {
-                detailsHtml += `<p class="text-xs text-[#BCAAA4] italic">남겨진 메모가 없어요.</p>`;
-            }
-            detailsHtml += `</div>`;
         }
+            
+        detailsHtml += `<div class="mt-3 pt-2 border-t border-dashed border-[#EFEBE9]">
+            <h4 class="font-hand text-lg text-[#5D4037] mb-2">Today's Note</h4>`;
+        
+        if (feedbacks.length > 0) {
+            detailsHtml += `<ul class="space-y-2">`;
+            feedbacks.forEach(fb => {
+                detailsHtml += `<li class="text-xs text-[#5D4037] bg-[#FAF8F5] p-2 rounded-lg border border-[#F5F5DC]">"${fb}"</li>`;
+            });
+            detailsHtml += `</ul>`;
+        } else {
+            detailsHtml += `<p class="text-xs text-[#BCAAA4] italic">남겨진 메모가 없어요.</p>`;
+        }
+        detailsHtml += `</div>`;
         
         fbSection.innerHTML = detailsHtml;
         wrapper.appendChild(fbSection);
@@ -842,74 +915,6 @@
     }
     
     function moveMonth(d) { calendarDate.setMonth(calendarDate.getMonth() + d); renderApp(); }
-
-    function renderProjects(container) {
-        const btnAdd = document.createElement('button');
-        // [수정] 버튼 스타일: 클릭 시 눌린 느낌이 나도록 active 배경색을 진하게 변경
-        btnAdd.className = 'w-full py-4 border-2 border-dashed border-[#A1887F] text-[#8D6E63] font-hand text-xl rounded-2xl mb-6 hover:bg-[#FDFCF5] active:bg-[#D7CCC8] active:text-white transition bg-white shadow-sm';
-        btnAdd.textContent = '+ 새로운 프로젝트 심기';
-        btnAdd.setAttribute('onclick', 'openProjectModal()');
-        
-        container.appendChild(btnAdd);
-
-        if(window.appData.projects.length === 0) {
-            container.innerHTML += `<div class="text-center text-[#BCAAA4] font-hand text-xl mt-12 opacity-70">여기에 장기 목표를 심어보세요 🌱</div>`;
-            return;
-        }
-
-        window.appData.projects.forEach(p => {
-            const card = document.createElement('div');
-            card.className = 'wood-frame p-5 bg-white mb-5';
-            const header = document.createElement('div');
-            header.className = 'flex flex-col gap-1 mb-3 pb-2 border-b border-[#F1F8E9]';
-            header.innerHTML = `
-                <div class="flex justify-between items-center">
-                    <h3 class="font-bold text-lg text-[#556B2F]">🌿 ${p.title}</h3>
-                    <div class="flex gap-1">
-                        <button onclick="generateProjectTasks('${p.id}', '${p.title}')" class="text-xs bg-[#8D6E63] text-white px-2 py-1 rounded hover:bg-[#6D4C41]">생성</button>
-                        <button onclick="deleteProject('${p.id}')" class="text-[#D7CCC8] hover:text-[#FF7F50] px-1">✕</button>
-                    </div>
-                </div>
-                <div class="text-xs text-[#A1887F] font-sans">${p.dateDisplay || ''}</div>
-                <div class="text-xs text-[#8D6E63] font-sans">${p.desc || ''}</div>
-            `;
-            card.appendChild(header);
-            const ul = document.createElement('ul');
-            ul.className = 'pl-1 space-y-2'; 
-            if(p.tasks.length === 0) ul.innerHTML = `<li class="text-xs text-gray-300 italic text-center py-2">AI에게 계획을 요청해보세요</li>`;
-            p.tasks.forEach((t, i) => ul.appendChild(createTaskEl(t, 'project', p.id, i)));
-            card.appendChild(ul);
-            container.appendChild(card);
-        });
-    }
-
-    function renderAnalysis(container) {
-        const wrapper = document.createElement('div');
-        wrapper.className = 'wood-frame p-6 bg-white flex flex-col items-center text-center min-h-[400px] justify-center';
-        wrapper.innerHTML = `
-            <div class="mb-4 text-[#D7CCC8]">${ICON_FLAT_HOUSE_SVG}</div>
-            <h2 class="font-hand text-3xl mb-3 text-[#8D6E63]">나의 성향은?</h2>
-            <p class="text-sm text-[#A1887F] mb-8 leading-relaxed">zipipo가 당신의 일상을 보고<br>따뜻한 조언을 해드릴게요.</p>
-            <button onclick="runAnalysis()" class="btn-wood-outline px-8 py-3 mb-8 shadow-sm font-bold text-sm">분석 요청하기</button>
-            <div id="analysisLoading" class="hidden text-[#8D6E63] text-xs animate-pulse mb-4">
-                zipipo가 열심히 분석하고 있어요... 💭
-            </div>
-        `;
-        const historyDiv = document.createElement('div');
-        historyDiv.id = 'analysisResultArea';
-        historyDiv.className = 'w-full space-y-4';
-        if (window.appData.analysisHistory && window.appData.analysisHistory.length > 0) {
-            const latest = window.appData.analysisHistory[window.appData.analysisHistory.length - 1];
-            historyDiv.innerHTML = `
-                <div class="text-left text-sm bg-[#FAF8F5] p-5 rounded-xl border border-[#EFEBE9] text-[#5D4037] leading-relaxed">
-                    <div class="text-xs text-[#FF8A65] mb-2 font-bold">${latest.date}의 기록</div>
-                    ${latest.text.replace(/\n/g, '<br>')}
-                </div>
-            `;
-        }
-        wrapper.appendChild(historyDiv);
-        container.appendChild(wrapper);
-    }
 
     function createTaskEl(task, type, key, index) {
         const li = document.createElement('li');
@@ -924,6 +929,7 @@
         content.className = 'flex items-start justify-between w-full pl-2';
         const textGroup = document.createElement('div');
         textGroup.className = 'flex flex-col flex-1 mr-2';
+        
         let timeStr = "";
         if(task.manualTimeRange) timeStr = task.manualTimeRange;
         
@@ -945,17 +951,31 @@
             textGroup.appendChild(timeSpan);
         }
         
-        const txt = document.createElement('span');
-        txt.className = `text-sm outline-none ${task.done ? 'text-gray-400 line-through' : 'text-[#4E342E]'}`;
-        txt.contentEditable = false; 
-        
         let displayText = task.text;
+        let parenthetical = "";
+        const parenMatch = displayText.match(/\(([^)]+)\)/); 
+        if (parenMatch) {
+            parenthetical = parenMatch[1];
+            displayText = displayText.replace(/\([^)]+\)/, '').trim(); 
+        }
+        
         displayText = displayText.replace(/\|?\s*\d{1,2}:\d{2}.*?\d{1,2}:\d{2}\s*\|?/g, '').trim();
         displayText = displayText.replace(/\|?---+\|?/g, '').trim();
         displayText = displayText.replace(/^\|\s*/, '').replace(/\s*\|$/, '');
+        displayText = displayText.replace(/\*\*/g, '');
 
+        const txt = document.createElement('span');
+        txt.className = `text-sm outline-none ${task.done ? 'text-gray-400 line-through' : 'text-[#4E342E]'}`;
+        txt.contentEditable = false; 
         txt.textContent = displayText;
         textGroup.appendChild(txt);
+
+        if(parenthetical) {
+            const subTxt = document.createElement('div');
+            subTxt.className = 'text-[11px] text-[#8D6E63] mt-1 ml-1';
+            subTxt.textContent = `- ${parenthetical}`;
+            textGroup.appendChild(subTxt);
+        }
 
         if(task.feedback) {
             const fbDiv = document.createElement('div');
@@ -1080,7 +1100,6 @@
         closeModal();
         let sysPrompt = "";
         const todayStr = getTodayStr();
-        // Feedback Context
         let feedbackContext = "";
         const sortedDates = Object.keys(window.appData.daily).sort().reverse();
         let pastFeedbacks = [];
@@ -1099,34 +1118,42 @@
             projCtx = `(연관 프로젝트: ${projTitles.join(', ')})`;
         }
         
-        // 현재 시간 구하기 (HH:MM)
         const now = new Date();
         const currentTimeStr = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
 
         if (type === 'daily') {
-            // [수정] 프롬프트 강화: 현재 시간 이후 일정 생성, 꿀팁 제공, 자기소개 금지
             sysPrompt = `
-                역할: 효율적이고 실용적인 플래너 (MBTI T 성향). 
+                역할: 효율적이고 실용적인 플래너 (MBTI T 성향).
                 현재 시각: ${todayStr} ${currentTimeStr}.
                 요청: "${promptText}" ${projCtx}. 
                 
                 [필수 규칙]
-                1. 인사말이나 자기소개("따뜻한 플래너입니다" 등) 절대 금지. 바로 일정이나 팁으로 시작할 것.
-                2. 현재 시각(${currentTimeStr}) 이후의 일정만 계획할 것. 이미 지난 시간은 포함하지 마시오.
-                3. 감성적인 응원보다는 목표 달성을 위한 실질적이고 구체적인 '꿀팁'을 1~2문장 제공할 것.
-                4. 할 일 형식: 'HH:MM~HH:MM 할일내용' (한 줄에 하나씩).
-                5. 표(table), 구분선, 마크다운 볼드체(**) 사용 금지. 텍스트로만 출력.
+                1. 인사말이나 자기소개 절대 금지. 바로 50자 이내의 짧고 실용적인 조언(한마디)으로 시작할 것.
+                2. 현재 시각(${currentTimeStr}) 이후의 일정만 계획할 것.
+                3. 할 일 형식: 'HH:MM~HH:MM 할일내용 (세부사항)' (한 줄에 하나씩).
+                4. 표, 구분선, **볼드체** 사용 금지.
                 ${feedbackContext}
             `;
         } else {
-            // [수정] Weekly 프롬프트 강화
+            const currentSun = getSunday(new Date());
+            const weekDates = [];
+            for(let i=0; i<7; i++) {
+                const d = new Date(currentSun);
+                d.setDate(d.getDate() + i);
+                weekDates.push(`${d.getFullYear()}-${(d.getMonth()+1).toString().padStart(2,'0')}-${d.getDate().toString().padStart(2,'0')}`);
+            }
+
             sysPrompt = `
                 역할: 효율적인 주간 플래너.
+                이번 주 날짜: ${weekDates.join(', ')} (일~토).
                 요청: "${promptText}" ${projCtx}.
-                규칙:
-                1. 인사말 생략.
-                2. 주간 목표 달성을 위한 핵심 전략이나 팁을 한 문단으로 먼저 제시할 것.
-                3. 그 후 할 일을 한 줄에 하나씩 나열.
+                
+                [필수 규칙]
+                1. 인사말 금지. 50자 이내의 주간 핵심 전략(한마디)으로 시작.
+                2. 할 일은 가능한 'YYYY-MM-DD: 할일내용' 형식으로 날짜를 지정해서 작성.
+                   (날짜를 지정하기 어려우면 그냥 '할일내용'만 작성)
+                3. 한 줄에 하나씩 작성.
+                4. 표, 구분선, **볼드체** 사용 금지.
             `;
         }
 
@@ -1135,11 +1162,18 @@
             const newTasks = [];
             
             lines.forEach(line => {
-                // 시간 포맷이 있는 줄은 할 일로 처리
                 if (/\d{1,2}:\d{2}/.test(line)) {
                     newTasks.push({ text: line, done: false, isMessage: false });
-                } else if (line.length > 5 && !line.includes('|')) {
-                    // 시간이 없고 길이가 긴 문장은 팁/메시지로 처리
+                } 
+                else if (/\d{4}-\d{2}-\d{2}/.test(line)) {
+                    const dateMatch = line.match(/(\d{4}-\d{2}-\d{2})[:\s]*(.*)/);
+                    if(dateMatch) {
+                        newTasks.push({ text: dateMatch[2], done: false, isMessage: false, specificDate: dateMatch[1] });
+                    } else {
+                        newTasks.push({ text: line, done: false, isMessage: false });
+                    }
+                }
+                else if (line.length > 5 && !line.includes('|')) {
                     newTasks.push({ text: line, done: false, isMessage: true });
                 }
             });
@@ -1150,7 +1184,6 @@
             } else {
                 const wk = getWeekKey(new Date());
                 if(!window.appData.weekly[wk]) window.appData.weekly[wk] = { tasks: [] };
-                // Weekly는 메시지 구분 없이 다 넣음 (단순화)
                 window.appData.weekly[wk].tasks.push(...newTasks.map(t => ({...t, isMessage: false})));
             }
             saveData();
@@ -1161,10 +1194,34 @@
     async function generateProjectTasks(pid, ptitle) {
         const key = localStorage.getItem(STORAGE_KEY_API);
         if(!key) return alert('API Key가 필요해요!');
-        await callGemini(`프로젝트 '${ptitle}' 단계별 할 일 5개.`, (text) => {
+        
+        const sysPrompt = `
+            프로젝트 '${ptitle}'를 달성하기 위한 계획을 세워주세요.
+            
+            [출력 형식]
+            ADVICE: (이 프로젝트를 위한 핵심 조언 1문장)
+            PHASE 1: (1단계 목표) - (세부 실천사항)
+            PHASE 2: (2단계 목표) - (세부 실천사항)
+            ...
+            (총 5단계 내외로 작성, 마크다운 볼드체(**) 사용 금지)
+        `;
+
+        await callGemini(sysPrompt, (text) => {
             const lines = parseTasks(text);
+            const newTasks = [];
+            
+            lines.forEach(line => {
+                if(line.startsWith('ADVICE:')) {
+                    newTasks.push({ text: line.replace('ADVICE:', '').trim(), done: false, isAdvice: true });
+                } else if (line.toUpperCase().includes('PHASE') || line.includes('단계')) {
+                     newTasks.push({ text: line, done: false, isAdvice: false });
+                } else if (line.trim().length > 0) {
+                     newTasks.push({ text: line, done: false, isAdvice: false });
+                }
+            });
+
             const p = window.appData.projects.find(x => x.id === pid);
-            p.tasks.push(...lines.map(t => ({text: t, done: false})));
+            p.tasks.push(...newTasks);
             saveData();
             renderApp();
         });
@@ -1185,6 +1242,33 @@
             window.appData.analysisHistory.push({ date: today, text: text });
             saveData();
             renderApp(); 
+        });
+    }
+
+    async function generateDailySummary(dateStr) {
+        const key = localStorage.getItem(STORAGE_KEY_API);
+        if(!key) return alert('API Key가 필요해요!');
+        
+        const tasks = window.appData.daily[dateStr] || [];
+        const completed = tasks.filter(t => t.done && !t.isMessage).map(t => t.text).join(', ');
+        const feedbacks = tasks.filter(t => t.feedback).map(t => t.feedback).join(', ');
+        
+        if(!completed && !feedbacks) return alert('회고할 데이터가 없습니다.');
+
+        const sysPrompt = `
+            날짜: ${dateStr}
+            완료한 일: ${completed}
+            나의 피드백: ${feedbacks}
+            
+            위 내용을 바탕으로 오늘의 하루를 3문장 내외로 요약하고 회고해주세요.
+            (말투: 따뜻하고 격려하는 톤, 해요체)
+        `;
+
+        await callGemini(sysPrompt, (text) => {
+            if(!window.appData.dailySummaries) window.appData.dailySummaries = {};
+            window.appData.dailySummaries[dateStr] = text;
+            saveData();
+            renderApp();
         });
     }
 
@@ -1484,7 +1568,8 @@
     window.generateProjectTasks = generateProjectTasks;
     window.deleteProject = deleteProject;
     window.addManualTask = addManualTask;
-    window.changeDate = changeDate; 
+    window.changeDate = changeDate;
+    window.generateDailySummary = generateDailySummary;
 
     // --- Execution Start ---
     renderHeader();
