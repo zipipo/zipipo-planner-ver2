@@ -269,20 +269,24 @@
         <div class="flex justify-center gap-4 text-xs text-[#BCAAA4]">
             <!-- API Key Toggle -->
             <button onclick="toggleApiKeyInput()" class="hover:text-[#8D6E63] font-hand text-lg flex items-center gap-1">
-                <svg class="w-4 h-4 text-[#D7CCC8]" fill="currentColor" viewBox="0 0 24 24"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-9-2c0-1.66 1.34-3 3-3s3 1.34 3 3v2H9V6zm9 14H6V10h12v10zm-6-3c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2z"/></svg>
+                <!-- [수정] 열쇠 아이콘 (Key SVG) -->
+                <svg class="w-4 h-4 text-[#D7CCC8]" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12.65 10C11.83 7.67 9.61 6 7 6c-3.31 0-6 2.69-6 6s2.69 6 6 6c2.61 0 4.83-1.67 5.65-4H17v4h4v-4h2v-4H12.65zM7 14c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z"/>
+                </svg>
                 Key Setting
             </button>
             
-            <!-- Google Login (Firebase) -->
+            <!-- Google Login (Firebase) - Cloud Icon Style -->
             <button onclick="handleAuthClick()" id="authBtn" class="hover:text-[#FF8A65] font-hand text-lg flex items-center gap-1">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z" />
-                </svg>
-                Cloud Login
+               <!-- Cloud Icon (Initial) -->
+               <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                   <path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96z"/>
+               </svg>
+               Cloud Login
             </button>
         </div>
 
-        <div id="userInfo" class="hidden text-[10px] text-[#A1887F] mt-2"></div>
+        <div id="userInfo" class="hidden text-[10px] text-[#A1887F] mt-2 font-sans font-bold"></div>
 
         <div id="apiKeyContainer" class="hidden mt-3 mx-8 p-4 bg-white border-2 border-[#EFEBE9] rounded-2xl">
             <input type="password" id="apiKeyInput" placeholder="API Key를 입력해주세요" 
@@ -465,7 +469,9 @@
     const STORAGE_KEY_DATA = 'zipipo_v2_data'; 
     const GEMINI_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent';
 
-    const ICON_CLOUD = `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z" /></svg>`;
+    // [수정] 아이콘 SVG 정의
+    const ICON_CLOUD = `<svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96z"/></svg>`;
+    const ICON_EDIT = `<svg class="w-3 h-3 text-[#BCAAA4] hover:text-[#8D6E63]" fill="currentColor" viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>`;
 
     // --- Data Management ---
     async function loadData() {
@@ -522,10 +528,12 @@
         const btn = document.getElementById('authBtn');
         const info = document.getElementById('userInfo');
         if (user) {
-            btn.innerHTML = `🔓 Logout`;
-            info.innerHTML = `${user.displayName || user.email}님 환영합니다 🏡`;
+            // [수정] 로그인 시 구름 아이콘 유지 + Logout 텍스트
+            btn.innerHTML = `${ICON_CLOUD} Logout`; 
+            info.innerHTML = user.email; // 이메일 표시
             info.classList.remove('hidden');
         } else {
+            // [수정] 로그아웃 시 구름 아이콘 유지 + Cloud Login 텍스트
             btn.innerHTML = `${ICON_CLOUD} Cloud Login`;
             info.classList.add('hidden');
         }
@@ -613,12 +621,27 @@
 
         const contentDaily = document.createElement('div');
         const todayTasks = window.appData.daily[selectedDate] || [];
-        if(todayTasks.length > 0) {
+        
+        const messages = todayTasks.filter(t => t.isMessage);
+        if (messages.length > 0) {
+            const msgDiv = document.createElement('div');
+            msgDiv.className = 'mx-6 mt-2 mb-4 p-3 bg-white/60 rounded-xl border border-[#FFE0B2] text-sm text-[#5D4037] relative z-10 font-hand leading-relaxed';
+            msgDiv.innerHTML = messages.map(m => m.text).join('<br>');
+            secDaily.appendChild(msgDiv);
+        }
+
+        const realTasks = todayTasks.filter(t => !t.isMessage); 
+
+        if(realTasks.length > 0) {
             contentDaily.className = 'timeline-container px-6 pb-5 pt-1 relative z-10';
             contentDaily.innerHTML = `<div class="timeline-line"></div>`; 
             const ulDaily = document.createElement('ul');
-            todayTasks.sort((a,b) => (a.manualTimeRange || a.startTime || '') > (b.manualTimeRange || b.startTime || '') ? 1 : -1);
-            todayTasks.forEach((t, i) => ulDaily.appendChild(createTaskEl(t, 'daily', selectedDate, i)));
+            realTasks.sort((a,b) => {
+                const timeA = a.manualTimeRange || a.startTime || '23:59';
+                const timeB = b.manualTimeRange || b.startTime || '23:59';
+                return timeA.localeCompare(timeB);
+            });
+            realTasks.forEach((t, i) => ulDaily.appendChild(createTaskEl(t, 'daily', selectedDate, i)));
             contentDaily.appendChild(ulDaily);
         } else {
             contentDaily.className = 'empty-state relative z-10';
@@ -676,15 +699,12 @@
             const dateStr = `${year}-${(month+1).toString().padStart(2,'0')}-${d.toString().padStart(2,'0')}`;
             const tasks = window.appData.daily[dateStr] || [];
             
-            // [수정] 성취도에 따른 "차오르는 물" 효과 (linear-gradient 사용)
             let percent = 0;
             if(tasks.length > 0) {
                 const doneCount = tasks.filter(t => t.done).length;
                 percent = (doneCount / tasks.length) * 100;
             }
             
-            // 배경을 투명에서 성취도 색상으로 아래에서 위로 채움
-            // #8FBC8F는 테마의 sage-green 색상
             const bgStyle = tasks.length > 0 
                 ? `background: linear-gradient(to top, #8FBC8F ${percent}%, transparent ${percent}%);` 
                 : '';
@@ -693,11 +713,9 @@
             const borderClass = isSelected ? 'border-2 border-[#FF8A65] shadow-md scale-110' : (dateStr === getTodayStr() ? 'border border-[#8D6E63]' : '');
             
             const dayEl = document.createElement('div');
-            // w-8 h-8 rounded-full은 원형 유지
             dayEl.className = `${borderClass} w-8 h-8 rounded-full flex items-center justify-center mx-auto transition text-xs cursor-pointer hover:scale-110`;
             if (bgStyle) {
                 dayEl.setAttribute('style', bgStyle);
-                // 텍스트 가독성을 위해 그림자 추가 (선택사항)
                 if (percent > 50) dayEl.classList.add('text-white', 'text-shadow'); 
                 else dayEl.classList.add('text-[#5D4037]');
             } else {
@@ -713,32 +731,30 @@
         }
         wrapper.appendChild(grid);
         
-        // [수정] 선택된 날짜 상세 내용 표시 (Achievement 하단)
         const tasks = window.appData.daily[achievementViewDate] || [];
         const feedbacks = tasks.filter(t => t.feedback).map(t => t.feedback);
         const fbSection = document.createElement('div');
         fbSection.className = 'mt-auto pt-4 border-t border-[#EFEBE9]';
         
-        // [수정] 달력 아이콘 제거 및 피드백 "원래대로" 복원, 피드백 없으면 메시지 표시
         let detailsHtml = `
             <h3 class="font-hand text-lg text-[#5D4037] mb-2 border-b border-[#EFEBE9] pb-1">
                 ${achievementViewDate}
             </h3>
         `;
         
-        if (tasks.length === 0) {
+        const realTasks = tasks.filter(t => !t.isMessage); 
+
+        if (realTasks.length === 0) {
             detailsHtml += `<p class="text-xs text-[#BCAAA4] italic text-center py-4">이 날은 기록된 일정이 없어요.</p>`;
         } else {
-            // 완료한 일 목록
             detailsHtml += `<div class="mb-4"><ul class="space-y-1">`;
-            tasks.forEach(t => {
+            realTasks.forEach(t => {
                 const checkMark = t.done ? '<span class="text-[#556B2F]">✔</span>' : '<span class="text-[#D7CCC8]">⬜</span>';
                 const textStyle = t.done ? 'text-gray-400 line-through' : 'text-[#5D4037]';
                 detailsHtml += `<li class="text-xs flex gap-1 items-center">${checkMark} <span class="${textStyle} truncate">${t.text}</span></li>`;
             });
             detailsHtml += `</ul></div>`;
             
-            // 피드백 섹션 ("Today's Note" 스타일 복원) - 항상 보이게 함
             detailsHtml += `<div class="mt-3 pt-2 border-t border-dashed border-[#EFEBE9]">
                 <h4 class="font-hand text-lg text-[#5D4037] mb-2">Today's Note</h4>`;
             
@@ -763,7 +779,6 @@
 
     function renderProjects(container) {
         const btnAdd = document.createElement('button');
-        // [수정] 버튼 스타일: 클릭 시 눌린 느낌이 나도록 active 배경색을 진하게 변경
         btnAdd.className = 'w-full py-4 border-2 border-dashed border-[#A1887F] text-[#8D6E63] font-hand text-xl rounded-2xl mb-6 hover:bg-[#FDFCF5] active:bg-[#D7CCC8] active:text-white transition bg-white shadow-sm';
         btnAdd.textContent = '+ 새로운 프로젝트 심기';
         btnAdd.setAttribute('onclick', 'openProjectModal()');
@@ -857,19 +872,27 @@
              const match = task.text.match(/(\d{2}:\d{2})~(\d{2}:\d{2})/);
              if(match) timeStr = match[0];
         }
+
         if(timeStr) {
             const timeSpan = document.createElement('button');
             timeSpan.className = 'text-[10px] text-[#A1887F] font-bold mb-0.5 text-left hover:text-[#FF8A65]';
             timeSpan.textContent = timeStr.replace('⏰ ', ''); 
-            timeSpan.onclick = () => openEditTimeModal(type, key, index, task);
+            timeSpan.onclick = () => openEditTimeModal(type, key, index, task); 
             textGroup.appendChild(timeSpan);
         }
+        
         const txt = document.createElement('span');
         txt.className = `text-sm outline-none ${task.done ? 'text-gray-400 line-through' : 'text-[#4E342E]'}`;
-        txt.contentEditable = true;
-        txt.textContent = task.text;
-        txt.onblur = (e) => updateTask(type, key, index, {text: e.target.textContent});
+        txt.contentEditable = false; 
+        
+        let displayText = task.text;
+        displayText = displayText.replace(/\|?\s*\d{1,2}:\d{2}.*?\d{1,2}:\d{2}\s*\|?/g, '').trim();
+        displayText = displayText.replace(/\|?---+\|?/g, '').trim();
+        displayText = displayText.replace(/^\|\s*/, '').replace(/\s*\|$/, '');
+
+        txt.textContent = displayText;
         textGroup.appendChild(txt);
+
         if(task.feedback) {
             const fbDiv = document.createElement('div');
             fbDiv.className = 'text-[11px] text-[#556B2F] mt-1 bg-[#F1F8E9] p-1.5 rounded inline-block';
@@ -879,6 +902,12 @@
         content.appendChild(textGroup);
         const actionGroup = document.createElement('div');
         actionGroup.className = 'flex items-center gap-2 shrink-0 h-6 mt-1';
+        
+        const editBtn = document.createElement('button');
+        editBtn.innerHTML = ICON_EDIT;
+        editBtn.onclick = () => openEditTimeModal(type, key, index, task);
+        actionGroup.appendChild(editBtn);
+
         const fbBtn = document.createElement('button');
         fbBtn.innerHTML = ICON_SPEECH;
         fbBtn.onclick = () => openInputModal('피드백을 남겨주세요', (val) => {
@@ -893,6 +922,7 @@
         actionGroup.appendChild(chk);
         content.appendChild(actionGroup);
         li.appendChild(content);
+        
         if(type === 'daily') {
              const timerRow = document.createElement('div');
              timerRow.className = 'flex items-center gap-2 mt-2 pl-2';
@@ -935,7 +965,11 @@
     }
 
     function getTodayStr() { return new Date().toISOString().split('T')[0]; }
-    function parseTasks(text) { return text.split('\n').map(l=>l.trim()).filter(l=>l.length>0 && !l.startsWith('---')); }
+    
+    function parseTasks(text) { 
+        return text.split('\n').map(l=>l.trim()).filter(l=>l.length>0 && !l.startsWith('---')); 
+    }
+
     function getWeekKey(d) {
         const date = new Date(d.getTime());
         date.setHours(0,0,0,0);
@@ -1002,20 +1036,29 @@
         }
         
         if (type === 'daily') {
-            sysPrompt = `역할: 따뜻한 플래너. 오늘(${todayStr}) 일정 생성. 요청: "${promptText}" ${projCtx}. ${feedbackContext} 규칙: '09:00~10:00 공부' 처럼 한 줄에 하나씩.`;
+            sysPrompt = `역할: 따뜻한 플래너. 오늘(${todayStr}) 일정 생성. 요청: "${promptText}" ${projCtx}. ${feedbackContext}. 규칙: 1. 할 일은 '09:00~10:00 할일내용' 형식으로 한 줄에 하나씩 작성. 2. 플래너의 따뜻한 응원 멘트는 별도 문단으로 작성. 3. 표(table) 형식이나 구분선 사용 금지.`;
         } else {
-            sysPrompt = `역할: 따뜻한 플래너. 이번 주 할일 생성. 요청: "${promptText}" ${projCtx}. 규칙: 한 줄에 하나씩.`;
+            sysPrompt = `역할: 따뜻한 플래너. 이번 주 할일 생성. 요청: "${promptText}" ${projCtx}. 규칙: 한 줄에 하나씩 작성. 응원 멘트 포함 가능.`;
         }
         await callGemini(sysPrompt, (text) => {
             const lines = parseTasks(text);
-            const newTasks = lines.map(t => ({ text: t, done: false }));
+            const newTasks = [];
+            
+            lines.forEach(line => {
+                if (/\d{1,2}:\d{2}/.test(line)) {
+                    newTasks.push({ text: line, done: false, isMessage: false });
+                } else if (line.length > 5 && !line.includes('|')) {
+                    newTasks.push({ text: line, done: false, isMessage: true });
+                }
+            });
+
             if (type === 'daily') {
                 if(!window.appData.daily[selectedDate]) window.appData.daily[selectedDate] = [];
                 window.appData.daily[selectedDate].push(...newTasks);
             } else {
                 const wk = getWeekKey(new Date());
                 if(!window.appData.weekly[wk]) window.appData.weekly[wk] = { tasks: [] };
-                window.appData.weekly[wk].tasks.push(...newTasks);
+                window.appData.weekly[wk].tasks.push(...newTasks.map(t => ({...t, isMessage: false})));
             }
             saveData();
             renderApp();
@@ -1178,7 +1221,8 @@
                     done: false, 
                     manualTimeRange: null,
                     specificDate: specificDate, 
-                    feedback: null
+                    feedback: null,
+                    isMessage: false
                 });
             } else {
                 if(!window.appData.daily[selectedDate]) window.appData.daily[selectedDate] = [];
@@ -1186,7 +1230,8 @@
                     text: text, 
                     done: false, 
                     manualTimeRange: timeStr, 
-                    feedback: null
+                    feedback: null,
+                    isMessage: false
                 });
             }
             saveData();
