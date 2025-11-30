@@ -4,11 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>zipipo planner</title>
-    <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Kirang+Haerang&display=swap" rel="stylesheet">
-    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         /* --- Theme Variables --- */
@@ -227,15 +225,42 @@
             border-bottom: 2px solid var(--point-coral);
             font-weight: bold;
         }
+
+        /* Specific styles for requests */
+        .task-time-label {
+            font-size: 0.7rem;
+            color: #BCAAA4;
+            margin-bottom: -2px;
+            display: block;
+        }
+        .task-sub-text {
+            font-size: 0.75rem;
+            color: #8D6E63;
+            margin-top: 2px;
+            display: block;
+            margin-left: 26px; 
+        }
+        
+        /* Project Date Header */
+        .proj-date-header {
+            font-size: 0.75rem;
+            font-weight: bold;
+            color: #556B2F;
+            background-color: #F1F8E9;
+            padding: 2px 8px;
+            border-radius: 12px;
+            display: inline-block;
+            margin-bottom: 4px;
+            margin-top: 8px;
+            border: 1px solid #DCEDC8;
+        }
     </style>
 </head>
 <body class="max-w-md mx-auto min-h-screen flex flex-col pb-28 relative bg-[#FDFCF5]">
 
-    <!-- Header -->
     <div class="sticky-header-wrapper">
         <header class="px-6 pt-8 pb-2 flex justify-between items-center bg-[#FDFCF5]">
             <div class="flex items-center gap-2">
-                <!-- House Icon -->
                 <svg class="w-8 h-8 text-[#8D6E63]" fill="currentColor" viewBox="0 0 24 24">
                     <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
                 </svg>
@@ -251,31 +276,21 @@
         </nav>
     </div>
 
-    <!-- Main Content -->
     <main id="appContent" class="p-5 flex-1 space-y-6 overflow-y-auto"></main>
 
-    <!-- Save Toast -->
     <div id="saveToast" class="fixed bottom-24 left-1/2 transform -translate-x-1/2 bg-[#5D4037] text-white text-xs px-4 py-2 rounded-full shadow-none opacity-0 transition-opacity duration-300 pointer-events-none z-50 bg-opacity-90 backdrop-blur-sm">
-        저장됨 ✨
+        저장됨
     </div>
 
-    <!-- Loading Popup -->
-    <div id="aiLoadingPopup" class="fixed inset-0 bg-black/20 z-[70] hidden flex items-center justify-center backdrop-blur-[2px]">
-        <div class="bg-white p-8 rounded-3xl shadow-lg border-2 border-[#EFEBE9] max-w-xs w-full mx-4 text-center">
-            <div class="mb-4 flex justify-center text-[#FF8A65]">
-                <svg class="animate-spin h-8 w-8" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-            </div>
-            <div class="text-[#5D4037] font-hand text-2xl mb-1">
+    <div id="aiLoadingPopup" class="fixed inset-0 bg-black/10 z-[70] hidden flex items-center justify-center backdrop-blur-[1px]">
+        <div class="bg-white px-8 py-6 rounded-3xl shadow-lg border-2 border-[#EFEBE9] max-w-[200px] w-full mx-4 text-center">
+            <div class="text-[#5D4037] font-hand text-xl mb-1">
                 zipipo가 만들고 있어요<span id="loadingDots" class="inline-block w-6 text-left"></span>
             </div>
-            <div class="text-xs text-[#A1887F]">잠시만 기다려주세요 ✨</div>
+            <div class="text-[10px] text-[#A1887F]">잠시만 기다려주세요</div>
         </div>
     </div>
 
-    <!-- Footer -->
     <footer id="homeFooter" class="mt-auto py-8 text-center">
         <div class="flex justify-center gap-4 text-xs text-[#BCAAA4]">
             <button onclick="toggleApiKeyInput()" class="hover:text-[#8D6E63] font-hand text-lg flex items-center gap-1">
@@ -290,14 +305,12 @@
         </div>
     </footer>
 
-    <!-- FAB -->
     <div class="fixed bottom-8 right-6 z-30">
         <button onclick="openGeneratorModal()" class="w-14 h-14 fab-house text-white hover:scale-105 transition active:scale-95 shadow-sm">
             <span class="text-2xl font-bold font-hand">+</span>
         </button>
     </div>
 
-    <!-- Generator Modal -->
     <div id="generatorModal" class="fixed inset-0 bg-[#4E342E]/20 z-50 hidden flex items-end sm:items-center justify-center backdrop-blur-[1px]">
         <div class="bg-[#FDFCF5] w-full max-w-md p-6 rounded-t-3xl sm:rounded-3xl shadow-none border-2 border-[#EFEBE9] m-0 sm:m-4 wood-frame modal-content">
             <div class="flex justify-between items-center mb-4">
@@ -318,12 +331,11 @@
         </div>
     </div>
 
-    <!-- Project Plan Edit Modal -->
     <div id="projectPlanModal" class="fixed inset-0 bg-[#4E342E]/20 z-50 hidden flex items-center justify-center backdrop-blur-[1px]">
         <div class="bg-[#FDFCF5] w-full max-w-md p-6 rounded-2xl shadow-none border-2 border-[#EFEBE9] m-4 wood-frame modal-content">
             <h3 class="font-hand text-xl text-[#8D6E63] mb-2">프로젝트 계획 짜기</h3>
-            <p class="text-xs text-[#A1887F] mb-4">zipipo에게 요청할 내용을 확인하세요.</p>
-            <textarea id="projectPlanPrompt" rows="5" class="w-full p-4 border-2 border-[#EFEBE9] rounded-xl mb-4 resize-none focus:outline-none focus:border-[#D7CCC8] bg-white text-sm text-[#5D4037]"></textarea>
+            <p class="text-xs text-[#A1887F] mb-4">날짜별로 할일을 구분해달라고 요청해보세요.</p>
+            <textarea id="projectPlanPrompt" rows="6" class="w-full p-4 border-2 border-[#EFEBE9] rounded-xl mb-4 resize-none focus:outline-none focus:border-[#D7CCC8] bg-white text-sm text-[#5D4037] leading-relaxed"></textarea>
             <div class="flex gap-3">
                 <button onclick="closeModal('projectPlanModal')" class="flex-1 py-3 bg-gray-100 text-[#8D6E63] rounded-xl text-xs hover:bg-gray-200">취소</button>
                 <button onclick="confirmProjectPlan()" class="flex-1 py-3 bg-[#8D6E63] text-white rounded-xl text-xs font-bold hover:bg-[#6D4C41]">계획 생성하기</button>
@@ -331,7 +343,6 @@
         </div>
     </div>
 
-    <!-- Task Edit/Add Modal -->
     <div id="addTaskModal" class="fixed inset-0 bg-black/20 z-[60] hidden flex items-center justify-center backdrop-blur-[1px]">
         <div class="bg-white p-6 rounded-2xl shadow-lg w-80 wood-frame modal-content text-center">
             <h3 id="taskModalTitle" class="font-hand text-xl text-[#8D6E63] mb-4">할 일 추가</h3>
@@ -357,7 +368,6 @@
         </div>
     </div>
 
-    <!-- Project Input Modal -->
     <div id="projectInputModal" class="fixed inset-0 bg-black/20 z-[60] hidden flex items-center justify-center backdrop-blur-[1px]">
         <div class="bg-white p-6 rounded-2xl shadow-lg w-80 wood-frame modal-content">
             <h3 class="font-hand text-xl text-[#8D6E63] mb-4 text-center">새 프로젝트 심기</h3>
@@ -397,7 +407,6 @@
         </div>
     </div>
 
-    <!-- Simple Input Modal -->
     <div id="inputModal" class="fixed inset-0 bg-black/20 z-[60] hidden flex items-center justify-center backdrop-blur-[1px]">
         <div class="bg-white p-5 rounded-2xl shadow-lg w-80 wood-frame modal-content text-center">
             <h3 id="inputModalTitle" class="font-hand text-xl text-[#8D6E63] mb-3">입력</h3>
@@ -409,7 +418,6 @@
         </div>
     </div>
 
-<!-- SCRIPT -->
 <script>
     // 1. CONSTANTS & CONFIG
     const STORAGE_KEY_API = 'zipipo_v2_apikey';
@@ -428,7 +436,7 @@
     // 2. STATE
     let appData = { daily: {}, weekly: {}, projects: [], dailySummaries: {} };
     let currentTab = 'home';
-    let selectedDate = new Date().toISOString().split('T')[0]; // Default to today
+    let selectedDate = new Date().toISOString().split('T')[0];
     let currentWeekBaseDate = new Date();
     let achievementViewDate = new Date().toISOString().split('T')[0];
     let inputCallback = null;
@@ -463,7 +471,8 @@
     function showLoading(msg) {
         const p = document.getElementById('aiLoadingPopup');
         p.classList.remove('hidden');
-        p.querySelector('.font-hand').childNodes[0].nodeValue = msg;
+        let cleanMsg = msg.replace('✨', '').trim();
+        p.querySelector('.font-hand').childNodes[0].nodeValue = cleanMsg;
         let dots = 0;
         if(loadingInterval) clearInterval(loadingInterval);
         loadingInterval = setInterval(() => { dots = (dots+1)%4; document.getElementById('loadingDots').innerText = '.'.repeat(dots); }, 500);
@@ -471,6 +480,18 @@
     function hideLoading() {
         document.getElementById('aiLoadingPopup').classList.add('hidden');
         if(loadingInterval) clearInterval(loadingInterval);
+    }
+
+    function getTaskTimeVal(t) {
+        if(t.manualTimeRange) {
+            const m = t.manualTimeRange.match(/(\d{1,2}):(\d{2})/);
+            if(m) return parseInt(m[1])*60 + parseInt(m[2]);
+        }
+        if(t.text && /^\d{1,2}:\d{2}/.test(t.text)) {
+             const m = t.text.match(/^(\d{1,2}):(\d{2})/);
+             if(m) return parseInt(m[1])*60 + parseInt(m[2]);
+        }
+        return 9999; 
     }
 
     // 4. DATA MANAGEMENT
@@ -490,202 +511,276 @@
         if(toast) { toast.style.opacity = '1'; setTimeout(() => { toast.style.opacity = '0'; }, 2000); }
     }
     function saveApiKey() {
-        const key = document.getElementById('apiKeyInput').value.trim();
-        if (key) { localStorage.setItem(STORAGE_KEY_API, key); toggleApiKeyInput(); alert('저장되었습니다.'); }
+        const key = document.getElementById('apiKeyInput').value;
+        if(key) { localStorage.setItem(STORAGE_KEY_API, key); alert('저장되었습니다'); toggleApiKeyInput(); }
     }
 
-    // 5. API CALL
-    async function callGemini(prompt, cb) {
+    // 5. API INTERACTION
+    async function callGemini(sysPrompt, cb) {
         const key = localStorage.getItem(STORAGE_KEY_API);
-        if(!key) return alert('API Key가 필요합니다.');
         try {
             const res = await fetch(`${GEMINI_URL}?key=${key}`, {
-                method: 'POST', headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }], generationConfig: { temperature: 0.7 } })
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ contents: [{ parts: [{ text: sysPrompt }] }] })
             });
             const data = await res.json();
-            if(!res.ok) throw new Error(data.error?.message || 'API Error');
-            cb(data.candidates[0].content.parts[0].text);
-        } catch(e) { alert('오류: ' + e.message); hideLoading(); }
+            if(data.candidates && data.candidates[0].content) {
+                cb(data.candidates[0].content.parts[0].text);
+            } else { alert('오류가 발생했습니다.'); hideLoading(); }
+        } catch(e) { alert('API 요청 실패'); console.error(e); hideLoading(); }
     }
 
-    // 6. CORE LOGIC
+    // 6. LOGIC
     async function generateSchedule(type) {
         const key = localStorage.getItem(STORAGE_KEY_API);
         if(!key) return alert('API Key가 필요해요!');
         const promptText = document.getElementById('taskPrompt').value;
         if(!promptText) return alert('내용을 입력해주세요');
-        showLoading("zipipo가 만들고 있어요"); 
-        document.getElementById('generatorModal').classList.add('hidden');
         
+        showLoading("zipipo가 만들고 있어요");
+        document.getElementById('generatorModal').classList.add('hidden');
+
         const todayStr = getTodayStr();
         const now = new Date();
         const currentTimeStr = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
         const isTargetToday = selectedDate === todayStr;
+        
         const timeConstraint = isTargetToday ? `2. 현재 시각(${currentTimeStr}) 이후의 일정만 계획할 것.` : `2. 하루 전체 일정을 계획할 것.`;
 
         let sysPrompt = type === 'daily' 
-            ? `역할: 플래너 (MBTI T). 날짜: ${selectedDate}. 요청: "${promptText}". [규칙] 1. 인사말 금지. ${timeConstraint} 3. 꿀팁 1~2문장. 4. 형식: 'HH:MM~HH:MM 할일'. 5. 마크다운 금지.`
+            ? `역할: 플래너 (MBTI T). 날짜: ${selectedDate}. 요청: "${promptText}". [규칙] 1. 인사말 금지. ${timeConstraint} 3. 꿀팁 1~2문장. 4. 형식: 'HH:MM~HH:MM 할일'. 5. 마크다운 금지.` 
             : `역할: 주간 플래너. 요청: "${promptText}". [규칙] 1. 인사말 금지. 2. 형식: 'YYYY-MM-DD: 할일'. 3. 한 줄에 하나씩.`;
-
+            
         await callGemini(sysPrompt, (text) => {
             const lines = parseTasks(text);
             const newTasks = [];
+            
             lines.forEach(line => {
-                if (/\d{1,2}:\d{2}/.test(line)) newTasks.push({ text: line, done: false, isMessage: false });
-                else if (/\d{4}-\d{2}-\d{2}/.test(line)) {
+                if (/\d{1,2}:\d{2}/.test(line)) {
+                    newTasks.push({ text: line, done: false, isMessage: false });
+                } else if (/\d{4}-\d{2}-\d{2}/.test(line)) {
                     const dateMatch = line.match(/(\d{4}-\d{2}-\d{2})[:\s]*(.*)/);
                     if(dateMatch) newTasks.push({ text: dateMatch[2], done: false, isMessage: false, specificDate: dateMatch[1] });
                     else newTasks.push({ text: line, done: false, isMessage: false });
-                } else if (line.length > 5 && !line.includes('|')) newTasks.push({ text: line, done: false, isMessage: true });
+                } else if (line.length > 5 && !line.includes('|')) {
+                    newTasks.push({ text: line, done: false, isMessage: true });
+                }
             });
 
             if (type === 'daily') {
-                if(!appData.daily[selectedDate]) appData.daily[selectedDate] = [];
+                appData.daily[selectedDate] = [];
                 appData.daily[selectedDate].push(...newTasks);
             } else {
-                const wk = getWeekKey(currentWeekBaseDate); 
+                const wk = getWeekKey(currentWeekBaseDate);
                 if(!appData.weekly[wk]) appData.weekly[wk] = { tasks: [] };
-                appData.weekly[wk].tasks.push(...newTasks.map(t => ({...t, isMessage: false})));
+                appData.weekly[wk].tasks.push(...newTasks);
             }
-            hideLoading(); saveData(); renderApp();
+            hideLoading();
+            saveData();
+            renderApp();
         });
     }
 
-    async function generateProjectTasks(pid, ptitle) {
-        const key = localStorage.getItem(STORAGE_KEY_API);
-        if(!key) return alert('API Key가 필요해요!');
-        const p = appData.projects.find(x => x.id === pid);
-        const datesInfo = p.dateDisplay ? `기간: ${p.dateDisplay}` : '';
-        const userPrompt = p.customPrompt || `프로젝트 '${ptitle}' 달성 계획.`;
-        showLoading("zipipo가 만들고 있어요"); 
-        const sysPrompt = `${userPrompt} ${datesInfo} [형식] ADVICE: (조언) PHASE: (단계) - (세부사항) ...`;
-        await callGemini(sysPrompt, (text) => {
-            const lines = parseTasks(text);
+    async function confirmProjectPlan() {
+        const pid = activeProjectId;
+        const prompt = document.getElementById('projectPlanPrompt').value;
+        if(!prompt) return;
+        closeModal('projectPlanModal');
+        showLoading("프로젝트 계획 중");
+        
+        await callGemini(prompt, (text) => {
+            let lines = parseTasks(text);
             const newTasks = [];
+            
             lines.forEach(line => {
-                line = line.trim();
-                if(!line) return;
-                if(line.startsWith('ADVICE:')) newTasks.push({ text: line.replace('ADVICE:', '').trim(), done: false, isAdvice: true });
-                else if (line.startsWith('PHASE:')) newTasks.push({ text: line.replace('PHASE:', '').trim(), done: false, isPhase: true, isAdvice: false });
-                else if (line.startsWith('-')) newTasks.push({ text: line.replace('-', '').trim(), done: false, isPhase: false, isAdvice: false });
-                else if (line.toUpperCase().includes('PHASE')) newTasks.push({ text: line, done: false, isPhase: true, isAdvice: false });
-                else newTasks.push({ text: line, done: false, isPhase: false, isAdvice: false });
+                let clean = line.replace(/\*\*/g, '').replace(/\|/g, '').trim();
+                if (clean.length === 0) return;
+
+                // Extract date if present (YYYY-MM-DD or MM.DD)
+                let taskDate = null;
+                const dateMatch = clean.match(/^(\d{4}-\d{2}-\d{2}|\d{1,2}\.\d{1,2})[:\s]+(.*)/);
+                
+                if (dateMatch) {
+                    taskDate = dateMatch[1];
+                    clean = dateMatch[2];
+                    // Normalize MM.DD to current year YYYY-MM-DD if needed, but for simplicity keep as is
+                    // If parsing needed: new Date().getFullYear() + '-' + ...
+                }
+
+                newTasks.push({ text: clean, done: false, date: taskDate });
             });
+
             const p = appData.projects.find(x => x.id === pid);
             if(p.tasks.length > 0 && confirm('덮어씌울까요?')) p.tasks = newTasks;
             else if(p.tasks.length === 0) p.tasks = newTasks;
-            else p.tasks.push(...newTasks); 
-            hideLoading(); saveData(); renderApp();
+            else p.tasks.push(...newTasks);
+            
+            hideLoading();
+            saveData();
+            renderApp();
         });
     }
 
     async function generateDailySummary(dateStr) {
         const key = localStorage.getItem(STORAGE_KEY_API);
         if(!key) return alert('API Key가 필요해요!');
+        
         const tasks = appData.daily[dateStr] || [];
         const completed = tasks.filter(t => t.done && !t.isMessage).map(t => t.text).join(', ');
         const feedbacks = tasks.filter(t => t.feedback).map(t => t.feedback).join(', ');
+        
         if(!completed && !feedbacks) return alert('회고할 데이터가 없습니다.');
-        showLoading("zipipo가 회고 중입니다"); 
+        
+        showLoading("zipipo가 회고 중");
+        
         const sysPrompt = `날짜: ${dateStr}. 완료: ${completed}. 피드백: ${feedbacks}. 하루 3문장 요약 회고 (따뜻한 말투).`;
+        
         await callGemini(sysPrompt, (text) => {
             if(!appData.dailySummaries) appData.dailySummaries = {};
             appData.dailySummaries[dateStr] = text;
-            hideLoading(); saveData(); renderApp();
+            hideLoading();
+            saveData();
+            renderApp();
         });
     }
 
     function completeProject(id, isComplete) {
         const p = appData.projects.find(x => x.id === id);
-        if (p) { p.completed = isComplete; saveData(); renderApp(); }
+        if (p) {
+            p.completed = isComplete;
+            saveData();
+            renderApp();
+        }
     }
-    
+
     function deleteProject(id) {
         if(confirm('정말 삭제하시겠습니까?')) {
             appData.projects = appData.projects.filter(p=>p.id!==id);
-            saveData(); renderApp();
+            saveData();
+            renderApp();
         }
     }
-    
+
     function deleteTaskItem(type, key, index) {
         if(type==='daily') appData.daily[key].splice(index,1);
         else if(type==='weekly') appData.weekly[key].tasks.splice(index,1);
         else appData.projects.find(p=>p.id===key).tasks.splice(index,1);
-        saveData(); renderApp();
+        saveData();
+        renderApp();
     }
-    
+
     function updateTask(type, key, index, changes) {
         let targetArr;
         if(type==='daily') targetArr = appData.daily[key];
         else if(type==='weekly') targetArr = appData.weekly[key].tasks;
         else targetArr = appData.projects.find(p=>p.id===key).tasks;
+        
         Object.assign(targetArr[index], changes);
-        saveData(); renderApp();
+        saveData();
+        renderApp();
     }
 
     // 7. Modals & Interaction
     function openProjectPlanModal(pid) {
         activeProjectId = pid;
         const p = appData.projects.find(x => x.id === pid);
-        document.getElementById('projectPlanPrompt').value = p.customPrompt || (p.desc ? `프로젝트: ${p.title}\n목표: ${p.desc}\n\n위 내용을 바탕으로 구체적인 실행 계획을 짜줘.` : `프로젝트 '${p.title}' 달성 계획을 세워주세요.`);
+        
+        // Build Date Context
+        let dateContext = "";
+        if (p.dates && p.dates.length > 0) {
+            dateContext = `선택된 날짜들: ${p.dates.join(', ')}`;
+        } else if (p.dateDisplay) {
+            dateContext = `기간: ${p.dateDisplay}`;
+        }
+
+        const defaultPrompt = 
+`프로젝트: ${p.title}
+목표: ${p.desc || '목표 없음'}
+${dateContext}
+
+위 기간 동안 프로젝트 목표를 달성하기 위한 구체적인 계획을 짜줘.
+반드시 날짜별로 구분해서 아래 형식으로 작성해줘.
+형식: YYYY-MM-DD: 할일 내용
+(예: 2024-05-01: 자료 조사하기)
+`;
+
+        document.getElementById('projectPlanPrompt').value = p.customPrompt || defaultPrompt;
         document.getElementById('projectPlanModal').classList.remove('hidden');
     }
-    function closeProjectPlanModal() { closeModal('projectPlanModal'); activeProjectId = null; }
-    
-    async function confirmProjectPlan() {
-        const promptVal = document.getElementById('projectPlanPrompt').value;
-        if(!promptVal) return alert('요청 내용을 입력해주세요.');
-        const p = appData.projects.find(x => x.id === activeProjectId);
-        p.customPrompt = promptVal; 
-        saveData(); closeProjectPlanModal();
-        await generateProjectTasks(activeProjectId, p.title);
-    }
 
-    function openAddTaskModal(existingData, type) {
-        currentTaskTypeForAdd = type || 'daily';
-        if (existingData) { currentTaskTypeForAdd = existingData.type; }
+    function openAddTaskModal(existing=null, type='daily') {
+        editingTask = existing;
+        currentTaskTypeForAdd = type;
+        const modalTitle = document.getElementById('taskModalTitle');
+        modalTitle.innerText = existing ? '할 일 수정' : '할 일 추가';
         document.getElementById('addTaskModal').classList.remove('hidden');
-        document.getElementById('taskModalTitle').innerText = existingData ? '수정' : (currentTaskTypeForAdd === 'weekly' ? '주간 할 일 추가' : '할 일 추가');
-        document.getElementById('manualTaskText').value = '';
-        ['startHour','startMin','endHour','endMin'].forEach(id => document.getElementById(id).value = '');
-        document.getElementById('weeklyTaskDate').value = '';
-        if (existingData) {
-            editingTask = existingData;
-            document.getElementById('manualTaskText').value = existingData.task.text;
-            if (existingData.task.specificDate) { document.getElementById('weeklyTaskDate').value = existingData.task.specificDate; }
-             if (existingData.task.manualTimeRange) {
-                const parts = existingData.task.manualTimeRange.split('~');
-                if (parts.length > 0) {
+        
+        if (existing) {
+            document.getElementById('manualTaskText').value = existing.task.text;
+            if (existing.task.specificDate) {
+                document.getElementById('weeklyTaskDate').value = existing.task.specificDate;
+            }
+            if (existing.task.manualTimeRange) {
+                const parts = existing.task.manualTimeRange.split('~');
+                if (parts[0]) {
                     const start = parts[0].trim().split(':');
-                    if (start.length === 2) { document.getElementById('startHour').value = start[0]; document.getElementById('startMin').value = start[1]; }
+                    document.getElementById('startHour').value = start[0];
+                    document.getElementById('startMin').value = start[1];
                 }
-                if (parts.length > 1) {
+                if (parts[1]) {
                     const end = parts[1].trim().split(' ')[0].split(':');
-                     if (end.length === 2) { document.getElementById('endHour').value = end[0]; document.getElementById('endMin').value = end[1]; }
+                    if (end.length === 2) {
+                        document.getElementById('endHour').value = end[0];
+                        document.getElementById('endMin').value = end[1];
+                    }
                 }
             }
-        } else { editingTask = null; document.getElementById('manualTaskText').focus(); }
+        } else {
+            editingTask = null;
+            document.getElementById('manualTaskText').value = '';
+            document.getElementById('manualTaskText').focus();
+            document.getElementById('startHour').value = ''; document.getElementById('startMin').value = '';
+            document.getElementById('endHour').value = ''; document.getElementById('endMin').value = '';
+            document.getElementById('weeklyTaskDate').value = '';
+        }
+
         const dailyWrapper = document.getElementById('dailyTimeInputWrapper');
         const weeklyWrapper = document.getElementById('weeklyDateInputWrapper');
-        if (currentTaskTypeForAdd === 'weekly') { dailyWrapper.classList.add('hidden'); weeklyWrapper.classList.remove('hidden'); } 
-        else { dailyWrapper.classList.remove('hidden'); weeklyWrapper.classList.add('hidden'); }
+        
+        if (currentTaskTypeForAdd === 'weekly') {
+            dailyWrapper.classList.add('hidden');
+            weeklyWrapper.classList.remove('hidden');
+        } else {
+            dailyWrapper.classList.remove('hidden');
+            weeklyWrapper.classList.add('hidden');
+        }
     }
-    
+
     function confirmTaskAction() {
         const text = document.getElementById('manualTaskText').value;
         if (!text) return alert('내용을 입력해주세요.');
+        
         const sh = document.getElementById('startHour').value;
         const sm = document.getElementById('startMin').value;
         const eh = document.getElementById('endHour').value;
         const em = document.getElementById('endMin').value;
+        
         let timeStr = null;
-        if(sh && sm && eh && em) timeStr = `${sh}:${sm} ~ ${eh}:${em}`; else if(sh && sm) timeStr = `${sh}:${sm} ~`;
+        if(sh && sm && eh && em) timeStr = `${sh}:${sm} ~ ${eh}:${em}`;
+        else if(sh && sm) timeStr = `${sh}:${sm} ~`;
+
         const specificDate = document.getElementById('weeklyTaskDate').value;
+
         if (editingTask) {
             const changes = { text: text };
-            if (currentTaskTypeForAdd === 'weekly') { changes.specificDate = specificDate; changes.manualTimeRange = null; } 
-            else { changes.manualTimeRange = timeStr; changes.specificDate = null; }
+            if (currentTaskTypeForAdd === 'weekly') {
+                changes.specificDate = specificDate;
+                changes.manualTimeRange = null;
+            } else {
+                changes.manualTimeRange = timeStr;
+                changes.specificDate = null;
+            }
             updateTask(editingTask.type, editingTask.key, editingTask.index, changes);
         } else {
             if (currentTaskTypeForAdd === 'weekly') {
@@ -696,77 +791,129 @@
                 if(!appData.daily[selectedDate]) appData.daily[selectedDate] = [];
                 appData.daily[selectedDate].push({ text: text, done: false, manualTimeRange: timeStr, feedback: null, isMessage: false });
             }
-            saveData(); renderApp();
+            saveData();
+            renderApp();
         }
         closeModal('addTaskModal');
     }
 
-    function openEditTimeModal(type, key, index, task) { openAddTaskModal({type, key, index, task}, type); }
-    function openInputModal(title, cb) { document.getElementById('inputModalTitle').innerText = title; document.getElementById('inputModalField').value = ''; document.getElementById('inputModal').classList.remove('hidden'); document.getElementById('inputModalField').focus(); inputCallback = cb; }
-    function closeInputModal() { document.getElementById('inputModal').classList.add('hidden'); inputCallback = null; }
-    function confirmInput() { const val = document.getElementById('inputModalField').value; if(val && inputCallback) { inputCallback(val); closeInputModal(); } }
-    
-    function openProjectModal() {
-        document.getElementById('projectInputModal').classList.remove('hidden');
-        document.getElementById('projTitle').value = ''; document.getElementById('projDesc').value = ''; 
-        document.getElementById('projStart').value = ''; document.getElementById('projEnd').value = '';
-        projCalDate = new Date(); selectedProjDates = new Set(); switchProjMode('range');
+    function openEditTimeModal(type, key, index, task) {
+        openAddTaskModal({type, key, index, task}, type);
     }
-    function closeProjectModal() { document.getElementById('projectInputModal').classList.add('hidden'); }
-    function switchProjMode(mode) {
-        projMode = mode;
-        if(mode==='range') { document.getElementById('projModeRange').classList.remove('hidden'); document.getElementById('projModeSelect').classList.add('hidden'); } 
-        else { document.getElementById('projModeRange').classList.add('hidden'); document.getElementById('projModeSelect').classList.remove('hidden'); renderProjCal(); }
+
+    function openInputModal(title, cb) {
+        document.getElementById('inputModalTitle').innerText = title;
+        document.getElementById('inputModalField').value = '';
+        document.getElementById('inputModal').classList.remove('hidden');
+        document.getElementById('inputModalField').focus();
+        inputCallback = cb;
     }
+
+    function closeInputModal() {
+        document.getElementById('inputModal').classList.add('hidden');
+        inputCallback = null;
+    }
+
+    function confirmInput() {
+        if(inputCallback) inputCallback(document.getElementById('inputModalField').value);
+        closeInputModal();
+    }
+
+    function switchProjMode(m) {
+        projMode = m;
+        document.getElementById('pm-range').classList.toggle('active', m==='range');
+        document.getElementById('pm-select').classList.toggle('active', m==='select');
+        document.getElementById('projModeRange').classList.toggle('hidden', m!=='range');
+        document.getElementById('projModeSelect').classList.toggle('hidden', m!=='select');
+        if(m==='select') renderProjCal();
+    }
+
     function renderProjCal() {
-        const y = projCalDate.getFullYear(); const m = projCalDate.getMonth();
+        const y = projCalDate.getFullYear();
+        const m = projCalDate.getMonth();
         document.getElementById('projCalTitle').innerText = `${y}.${m+1}`;
-        const container = document.getElementById('projCalGrid'); container.innerHTML = '';
-        const firstDay = new Date(y, m, 1).getDay(); const lastDate = new Date(y, m+1, 0).getDate();
-        for(let i=0; i<firstDay; i++) container.innerHTML += `<div></div>`;
-        for(let d=1; d<=lastDate; d++) {
-            const dateStr = `${y}-${(m+1).toString().padStart(2,'0')}-${d.toString().padStart(2,'0')}`;
-            const el = document.createElement('div'); el.className = 'mini-cal-cell';
+        const container = document.getElementById('projCalGrid');
+        container.innerHTML = '<div>일</div><div>월</div><div>화</div><div>수</div><div>목</div><div>금</div><div>토</div>';
+        
+        const firstDay = new Date(y, m, 1).getDay();
+        const lastDate = new Date(y, m+1, 0).getDate();
+        
+        for(let i=0; i<firstDay; i++) container.innerHTML += '<div></div>';
+        for(let i=1; i<=lastDate; i++) {
+            const dateStr = `${y}-${(m+1).toString().padStart(2,'0')}-${i.toString().padStart(2,'0')}`;
+            const el = document.createElement('div');
+            el.className = 'mini-cal-cell';
             if(selectedProjDates.has(dateStr)) el.classList.add('selected');
-            el.innerText = d;
-            el.onclick = () => { if(selectedProjDates.has(dateStr)) selectedProjDates.delete(dateStr); else selectedProjDates.add(dateStr); renderProjCal(); document.getElementById('selectedCount').innerText = selectedProjDates.size; };
+            el.innerText = i;
+            el.onclick = () => {
+                if(selectedProjDates.has(dateStr)) selectedProjDates.delete(dateStr);
+                else selectedProjDates.add(dateStr);
+                renderProjCal();
+                document.getElementById('selectedCount').innerText = selectedProjDates.size;
+            };
             container.appendChild(el);
         }
     }
-    function moveProjCal(d) { projCalDate.setMonth(projCalDate.getMonth() + d); renderProjCal(); }
-    
+
+    function moveProjCal(d) {
+        projCalDate.setMonth(projCalDate.getMonth() + d);
+        renderProjCal();
+    }
+
     function confirmCreateProject() {
-        const title = document.getElementById('projTitle').value; const desc = document.getElementById('projDesc').value; 
+        const title = document.getElementById('projTitle').value;
+        const desc = document.getElementById('projDesc').value;
         if(!title) return alert('프로젝트 이름을 입력해주세요');
-        let dateDisplay = ''; let type = '';
+        
+        let dateDisplay = '';
+        let type = '';
+        let dateArray = null;
+
         if(projMode === 'range') {
-            const start = document.getElementById('projStart').value; const end = document.getElementById('projEnd').value;
+            const start = document.getElementById('projStart').value;
+            const end = document.getElementById('projEnd').value;
             if(!start || !end) return alert('기간을 설정해주세요');
-            dateDisplay = `${start} ~ ${end}`; type = 'range';
+            dateDisplay = `${start} ~ ${end}`;
+            type = 'range';
         } else {
             if(selectedProjDates.size === 0) return alert('날짜를 선택해주세요');
             const sorted = Array.from(selectedProjDates).sort();
-            dateDisplay = `총 ${selectedProjDates.size}일 (${sorted[0]}...)`; type = 'select';
+            dateDisplay = `총 ${selectedProjDates.size}일 (${sorted[0]}...)`;
+            type = 'select';
+            dateArray = Array.from(selectedProjDates).sort();
         }
-        // Set to Array
-        const dateArray = Array.from(selectedProjDates).sort();
-        appData.projects.push({ id: Date.now()+'', title: title, desc: desc, dateDisplay: dateDisplay, dates: type === 'select' ? dateArray : null, tasks:[], completed: false });
-        saveData(); renderApp(); closeModal('projectInputModal');
+
+        appData.projects.push({
+            id: Date.now()+'',
+            title: title,
+            desc: desc,
+            dateDisplay: dateDisplay,
+            dates: type === 'select' ? dateArray : null,
+            tasks:[],
+            completed: false
+        });
+        saveData();
+        renderApp();
+        closeModal('projectInputModal');
     }
-    
+
     function openGeneratorModal() {
         document.getElementById('generatorModal').classList.remove('hidden');
-        const container = document.getElementById('projectMultiSelect'); container.innerHTML = '';
-        if (appData.projects.length === 0) { container.innerHTML = '<div class="text-xs text-gray-400 italic text-center p-2">생성된 프로젝트가 없습니다</div>'; } 
-        else {
+        const container = document.getElementById('projectMultiSelect');
+        container.innerHTML = '';
+        if (appData.projects.length === 0) {
+            container.innerHTML = '<div class="text-xs text-gray-400 italic text-center p-2">생성된 프로젝트가 없습니다</div>';
+        } else {
             appData.projects.forEach(p => {
-                const label = document.createElement('label'); label.className = 'flex items-center gap-2 p-1 hover:bg-[#F5F5DC] rounded cursor-pointer';
+                const label = document.createElement('label');
+                label.className = 'flex items-center gap-2 p-1 hover:bg-[#F5F5DC] rounded cursor-pointer';
                 label.innerHTML = `<input type="checkbox" name="projSelect" value="${p.id}" class="custom-checkbox w-4 h-4"><span class="text-sm text-[#5D4037]">${p.title}</span>`;
                 container.appendChild(label);
             });
         }
         document.getElementById('taskPrompt').value = '';
     }
+
     function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
     function addManualTask() { openAddTaskModal(null, 'daily'); }
 
@@ -774,53 +921,93 @@
     function renderHeader() {
         const today = new Date();
         const days = ['일요일', '월요일', '화요일', '수요일', '목요일', '금요일', '토요일'];
-        document.getElementById('headerDate').textContent = `${today.getMonth()+1}월 ${today.getDate()}일 ${days[today.getDay()]}`;
+        document.getElementById('headerDate').innerText = `${today.getMonth()+1}월 ${today.getDate()}일 ${days[today.getDay()]}`;
     }
 
     function switchTab(tab) {
         currentTab = tab;
-        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('tab-active'));
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('tab-active'));
         document.getElementById(`tab-${tab}`).classList.add('tab-active');
         renderApp();
     }
 
     function renderApp() {
         const container = document.getElementById('appContent');
-        const footer = document.getElementById('homeFooter');
         container.innerHTML = '';
-        if (currentTab === 'home') { renderHome(container); footer.classList.remove('hidden'); } 
-        else { footer.classList.add('hidden'); 
-            if (currentTab === 'achievement') renderCalendar(container);
-            else if (currentTab === 'project') renderProjects(container);
-        }
+        if (currentTab === 'home') renderDaily(container);
+        else if (currentTab === 'project') renderProjects(container);
+        else if (currentTab === 'achievement') renderCalendar(container);
     }
 
-    function renderHome(container) {
+    function renderDaily(container) {
+        const secDaily = document.createElement('section');
+        const d = new Date(selectedDate);
+        const dayNames = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+        
+        secDaily.innerHTML = `
+            <div class="flex justify-between items-end mb-4 px-1">
+                <div class="text-2xl font-hand text-[#5D4037] flex items-baseline gap-2">
+                    <span>${d.getMonth()+1}.${d.getDate()}</span>
+                    <span class="text-sm text-[#A1887F] font-sans font-bold">${dayNames[d.getDay()]}</span>
+                </div>
+                <div class="flex gap-2">
+                    <input type="date" class="border border-[#D7CCC8] rounded px-2 py-1 text-xs bg-white" value="${selectedDate}" onchange="window.changeDate(this.value)">
+                </div>
+            </div>`;
+
+        const dailyData = appData.daily[selectedDate] || [];
+        
+        // Render Message first
+        const dailyMsgs = dailyData.filter(t => t.isMessage);
+        if (dailyMsgs.length > 0) {
+            secDaily.innerHTML += `<div class="mx-6 mt-1 mb-3 p-3 bg-white/60 rounded-xl border border-[#C5E1A5] text-sm text-[#556B2F] relative z-10 font-wando leading-relaxed">${dailyMsgs.map(m => m.text).join('<br>')}</div>`;
+        }
+
+        const contentDaily = document.createElement('div');
+        contentDaily.className = 'bg-white rounded-[24px] border border-[#EFEBE9] p-5 relative min-h-[300px] shadow-sm';
+        
+        const gridBg = document.createElement('div');
+        gridBg.className = 'absolute inset-0 pointer-events-none opacity-30';
+        gridBg.style.backgroundImage = 'linear-gradient(#EFEBE9 1px, transparent 1px)';
+        gridBg.style.backgroundSize = '100% 24px';
+        contentDaily.appendChild(gridBg);
+
+        const realDailyTasks = dailyData.filter(t => !t.isMessage);
+        
+        if (realDailyTasks.length > 0) {
+            const ulDaily = document.createElement('ul');
+            // Sort by Time (Earliest First)
+            realDailyTasks.sort((a,b) => getTaskTimeVal(a) - getTaskTimeVal(b));
+            
+            realDailyTasks.forEach((t, i) => ulDaily.appendChild(createTaskEl(t, 'daily', selectedDate, i)));
+            contentDaily.appendChild(ulDaily);
+        } else {
+            contentDaily.innerHTML += `<div class="empty-state relative z-10"><span class="text-xs text-[#8D6E63] opacity-60">오늘의 목표를 세워보세요!</span></div>`;
+        }
+        secDaily.appendChild(contentDaily);
+        container.appendChild(secDaily);
+        
+        const secWeekly = document.createElement('section');
+        secWeekly.className = 'mt-8 pt-6 border-t border-dashed border-[#D7CCC8]';
         const weekKey = getWeekKey(currentWeekBaseDate);
         const weeklyData = appData.weekly[weekKey] || { tasks: [] };
         
-        const secWeekly = document.createElement('section');
-        secWeekly.className = 'pillow-frame mb-5 bg-[#F1F8E9]'; 
         secWeekly.innerHTML = `
-            <div class="px-6 pt-3 pb-2 flex items-center justify-between z-10 relative">
-                <div class="flex items-center gap-1">${ICONS.lightWood} <span class="font-hand text-2xl text-[#5D4037]">Weekly</span></div>
+            <div class="flex justify-between items-center mb-4 px-1">
+                <h3 class="font-hand text-xl text-[#8D6E63]">Weekly</h3>
                 <div class="flex items-center gap-2">
-                    <button onclick="window.moveWeek(-1)" class="text-gray-400 text-sm font-bold">&lt;</button>
-                    <span class="text-xs text-[#BCAAA4] font-sans bg-white/80 px-2 rounded-full">${getWeekRangeStr(currentWeekBaseDate)}</span>
-                    <button onclick="window.moveWeek(1)" class="text-gray-400 text-sm font-bold">&gt;</button>
-                    <button onclick="window.openAddTaskModal(null, 'weekly')" class="w-6 h-6 rounded-full bg-white text-[#8D6E63] border border-[#D7CCC8] flex items-center justify-center font-bold text-sm ml-1 hover:bg-[#EFEBE9]">+</button>
+                    <button onclick="window.moveWeek(-1)" class="text-[#A1887F] hover:text-[#5D4037]">◀</button>
+                    <span class="text-xs font-bold text-[#5D4037]">${getWeekRangeStr(currentWeekBaseDate)}</span>
+                    <button onclick="window.moveWeek(1)" class="text-[#A1887F] hover:text-[#5D4037]">▶</button>
+                    <button onclick="window.openAddTaskModal(null, 'weekly')" class="border border-[#D7CCC8] bg-white rounded-full w-6 h-6 flex items-center justify-center text-[#8D6E63] text-sm ml-1 hover:bg-[#EFEBE9]">+</button>
                 </div>
             </div>`;
-        
-        const weeklyMsgs = weeklyData.tasks.filter(t => t.isMessage);
-        if (weeklyMsgs.length > 0) {
-            secWeekly.innerHTML += `<div class="mx-6 mt-1 mb-3 p-3 bg-white/60 rounded-xl border border-[#C5E1A5] text-sm text-[#556B2F] relative z-10 font-wando leading-relaxed">${weeklyMsgs.map(m => m.text).join('<br>')}</div>`;
-        }
-
+            
         const contentWrap = document.createElement('div');
-        contentWrap.className = 'px-6 pb-5 pt-1 relative z-10 flex flex-col gap-4'; 
+        contentWrap.className = 'px-6 pb-5 pt-1 relative z-10 flex flex-col gap-4';
+        
         const currentSun = getSunday(currentWeekBaseDate);
-        const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+        
         for(let i=0; i<7; i++) {
             const d = new Date(currentSun);
             d.setDate(d.getDate() + i);
@@ -831,11 +1018,12 @@
             const isToday = dayStr === getTodayStr();
             const headerColor = i === 0 ? 'text-red-500' : 'text-[#8D6E63]';
             const headerBg = isToday ? 'bg-[#FFE0B2]' : 'bg-white/50';
+            
             daySection.innerHTML = `<div class="flex items-center mb-1"><span class="${headerBg} px-2 py-0.5 rounded text-xs font-bold ${headerColor} font-sans">${dayNames[i]} ${d.getMonth()+1}.${d.getDate()}</span></div>`;
             
             if (dayTasks.length > 0) {
                 const ul = document.createElement('ul');
-                ul.className = 'pl-2 border-l-2 border-[#D7CCC8]/30 ml-2 space-y-2'; 
+                ul.className = 'pl-2 border-l-2 border-[#D7CCC8]/30 ml-2 space-y-2';
                 dayTasks.forEach(t => {
                     const originalIdx = weeklyData.tasks.indexOf(t);
                     const taskEl = createTaskEl(t, 'weekly', weekKey, originalIdx);
@@ -849,125 +1037,128 @@
         
         const anytimeTasks = weeklyData.tasks.filter(t => !t.isMessage && !t.specificDate);
         if (anytimeTasks.length > 0) {
-             const anytimeSection = document.createElement('div');
-             anytimeSection.className = 'flex flex-col mt-2 pt-3 border-t border-dashed border-[#C5E1A5]';
-             anytimeSection.innerHTML = `<div class="text-xs font-bold text-[#556B2F] mb-2 px-1">Anytime</div>`;
-             const ul = document.createElement('ul');
-             ul.className = 'pl-2 space-y-2';
-             anytimeTasks.forEach(t => {
+            const anytimeSection = document.createElement('div');
+            anytimeSection.className = 'flex flex-col mt-2 pt-3 border-t border-dashed border-[#C5E1A5]';
+            anytimeSection.innerHTML = `<div class="text-xs text-[#8D6E63] font-bold mb-2">Anytime</div>`;
+            const ulAny = document.createElement('ul');
+            ulAny.className = 'pl-2 space-y-2';
+            anytimeTasks.forEach(t => {
                 const originalIdx = weeklyData.tasks.indexOf(t);
                 const taskEl = createTaskEl(t, 'weekly', weekKey, originalIdx);
                 taskEl.classList.add('weekly-item');
-                ul.appendChild(taskEl);
-             });
-             anytimeSection.appendChild(ul);
-             contentWrap.appendChild(anytimeSection);
+                ulAny.appendChild(taskEl);
+            });
+            anytimeSection.appendChild(ulAny);
+            contentWrap.appendChild(anytimeSection);
         }
-        
+
         secWeekly.appendChild(contentWrap);
         container.appendChild(secWeekly);
-
-        // Daily Section
-        const secDaily = document.createElement('section');
-        secDaily.className = 'pillow-frame mb-6 bg-[#FFF3E0]'; 
-        secDaily.innerHTML = `<div class="px-6 pt-3 pb-2 flex justify-between items-center z-10 relative"><div class="flex items-center gap-1">${ICONS.lightWood} <span class="font-hand text-2xl text-[#5D4037]">Daily</span></div><div class="flex items-center gap-2"><input type="date" value="${selectedDate}" onchange="window.changeDate(this.value)" class="text-xs border-0 rounded px-2 py-1 font-sans text-gray-500 bg-white/50 focus:outline-none"><button onclick="window.openAddTaskModal(null, 'daily')" class="w-6 h-6 rounded-full bg-white text-[#8D6E63] border border-[#D7CCC8] flex items-center justify-center font-bold text-sm ml-1 hover:bg-[#EFEBE9]">+</button></div></div>`;
-        
-        if(!appData.daily[selectedDate]) appData.daily[selectedDate] = [];
-        const todayTasks = appData.daily[selectedDate];
-        const dailyMessages = todayTasks.filter(t => t.isMessage);
-        if (dailyMessages.length > 0) {
-            secDaily.innerHTML += `<div class="mx-6 mt-2 mb-4 p-3 bg-white/60 rounded-xl border border-[#FFE0B2] text-sm text-[#5D4037] relative z-10 font-wando leading-relaxed">${dailyMessages.map(m => m.text).join('<br>')}</div>`;
-        }
-        
-        const contentDaily = document.createElement('div');
-        contentDaily.className = 'timeline-container px-6 pb-5 pt-1 relative z-10';
-        contentDaily.innerHTML = `<div class="timeline-line"></div>`;
-        const realDailyTasks = todayTasks.filter(t => !t.isMessage);
-        if(realDailyTasks.length > 0) {
-             const ulDaily = document.createElement('ul');
-             realDailyTasks.sort((a,b) => (a.manualTimeRange || a.startTime || '') > (b.manualTimeRange || b.startTime || '') ? 1 : -1);
-             realDailyTasks.forEach((t, i) => ulDaily.appendChild(createTaskEl(t, 'daily', selectedDate, i)));
-             contentDaily.appendChild(ulDaily);
-        } else {
-             contentDaily.innerHTML = `<div class="empty-state"><span class="text-xs text-[#8D6E63] opacity-60">오늘의 목표를 세워보세요!</span></div>`;
-        }
-        secDaily.appendChild(contentDaily);
-        container.appendChild(secDaily);
     }
 
     function renderProjects(container) {
         const secProj = document.createElement('section');
         secProj.innerHTML = `<h3 class="font-hand text-xl text-[#556B2F] mb-3 px-1 flex items-center gap-1">도전중인 프로젝트</h3>`;
+        
         const addBtnContainer = document.createElement('div');
         addBtnContainer.className = 'mb-6';
         addBtnContainer.innerHTML = `<button onclick="window.openProjectModal()" class="w-full py-4 border-2 border-dashed border-[#A1887F] text-[#8D6E63] font-hand text-xl rounded-2xl hover:bg-[#FDFCF5] active:bg-[#D7CCC8] active:text-white transition bg-white shadow-none flex items-center justify-center gap-2"><span class="text-2xl">+</span> 새로운 프로젝트 심기</button>`;
         container.appendChild(addBtnContainer);
+        
         const scrollDiv = document.createElement('div');
-        scrollDiv.className = 'flex gap-3 overflow-x-auto pb-4 px-1';
+        scrollDiv.className = 'flex flex-col gap-4 pb-4 px-1';
+        
         const activeProjects = appData.projects.filter(p => !p.completed);
         const completedProjects = appData.projects.filter(p => p.completed);
+        
         if(activeProjects.length > 0) {
             activeProjects.forEach(p => {
                 const card = document.createElement('div');
-                card.className = 'min-w-[130px] wood-frame p-3 bg-white flex-shrink-0 border border-[#C5E1A5] relative group'; 
-                card.innerHTML = `
-                <div class="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition z-10">
-                    <button class="p-1 text-[#A1887F] hover:text-[#8D6E63]" onclick="window.completeProject('${p.id}', true)">${ICONS.check}</button>
-                    <button class="p-1 text-[#D7CCC8] hover:text-[#FF7F50]" onclick="window.deleteProject('${p.id}')">${ICONS.closeX}</button>
-                </div>
-                <div class="text-xs text-[#33691E] font-bold mb-1 truncate pr-12 pt-1">${p.title}</div><div class="text-[9px] text-[#A1887F] mb-1 font-sans">${p.dateDisplay || ''}</div>`;
-                const stages = p.tasks.filter(t => !t.isAdvice && !t.isPhase);
-                const doneCnt = stages.filter(t=>t.done).length;
-                const percent = stages.length ? (doneCnt/stages.length)*100 : 0;
-                card.innerHTML += `<div class="w-full bg-[#F1F8E9] h-1.5 rounded-full mt-1 overflow-hidden"><div class="bg-[#8FBC8F] h-full" style="width:${percent}%"></div></div><div class="text-[10px] text-[#558B2F] font-sans text-right mt-1">${doneCnt}/${stages.length}</div>`;
-                card.innerHTML += `<div class="flex justify-center items-center mt-2 border-t border-[#F1F8E9] pt-2"><button onclick="window.openProjectPlanModal('${p.id}')" class="text-[10px] bg-[#8D6E63] text-white px-2 py-0.5 rounded w-full hover:bg-[#6D4C41]">계획짜기</button></div>`;
-                const ul = document.createElement('ul');
-                ul.className = 'pl-1 space-y-2 mt-2';
-                if(p.tasks.length === 0) ul.innerHTML = `<li class="text-xs text-gray-300 italic text-center py-2">zipipo에게 계획 요청</li>`;
-                p.tasks.forEach((t, i) => {
-                    if (t.isPhase) {
-                         const li = document.createElement('li');
-                         li.className = "mt-2 mb-1";
-                         li.innerHTML = `<div class="bg-[#FFF3E0] text-[#E65100] text-xs font-bold px-2 py-1 rounded border border-[#FFCC80] shadow-sm">${t.text}</div>`;
-                         ul.appendChild(li);
-                    } else if (!t.isAdvice) { 
-                        ul.appendChild(createTaskEl(t, 'project', p.id, i)); 
-                    }
+                card.className = 'wood-frame p-4 bg-white border border-[#C5E1A5] relative group w-full';
+                
+                // Group tasks by Date
+                const groupedTasks = {};
+                p.tasks.forEach((t, idx) => {
+                    const d = t.date || 'General';
+                    if (!groupedTasks[d]) groupedTasks[d] = [];
+                    groupedTasks[d].push({ ...t, originalIndex: idx });
                 });
-                card.appendChild(ul);
+                
+                // Sort Dates (General at end or beginning? Let's put dates first)
+                const sortedDates = Object.keys(groupedTasks).sort();
+                let taskListHtml = '';
+
+                sortedDates.forEach(date => {
+                    const displayDate = date === 'General' ? '기타' : date;
+                    taskListHtml += `<div class="proj-date-header">${displayDate}</div>`;
+                    
+                    groupedTasks[date].forEach(item => {
+                         taskListHtml += `
+                            <li class="flex items-start gap-2 text-[#5D4037] mb-1">
+                                <div class="w-0.5 h-full bg-[#D7CCC8] mt-1.5 opacity-50"></div>
+                                <span class="flex-1">${item.text}</span>
+                                <button class="text-[#D7CCC8] hover:text-[#FF7F50] text-xs" onclick="window.deleteTaskItem('project', '${p.id}', ${item.originalIndex})">x</button>
+                            </li>
+                        `;
+                    });
+                });
+
+                card.innerHTML = `
+                    <div class="absolute top-2 right-2 flex gap-1 z-10">
+                        <button class="p-1 text-[#A1887F] hover:text-[#8D6E63]" onclick="window.completeProject('${p.id}', true)">${ICONS.check}</button>
+                        <button class="p-1 text-[#D7CCC8] hover:text-[#FF7F50]" onclick="window.deleteProject('${p.id}')">${ICONS.closeX}</button>
+                    </div>
+                    <h4 class="font-bold text-[#5D4037] mb-1 pr-16">${p.title}</h4>
+                    <p class="text-xs text-[#8D6E63] mb-3">${p.dateDisplay}</p>
+                    <div class="border-t border-dashed border-[#C5E1A5] pt-2 mt-2">
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-xs font-bold text-[#556B2F]">Project Plan</span>
+                            <button onclick="openProjectPlanModal('${p.id}')" class="text-[10px] bg-[#F1F8E9] text-[#33691E] px-2 py-1 rounded-full border border-[#AED581] hover:bg-[#AED581] hover:text-white transition">AI 계획 짜기</button>
+                        </div>
+                        <ul class="max-h-60 overflow-y-auto pl-1 text-sm">
+                            ${taskListHtml}
+                        </ul>
+                    </div>
+                `;
                 scrollDiv.appendChild(card);
             });
-        } else { scrollDiv.innerHTML = `<div class="text-center text-[#BCAAA4] font-hand text-xl mt-4 w-full opacity-70">여기에 장기 목표를 심어보세요</div>`; }
-        secProj.appendChild(scrollDiv);
-        
-        if (completedProjects.length > 0) {
+            secProj.appendChild(scrollDiv);
+        } else {
+            secProj.innerHTML += `<div class="text-center py-8 text-xs text-[#BCAAA4]">진행 중인 프로젝트가 없습니다</div>`;
+        }
+
+        if(completedProjects.length > 0) {
             const completedSec = document.createElement('div');
-            completedSec.className = 'mt-6 border-t-2 border-dashed border-[#EFEBE9] pt-4 px-1';
-            completedSec.innerHTML = `<h4 class="font-hand text-lg text-[#8D6E63] mb-3 flex items-center gap-1"><span>완료된 프로젝트</span> <span class="text-xs bg-[#D7CCC8] text-white px-2 py-0.5 rounded-full font-sans">${completedProjects.length}</span></h4>`;
+            completedSec.className = 'mt-8 pt-6 border-t border-[#EFEBE9]';
+            completedSec.innerHTML = `<h3 class="font-hand text-lg text-[#A1887F] mb-3 px-1">완료된 프로젝트</h3>`;
             const list = document.createElement('div');
             list.className = 'space-y-2';
+            
             completedProjects.forEach(p => {
-                 const item = document.createElement('div');
-                 const titleRow = document.createElement('div');
-                 titleRow.className = 'flex justify-between items-center p-3 bg-white rounded-xl border border-[#EFEBE9] cursor-pointer hover:bg-[#FAF8F5] transition shadow-sm';
-                 titleRow.innerHTML = `<span class="text-sm text-[#5D4037] font-bold line-through decoration-2 decoration-[#D7CCC8]/50">${p.title}</span><span class="text-xs text-[#BCAAA4]">▼</span>`;
-                 const detailDiv = document.createElement('div');
-                 detailDiv.className = 'hidden mt-2 pl-3 pr-1 py-2 border-l-2 border-[#D7CCC8]/30 ml-2 bg-white/50 rounded-r-xl text-xs space-y-2';
-                 detailDiv.innerHTML = `<button class="flex items-center gap-1 text-[#8D6E63] hover:text-[#5D4037] mb-2 text-[11px] font-bold" onclick="event.stopPropagation(); window.completeProject('${p.id}', false)">${ICONS.undo} 복구</button>`;
-                 if (p.desc) detailDiv.innerHTML += `<div class="text-[#A1887F] mb-2">${p.desc}</div>`;
-                 const taskList = document.createElement('ul');
-                 taskList.className = 'pl-2 space-y-1 mt-2 border-t border-dashed border-[#EFEBE9] pt-2';
-                 if(p.tasks.length > 0) {
+                const item = document.createElement('div');
+                const titleRow = document.createElement('div');
+                titleRow.className = 'flex justify-between items-center p-3 bg-white rounded-xl border border-[#EFEBE9] cursor-pointer hover:bg-[#FAF8F5] transition shadow-sm';
+                titleRow.innerHTML = `<span class="text-sm text-[#5D4037] font-bold line-through decoration-2 decoration-[#D7CCC8]/50">${p.title}</span><span class="text-xs text-[#BCAAA4]">▼</span>`;
+                
+                const detailDiv = document.createElement('div');
+                detailDiv.className = 'hidden mt-2 pl-3 pr-1 py-2 border-l-2 border-[#D7CCC8]/30 ml-2 bg-white/50 rounded-r-xl text-xs space-y-2';
+                
+                detailDiv.innerHTML = `<button class="flex items-center gap-1 text-[#8D6E63] hover:text-[#5D4037] mb-2 text-[11px] font-bold" onclick="event.stopPropagation(); window.completeProject('${p.id}', false)">${ICONS.undo} 복구</button>`;
+                if (p.desc) detailDiv.innerHTML += `<div class="text-[#A1887F] mb-2">${p.desc}</div>`;
+                
+                const taskList = document.createElement('ul');
+                taskList.className = 'pl-2 space-y-1 mt-2 border-t border-dashed border-[#EFEBE9] pt-2';
+                
+                if(p.tasks.length > 0) {
                     p.tasks.forEach(t => {
-                        if (!t.isPhase && !t.isAdvice) {
-                            taskList.innerHTML += `<li class="text-xs text-[#5D4037] flex items-start gap-1"><span class="text-[#8D6E63]">•</span> ${t.text}</li>`;
-                        }
+                         taskList.innerHTML += `<li class="text-xs text-[#5D4037] flex items-start gap-1"><div class="w-0.5 h-3 bg-[#D7CCC8] mt-1"></div> ${t.text}</li>`;
                     });
-                 }
-                 detailDiv.appendChild(taskList);
-                 titleRow.onclick = () => { detailDiv.classList.toggle('hidden'); };
-                 item.append(titleRow, detailDiv);
-                 list.appendChild(item);
+                }
+                detailDiv.appendChild(taskList);
+                
+                titleRow.onclick = () => { detailDiv.classList.toggle('hidden'); };
+                item.append(titleRow, detailDiv);
+                list.appendChild(item);
             });
             completedSec.appendChild(list);
             secProj.appendChild(completedSec);
@@ -980,46 +1171,47 @@
         const month = calendarDate.getMonth();
         const wrapper = document.createElement('div');
         wrapper.className = 'wood-frame p-5 bg-white min-h-[400px] flex flex-col';
-        wrapper.innerHTML = `<div class="flex justify-between items-center mb-6"><button onclick="window.moveMonth(-1)" class="text-[#8D6E63] hover:text-[#FF7F50] text-xl font-bold px-2">◀</button><h2 class="font-hand text-2xl text-[#5D4037]">${year}년 ${month+1}월</h2><button onclick="window.moveMonth(1)" class="text-[#8D6E63] hover:text-[#FF7F50] text-xl font-bold px-2">▶</button></div>`;
-        const grid = document.createElement('div');
-        grid.className = 'grid grid-cols-7 gap-y-4 gap-x-1 text-center text-sm mb-6';
-        ['일','월','화','수','목','금','토'].forEach(d => grid.innerHTML += `<div class="font-bold text-[#A1887F] text-xs pb-2">${d}</div>`);
+        
+        wrapper.innerHTML = `<div class="flex justify-between items-center mb-6"><button onclick="window.moveMonth(-1)" class="text-[#8D6E63]">◀</button><h2 class="font-hand text-2xl text-[#5D4037]">${year}.${month+1}</h2><button onclick="window.moveMonth(1)" class="text-[#8D6E63]">▶</button></div>`;
+        
+        const calGrid = document.createElement('div');
+        calGrid.className = 'grid grid-cols-7 gap-1 mb-6 text-center';
+        ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].forEach(d => calGrid.innerHTML+=`<div class="text-xs font-bold text-[#A1887F] mb-2">${d}</div>`);
+        
         const firstDay = new Date(year, month, 1).getDay();
-        const lastDate = new Date(year, month + 1, 0).getDate();
-        for(let i=0; i<firstDay; i++) grid.innerHTML += `<div></div>`;
-        for(let d=1; d<=lastDate; d++) {
-            const dateStr = `${year}-${(month+1).toString().padStart(2,'0')}-${d.toString().padStart(2,'0')}`;
-            const tasks = appData.daily[dateStr] || [];
-            let percent = 0;
-            if(tasks.length > 0) {
-                const doneCount = tasks.filter(t => t.done).length;
-                percent = (doneCount / tasks.length) * 100;
-            }
-            const bgStyle = tasks.length > 0 ? `background: linear-gradient(to top, #8FBC8F ${percent}%, transparent ${percent}%);` : '';
-            const isSelected = dateStr === achievementViewDate;
-            const borderClass = isSelected ? 'border-2 border-[#FF8A65] shadow-md scale-110' : (dateStr === getTodayStr() ? 'border border-[#8D6E63]' : '');
-            const dayEl = document.createElement('div');
-            dayEl.className = `${borderClass} w-8 h-8 rounded-full flex items-center justify-center mx-auto transition text-xs cursor-pointer hover:scale-110`;
-            if (bgStyle) {
-                dayEl.setAttribute('style', bgStyle);
-                if (percent > 50) dayEl.classList.add('text-white', 'text-shadow'); else dayEl.classList.add('text-[#5D4037]');
-            } else { dayEl.classList.add('text-gray-400'); }
-            dayEl.innerText = d;
-            dayEl.onclick = () => { achievementViewDate = dateStr; renderApp(); };
-            grid.appendChild(dayEl);
+        const lastDate = new Date(year, month+1, 0).getDate();
+        
+        for(let i=0; i<firstDay; i++) calGrid.innerHTML += `<div></div>`;
+        for(let i=1; i<=lastDate; i++) {
+            const dateStr = `${year}-${(month+1).toString().padStart(2,'0')}-${i.toString().padStart(2,'0')}`;
+            const summary = appData.dailySummaries[dateStr];
+            const hasTask = appData.daily[dateStr] && appData.daily[dateStr].some(t=>t.done);
+            let indicator = '';
+            if(summary) indicator = '✨'; 
+            else if(hasTask) indicator = '●';
+            
+            const cell = document.createElement('div');
+            cell.className = `h-10 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:bg-[#F1F8E9] ${achievementViewDate===dateStr ? 'bg-[#DCEDC8] border border-[#AED581]' : ''}`;
+            cell.innerHTML = `<span class="text-sm ${achievementViewDate===dateStr ? 'font-bold':''}">${i}</span><span class="text-[10px] text-[#FF8A65] h-3">${indicator}</span>`;
+            cell.onclick = () => { achievementViewDate = dateStr; renderApp(); };
+            calGrid.appendChild(cell);
         }
-        wrapper.appendChild(grid);
+        wrapper.appendChild(calGrid);
+        
         const tasks = appData.daily[achievementViewDate] || [];
         const completedTasks = tasks.filter(t => t.done && !t.isMessage);
-        const summary = appData.dailySummaries[achievementViewDate]; 
+        const summary = appData.dailySummaries[achievementViewDate];
+        
         const fbSection = document.createElement('div');
         fbSection.className = 'mt-auto pt-4 border-t border-[#EFEBE9]';
         let detailsHtml = `<h3 class="font-hand text-lg text-[#5D4037] mb-2 border-b border-[#EFEBE9] pb-1">${achievementViewDate}</h3>`;
+        
         if (summary) {
             detailsHtml += `<div class="mb-4 p-3 bg-[#F1F8E9] rounded-xl text-xs text-[#33691E] leading-relaxed font-wando border border-[#AED581]"><div class="font-bold mb-1">✨ zipipo 회고 요약</div>${summary}</div>`;
         } else if (completedTasks.length > 0) {
-             detailsHtml += `<button onclick="window.generateDailySummary('${achievementViewDate}')" class="w-full mb-4 py-2 bg-white border border-[#D7CCC8] text-[#8D6E63] rounded-xl text-xs hover:bg-[#FDFCF5] transition flex items-center justify-center gap-1"><span>✨ zipipo 회고 정리</span></button>`;
+            detailsHtml += `<button onclick="window.generateDailySummary('${achievementViewDate}')" class="w-full mb-4 py-2 bg-white border border-[#D7CCC8] text-[#8D6E63] rounded-xl text-xs hover:bg-[#FDFCF5] transition flex items-center justify-center gap-1"><span>✨ zipipo 회고 정리</span></button>`;
         }
+        
         detailsHtml += `<ul class="space-y-2 mb-4">`;
         if(completedTasks.length === 0) detailsHtml += `<li class="text-xs text-[#BCAAA4] italic text-center">완료된 일정이 없어요.</li>`;
         else {
@@ -1030,118 +1222,136 @@
         }
         detailsHtml += `</ul>`;
         fbSection.innerHTML = detailsHtml;
+        
         wrapper.appendChild(fbSection);
         container.appendChild(wrapper);
     }
 
     function createTaskEl(task, type, key, index) {
         const li = document.createElement('li');
-        li.className = 'timeline-container flex flex-col mb-4'; 
-        if(type === 'weekly') li.classList.add('weekly-item');
-
+        li.className = 'timeline-container flex flex-col mb-4';
+        
         const dot = document.createElement('div');
         dot.className = 'timeline-dot';
-        li.appendChild(dot);
         const line = document.createElement('div');
         line.className = 'timeline-line';
         li.appendChild(line);
+        li.appendChild(dot);
+
         const content = document.createElement('div');
-        content.className = 'flex items-start justify-between w-full pl-2';
-        const textGroup = document.createElement('div');
-        textGroup.className = 'flex flex-col flex-1 mr-2';
-        let timeStr = "";
-        if(task.manualTimeRange) timeStr = task.manualTimeRange;
-        else if(task.startTime && task.endTime) {
-            const diff = Math.round((new Date(task.endTime)-new Date(task.startTime))/60000);
-            timeStr = `${formatTime(task.startTime)}~${formatTime(task.endTime)} (${diff}m)`;
-        }
-        if(timeStr) {
-            const timeSpan = document.createElement('button');
-            timeSpan.className = 'text-[10px] text-[#A1887F] font-bold mb-0.5 text-left hover:text-[#FF8A65]';
-            timeSpan.textContent = timeStr.replace('⏰ ', ''); 
-            timeSpan.onclick = () => window.openEditTimeModal(type, key, index, task); 
-            textGroup.appendChild(timeSpan);
-        }
+        content.className = 'relative z-10 w-full';
+
+        let displayTime = '';
         let displayText = task.text;
-        const txtSpan = document.createElement('span');
-        txtSpan.className = `text-sm ${task.done ? 'text-gray-400 line-through' : 'text-[#4E342E]'}`;
-        txtSpan.textContent = displayText;
-        textGroup.appendChild(txtSpan);
-        if(task.feedback) {
-            const fbDiv = document.createElement('div');
-            fbDiv.className = 'text-[11px] text-[#556B2F] mt-1 bg-[#F1F8E9] p-1.5 rounded inline-block';
-            fbDiv.innerHTML = `└ ${task.feedback}`;
-            textGroup.appendChild(fbDiv);
+        let subText = '';
+        
+        if (type === 'daily') {
+            const timeMatch = displayText.match(/(\d{1,2}:\d{2})(~\d{1,2}:\d{2})?/);
+            if (task.manualTimeRange) displayTime = task.manualTimeRange.split('~')[0].trim();
+            else if (timeMatch) {
+                displayTime = timeMatch[0];
+                displayText = displayText.replace(timeMatch[0], '').trim();
+                displayText = displayText.replace(/^[:\-\s]+/, '');
+            }
+
+            const parenMatch = displayText.match(/\((.*?)\)/);
+            if (parenMatch) {
+                subText = parenMatch[1];
+                displayText = displayText.replace(parenMatch[0], '').trim();
+            }
         }
-        content.appendChild(textGroup);
+
+        if (type === 'daily' && displayTime) {
+            const timeDiv = document.createElement('div');
+            timeDiv.className = 'task-time-label';
+            timeDiv.innerText = displayTime;
+            content.appendChild(timeDiv);
+        }
+
         const actionGroup = document.createElement('div');
-        actionGroup.className = 'flex items-center gap-2 shrink-0 h-6 mt-1';
-        const editBtn = document.createElement('button');
-        editBtn.innerHTML = ICONS.edit;
-        editBtn.onclick = () => window.openEditTimeModal(type, key, index, task);
-        actionGroup.appendChild(editBtn);
-        const fbBtn = document.createElement('button');
-        fbBtn.innerHTML = ICONS.speech;
-        fbBtn.onclick = () => window.openInputModal('피드백을 남겨주세요', (val) => window.updateTask(type, key, index, {feedback: val}));
-        actionGroup.appendChild(fbBtn);
+        actionGroup.className = 'flex items-center gap-2';
+
+        const title = document.createElement('span');
+        title.className = 'flex-1 text-sm cursor-pointer hover:text-[#8D6E63] transition leading-relaxed';
+        title.innerHTML = displayText;
+        if(task.done) title.classList.add('line-through', 'text-opacity-50', 'text-[#A1887F]');
+        title.onclick = () => window.openEditTimeModal(type, key, index, task);
+        actionGroup.appendChild(title);
+
         const chk = document.createElement('input');
         chk.type = 'checkbox';
         chk.className = 'custom-checkbox';
         chk.checked = task.done;
-        chk.onchange = () => window.updateTask(type, key, index, {done: chk.checked});
+        chk.onclick = (e) => { 
+            e.stopPropagation(); 
+            window.updateTask(type, key, index, {done: chk.checked}); 
+        };
         actionGroup.appendChild(chk);
+
         content.appendChild(actionGroup);
+
+        if (type === 'daily' && subText) {
+            const subDiv = document.createElement('div');
+            subDiv.className = 'task-sub-text';
+            subDiv.innerText = subText;
+            content.appendChild(subDiv);
+        }
+
         li.appendChild(content);
-        
+
         if(type === 'daily') {
-             const timerRow = document.createElement('div');
-             timerRow.className = 'flex items-center gap-2 mt-2 pl-2';
-             if(!task.actualStartTime) {
+            const timerRow = document.createElement('div');
+            timerRow.className = 'flex items-center gap-2 mt-2 pl-2';
+            
+            if(!task.actualStartTime) {
                 const btn = document.createElement('button');
                 btn.className = 'font-hand text-sm text-[#A1887F] hover:text-[#FF8A65] border border-[#D7CCC8] px-2 py-0.5 rounded-full bg-white';
                 btn.textContent = 'start !';
                 btn.onclick = () => window.updateTask(type, key, index, {actualStartTime: new Date().toISOString()});
                 timerRow.appendChild(btn);
-             } else if (!task.actualEndTime) {
+            } else if (!task.actualEndTime) {
                 const btn = document.createElement('button');
                 btn.className = 'font-hand text-sm text-white bg-[#FFAB91] hover:bg-[#FF8A65] px-2 py-0.5 rounded-full';
                 btn.textContent = 'stop !';
                 btn.onclick = () => window.updateTask(type, key, index, {actualEndTime: new Date().toISOString()});
                 timerRow.appendChild(btn);
-             } else {
-                 const diff = Math.round((new Date(task.actualEndTime)-new Date(task.actualStartTime))/60000);
-                 const recTime = document.createElement('button');
-                 recTime.className = 'font-hand text-xs text-[#8D6E63] ml-1 hover:underline';
-                 recTime.textContent = `${formatTime(task.actualStartTime)}~${formatTime(task.actualEndTime)} (${diff}m)`;
-                 recTime.onclick = () => { if(confirm('기록을 초기화할까요?')) window.updateTask(type, key, index, {actualStartTime: null, actualEndTime: null}); };
-                 timerRow.appendChild(recTime);
-             }
-             const delBtn = document.createElement('button');
-             delBtn.innerHTML = '✕';
-             delBtn.className = 'text-[10px] text-[#D7CCC8] hover:text-[#FF8A65] ml-auto mr-1';
-             delBtn.onclick = () => window.deleteTaskItem(type, key, index);
-             timerRow.appendChild(delBtn);
-             li.appendChild(timerRow);
-        } else {
-            const delBtn = document.createElement('button');
-            delBtn.innerHTML = '✕';
-            delBtn.className = 'text-[10px] text-[#D7CCC8] hover:text-[#FF8A65] self-end mr-1 mt-1';
-            delBtn.onclick = () => window.deleteTaskItem(type, key, index);
-            li.appendChild(delBtn);
+            } else if (!task.feedback) {
+                const btn = document.createElement('button');
+                btn.className = 'text-[#BCAAA4] hover:text-[#8D6E63]';
+                btn.innerHTML = ICONS.speech;
+                btn.onclick = () => window.openInputModal('한줄 피드백', (val) => window.updateTask(type, key, index, {feedback: val}));
+                timerRow.appendChild(btn);
+            } else {
+                const fb = document.createElement('span');
+                fb.className = 'text-xs text-[#8D6E63] bg-[#FDFCF5] px-2 py-1 rounded border border-[#EFEBE9]';
+                fb.innerText = `"${task.feedback}"`;
+                timerRow.appendChild(fb);
+            }
+            if(timerRow.hasChildNodes()) li.appendChild(timerRow);
         }
+        
         return li;
     }
 
-    // --- Global Exports ---
-    window.toggleApiKeyInput = toggleApiKeyInput;
+    // --- Init ---
+    renderHeader();
+    initTimeSelects();
+    loadData(); 
+    renderApp();
+
+    const savedKey = localStorage.getItem(STORAGE_KEY_API);
+    if(!savedKey) toggleApiKeyInput();
+
+    // Export to global for HTML attributes
+    window.closeModal = closeModal;
     window.saveApiKey = saveApiKey;
-    window.openGeneratorModal = openGeneratorModal;
-    window.closeModal = (id) => document.getElementById(id).classList.add('hidden');
+    window.toggleApiKeyInput = toggleApiKeyInput;
     window.generateSchedule = generateSchedule;
+    window.openGeneratorModal = openGeneratorModal;
     window.openAddTaskModal = openAddTaskModal;
     window.closeAddTaskModal = () => closeModal('addTaskModal');
     window.confirmTaskAction = confirmTaskAction;
-    window.openProjectModal = openProjectModal;
+    window.openProjectModal = () => document.getElementById('projectInputModal').classList.remove('hidden');
     window.closeProjectModal = () => closeModal('projectInputModal');
     window.switchProjMode = switchProjMode;
     window.confirmCreateProject = confirmCreateProject;
@@ -1151,10 +1361,6 @@
     window.confirmInput = confirmInput;
     window.switchTab = switchTab;
     window.moveMonth = moveMonth;
-    window.generateProjectTasks = generateProjectTasks;
-    window.deleteProject = deleteProject;
-    window.addManualTask = addManualTask;
-    window.changeDate = changeDate;
     window.generateDailySummary = generateDailySummary;
     window.openProjectPlanModal = openProjectPlanModal;
     window.closeProjectPlanModal = () => closeModal('projectPlanModal');
@@ -1164,15 +1370,9 @@
     window.openEditTimeModal = openEditTimeModal;
     window.updateTask = updateTask;
     window.deleteTaskItem = deleteTaskItem;
-
-    // --- Init ---
-    renderHeader();
-    initTimeSelects();
-    loadData(); 
-    renderApp();
-
-    const savedKey = localStorage.getItem(STORAGE_KEY_API);
-    if(savedKey) document.getElementById('apiKeyInput').value = savedKey;
+    window.deleteProject = deleteProject;
+    window.addManualTask = addManualTask;
+    window.changeDate = changeDate;
 
 </script>
 </body>
