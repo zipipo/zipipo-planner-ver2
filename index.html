@@ -237,8 +237,8 @@
             border: 1px solid #FFE0B2;
             border-radius: 12px;
             padding: 10px;
-            margin-top: 8px;
-            margin-bottom: 8px;
+            margin-top: 30px; 
+            margin-bottom: 12px;
             font-size: 0.8rem;
             color: #E65100;
             line-height: 1.5;
@@ -250,8 +250,6 @@
             display: block;
             margin-bottom: 2px;
         }
-        
-        /* [NEW] Project Subtask Styles - No border, just indent */
         .task-depth-1 { margin-left: 1rem; }
         .task-depth-2 { margin-left: 2rem; }
         .proj-msg-box {
@@ -262,6 +260,23 @@
             border-radius: 8px;
             margin-bottom: 4px;
             font-weight: bold;
+        }
+        /* Memo Area Style */
+        .proj-memo-area {
+            width: 100%;
+            background-color: #FDFCF5;
+            border: 1px solid #D7CCC8;
+            border-radius: 12px;
+            padding: 10px;
+            font-size: 0.8rem;
+            color: #5D4037;
+            resize: none;
+            margin-top: 10px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .proj-memo-area:focus {
+            border-color: #8D6E63;
         }
     </style>
 </head>
@@ -315,7 +330,7 @@
     </footer>
 
     <div class="fixed bottom-8 right-6 z-30">
-        <button onclick="openGeneratorModal(null)" class="w-14 h-14 fab-house text-white hover:scale-105 transition active:scale-95 shadow-sm">
+        <button onclick="openGeneratorModal('new')" class="w-14 h-14 fab-house text-white hover:scale-105 transition active:scale-95 shadow-sm">
             <span class="text-2xl font-bold font-hand">+</span>
         </button>
     </div>
@@ -325,12 +340,6 @@
             <div class="flex justify-between items-center mb-4">
                 <h3 class="font-hand text-2xl text-[#8D6E63]">일정 짓기</h3>
                 <button onclick="closeModal('generatorModal')" class="text-[#BCAAA4] hover:text-[#8D6E63] text-xl">✕</button>
-            </div>
-            <div class="mb-3">
-                <label class="text-xs text-[#A1887F] block mb-2">프로젝트 연동</label>
-                <div id="projectMultiSelect" class="w-full max-h-32 overflow-y-auto border border-[#D7CCC8] rounded-xl bg-white p-2 space-y-1">
-                    <div class="text-xs text-gray-400 italic text-center">프로젝트가 없습니다</div>
-                </div>
             </div>
             <textarea id="taskPrompt" rows="3" class="w-full p-4 border-2 border-[#EFEBE9] rounded-xl mb-4 resize-none focus:outline-none focus:border-[#D7CCC8] bg-white text-sm placeholder-gray-300" placeholder="예: 공부 2시간 하고 산책하기"></textarea>
             <div class="flex gap-3 mb-3">
@@ -559,10 +568,6 @@
         const promptText = document.getElementById('taskPrompt').value;
         if(!promptText) return alert('내용을 입력해주세요');
         
-        // [NEW] Project Integration for Daily
-        const checkboxes = document.querySelectorAll('input[name="projSelect"]:checked');
-        const selectedProjIds = Array.from(checkboxes).map(cb => cb.value);
-        
         showLoading("zipipo가 만들고 있어요");
         document.getElementById('generatorModal').classList.add('hidden');
 
@@ -614,19 +619,6 @@
                 }
             });
 
-            // [NEW] Add Project Tasks to Daily
-            if (type === 'daily' && selectedProjIds.length > 0) {
-                selectedProjIds.forEach(pid => {
-                    const proj = appData.projects.find(p => p.id === pid);
-                    if (proj) {
-                        const pTasks = proj.tasks.filter(t => t.date === selectedDate);
-                        pTasks.forEach(pt => {
-                            newTasks.push({ text: `[${proj.title}] ${pt.text}`, done: false, isMessage: false });
-                        });
-                    }
-                });
-            }
-
             if (type === 'daily') {
                 appData.daily[selectedDate] = [];
                 appData.daily[selectedDate].push(...newTasks);
@@ -636,7 +628,7 @@
                 appData.weekly[wk].tasks.push(...newTasks);
             }
             
-            // [NEW] Clear Prompt Input after success
+            // Clear prompt input after generation
             document.getElementById('taskPrompt').value = '';
             
             hideLoading();
@@ -661,9 +653,7 @@
                 const clean = line.replace(/\*\*/g, '').replace(/\|/g, '').trim();
                 if (clean.length === 0) return;
 
-                // [NEW] Parsing: Detect Header/Message lines (###)
                 if (/^#{1,3}/.test(clean) || /^(Phase|Step|Stage)\s+\d+/.test(clean)) {
-                    // Treat as message/header task
                     newTasks.push({ text: clean.replace(/#/g, '').trim(), done: false, type: 'header', date: currentDateContext });
                     return;
                 }
@@ -722,7 +712,6 @@
         
         showLoading("zipipo가 회고 중");
         
-        // [NEW] Summary Constraint: 5 lines, remove instructions from output
         const sysPrompt = `날짜: ${dateStr}. 완료: ${completed}. 피드백: ${feedbacks}. 
         위 내용을 바탕으로 하루를 5줄 이내로 따뜻하게 회고해줘.
         [규칙]
@@ -772,6 +761,14 @@
         Object.assign(targetArr[index], changes);
         saveData();
         renderApp();
+    }
+    
+    function updateProjectMemo(pid, val) {
+        const p = appData.projects.find(x => x.id === pid);
+        if(p) {
+            p.memo = val;
+            saveData();
+        }
     }
     
     function editDailyMessage(dateStr) {
@@ -1037,32 +1034,19 @@ ${dateContext}
         closeModal('projectInputModal');
     }
 
-    function openGeneratorModal(forceType) {
+    // [MODIFIED] Open Generator Modal: 'new' clears, 'daily'/'weekly' loads
+    function openGeneratorModal(mode) {
         document.getElementById('generatorModal').classList.remove('hidden');
+        const txt = document.getElementById('taskPrompt');
         
-        // Load Daily Prompt by default
-        let savedPrompt = appData.dailyPrompts[selectedDate] || '';
-        
-        const container = document.getElementById('projectMultiSelect');
-        container.innerHTML = '';
-        if (appData.projects.length === 0) {
-            container.innerHTML = '<div class="text-xs text-gray-400 italic text-center p-2">생성된 프로젝트가 없습니다</div>';
-        } else {
-            appData.projects.forEach(p => {
-                const label = document.createElement('label');
-                label.className = 'flex items-center gap-2 p-1 hover:bg-[#F5F5DC] rounded cursor-pointer';
-                label.innerHTML = `<input type="checkbox" name="projSelect" value="${p.id}" class="custom-checkbox w-4 h-4"><span class="text-sm text-[#5D4037]">${p.title}</span>`;
-                container.appendChild(label);
-            });
+        if (mode === 'new') {
+            txt.value = '';
+        } else if (mode === 'daily') {
+            txt.value = appData.dailyPrompts[selectedDate] || '';
+        } else if (mode === 'weekly') {
+            const wk = getWeekKey(currentWeekBaseDate);
+            txt.value = appData.weeklyPrompts[wk] || '';
         }
-        document.getElementById('taskPrompt').value = savedPrompt;
-    }
-    
-    function openWeeklyGenerator() {
-        const wk = getWeekKey(currentWeekBaseDate);
-        const saved = appData.weeklyPrompts[wk] || '';
-        document.getElementById('taskPrompt').value = saved;
-        document.getElementById('generatorModal').classList.remove('hidden');
     }
 
     function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
@@ -1121,11 +1105,11 @@ ${dateContext}
         const contentDaily = document.createElement('div');
         contentDaily.className = 'bg-white rounded-[24px] border border-[#EFEBE9] p-5 relative min-h-[300px] shadow-sm';
         
-        // [NEW] Button Text Change
+        // [FIX] Button Text: No Emoji
         const promptBtn = document.createElement('button');
         promptBtn.className = 'absolute top-3 right-3 text-[10px] text-[#A1887F] bg-[#FDFCF5] border border-[#D7CCC8] px-2 py-1 rounded-full hover:bg-[#EFEBE9] z-20 flex items-center gap-1';
-        promptBtn.innerHTML = `📝 프롬프트 수정`;
-        promptBtn.onclick = () => openGeneratorModal(null);
+        promptBtn.innerHTML = `수정`;
+        promptBtn.onclick = () => openGeneratorModal('daily');
         contentDaily.appendChild(promptBtn);
 
         const gridBg = document.createElement('div');
@@ -1163,7 +1147,7 @@ ${dateContext}
                     <button onclick="window.moveWeek(-1)" class="text-[#A1887F] hover:text-[#5D4037]">◀</button>
                     <span class="text-xs font-bold text-[#5D4037]">${getWeekRangeStr(currentWeekBaseDate)}</span>
                     <button onclick="window.moveWeek(1)" class="text-[#A1887F] hover:text-[#5D4037]">▶</button>
-                    <button onclick="window.openWeeklyGenerator()" class="ml-1 text-[10px] text-[#8D6E63] border border-[#D7CCC8] px-2 py-1 rounded bg-white hover:bg-[#EFEBE9]">📝 프롬프트</button>
+                    <button onclick="window.openGeneratorModal('weekly')" class="ml-1 text-[10px] text-[#8D6E63] border border-[#D7CCC8] px-2 py-1 rounded bg-white hover:bg-[#EFEBE9]">수정</button>
                     <button onclick="window.openAddTaskModal(null, 'weekly')" class="border border-[#D7CCC8] bg-white rounded-full w-6 h-6 flex items-center justify-center text-[#8D6E63] text-sm ml-1 hover:bg-[#EFEBE9]">+</button>
                 </div>
             </div>`;
@@ -1249,6 +1233,8 @@ ${dateContext}
                         tips.push({ ...t, originalIndex: idx });
                     } else {
                         const d = t.date || '기타 (General)';
+                        // Ignore General section
+                        if (d === '기타 (General)' || d === '기타') return;
                         if (!groupedTasks[d]) groupedTasks[d] = [];
                         groupedTasks[d].push({ ...t, originalIndex: idx });
                     }
@@ -1256,6 +1242,7 @@ ${dateContext}
                 
                 const sortedDates = Object.keys(groupedTasks).sort();
                 
+                // Tips Section
                 if (tips.length > 0) {
                     const tipBox = document.createElement('div');
                     tipBox.className = 'proj-tip-box';
@@ -1324,18 +1311,15 @@ ${dateContext}
                     
                     const ul = document.createElement('ul');
                     
-                    // [NEW] Numbering Logic
                     let taskCounter = 1;
                     
                     groupedTasks[date].forEach(item => {
-                        // [NEW] Render Headers differently
                         if (item.type === 'header') {
                             const headerDiv = document.createElement('div');
                             headerDiv.className = 'proj-msg-box';
                             headerDiv.innerHTML = `${item.text} <button class="text-[#D7CCC8] hover:text-[#FF7F50] float-right" onclick="window.deleteTaskItem('project', '${p.id}', ${item.originalIndex})">x</button>`;
                             ul.appendChild(headerDiv);
                         } else {
-                            // Pass number as prefix only for display in Project tab
                             const taskEl = createTaskEl(item, 'project', p.id, item.originalIndex, taskCounter++);
                             if (item.depth && item.depth > 0) {
                                 taskEl.classList.add(`task-depth-${Math.min(item.depth, 2)}`);
@@ -1345,6 +1329,15 @@ ${dateContext}
                     });
                     taskListContainer.appendChild(ul);
                 });
+                
+                // Memo Area
+                const memoArea = document.createElement('textarea');
+                memoArea.className = 'proj-memo-area';
+                memoArea.rows = 2;
+                memoArea.placeholder = '자유 메모...';
+                memoArea.value = p.memo || '';
+                memoArea.onchange = (e) => window.updateProjectMemo(p.id, e.target.value);
+                card.appendChild(memoArea);
                 
                 scrollDiv.appendChild(card);
             });
@@ -1474,7 +1467,6 @@ ${dateContext}
             li.appendChild(line);
             li.appendChild(dot);
         } else {
-            // [NEW] Remove dot/line logic for Project items to implement text hierarchy
             // No dot appended for project items
         }
 
@@ -1489,9 +1481,7 @@ ${dateContext}
         let displayText = task.text;
         let subText = '';
         
-        // [NEW] Project numbering
         if (isProject && numberPrefix) {
-            // - format
             if (task.depth && task.depth > 0) {
                 displayText = `- ${displayText}`;
             } else {
@@ -1632,7 +1622,6 @@ ${dateContext}
     window.toggleApiKeyInput = toggleApiKeyInput;
     window.generateSchedule = generateSchedule;
     window.openGeneratorModal = openGeneratorModal;
-    window.openWeeklyGenerator = openWeeklyGenerator;
     window.openAddTaskModal = openAddTaskModal;
     window.closeAddTaskModal = () => closeModal('addTaskModal');
     window.confirmTaskAction = confirmTaskAction;
@@ -1658,6 +1647,7 @@ ${dateContext}
     window.deleteProject = deleteProject;
     window.addManualTask = addManualTask;
     window.changeDate = changeDate;
+    window.updateProjectMemo = updateProjectMemo;
 
 </script>
 </body>
