@@ -447,8 +447,16 @@
     let calendarDate = new Date();
 
     // 3. HELPER FUNCTIONS
-    function getTodayStr() { return new Date().toISOString().split('T')[0]; }
-    function parseTasks(text) { return text.split('\n').map(l=>l).filter(l=>l.trim().length>0 && !l.trim().startsWith('---')); } // Keep indentation for project parsing
+    function getLocalDateStr(d) {
+        return `${d.getFullYear()}-${(d.getMonth()+1).toString().padStart(2,'0')}-${d.getDate().toString().padStart(2,'0')}`;
+    }
+    function formatTimeSimple(iso) {
+        const d = new Date(iso);
+        return `${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`;
+    }
+
+    function getTodayStr() { return getLocalDateStr(new Date()); }
+    function parseTasks(text) { return text.split('\n').map(l=>l).filter(l=>l.trim().length>0 && !l.trim().startsWith('---')); } 
     function getWeekKey(d) { const date = new Date(d.getTime()); date.setHours(0,0,0,0); date.setDate(date.getDate() + 3 - (date.getDay() + 6) % 7); const week1 = new Date(date.getFullYear(), 0, 4); return 1 + Math.round(((date.getTime() - week1.getTime()) / 86400000 - 3 + (week1.getDay() + 6) % 7) / 7) + ''; }
     function getWeekRangeStr(d) { const curr = new Date(d); const first = curr.getDate() - curr.getDay(); const last = first + 6; const f = new Date(curr.setDate(first)); const l = new Date(curr.setDate(last)); return `${f.getMonth()+1}.${f.getDate()} ~ ${l.getMonth()+1}.${l.getDate()}`; }
     function getSunday(d) { d = new Date(d); var day = d.getDay(); var diff = d.getDate() - day; return new Date(d.setDate(diff)); }
@@ -540,13 +548,23 @@
         const todayStr = getTodayStr();
         const now = new Date();
         const currentTimeStr = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
-        const isTargetToday = selectedDate === todayStr;
         
-        const timeConstraint = isTargetToday ? `2. 현재 시각(${currentTimeStr}) 이후의 일정만 계획할 것.` : `2. 하루 전체 일정을 계획할 것.`;
+        // --- Calculate Weekly Range correctly for AI ---
+        const currSun = getSunday(currentWeekBaseDate);
+        const currSat = new Date(currSun); currSat.setDate(currSat.getDate()+6);
+        const weekRangeStr = `${getLocalDateStr(currSun)} ~ ${getLocalDateStr(currSat)}`;
+        // ------------------------------------------------
 
-        let sysPrompt = type === 'daily' 
-            ? `역할: 플래너 (MBTI T). 날짜: ${selectedDate}. 요청: "${promptText}". [규칙] 1. 인사말 금지. ${timeConstraint} 3. 꿀팁 1~2문장. 4. 형식: 'HH:MM~HH:MM 할일'. 5. 마크다운 금지.` 
-            : `역할: 주간 플래너. 요청: "${promptText}". [규칙] 1. 인사말 금지. 2. 형식: 'YYYY-MM-DD: 할일'. 3. 한 줄에 하나씩.`;
+        let sysPrompt = "";
+        
+        if (type === 'daily') {
+             const isTargetToday = selectedDate === todayStr;
+             const timeConstraint = isTargetToday ? `2. 현재 시각(${currentTimeStr}) 이후의 일정만 계획할 것.` : `2. 하루 전체 일정을 계획할 것.`;
+             sysPrompt = `역할: 플래너 (MBTI T). 날짜: ${selectedDate}. 요청: "${promptText}". [규칙] 1. 인사말 금지. ${timeConstraint} 3. 꿀팁 1~2문장. 4. 형식: 'HH:MM~HH:MM 할일'. 5. 마크다운 금지.`;
+        } else {
+             // Weekly Prompt
+             sysPrompt = `역할: 주간 플래너. 기간: ${weekRangeStr}. 요청: "${promptText}". [규칙] 1. 인사말 금지. 2. 형식: 'YYYY-MM-DD: 할일'. 3. 한 줄에 하나씩. 4. 위 기간 내의 날짜로만 생성할 것.`;
+        }
             
         await callGemini(sysPrompt, (text) => {
             const lines = parseTasks(text);
@@ -595,25 +613,21 @@
                 const clean = line.replace(/\*\*/g, '').replace(/\|/g, '').trim();
                 if (clean.length === 0) return;
 
-                // Indentation Check for Hierarchy
                 const indentMatch = line.match(/^(\s+)/);
-                const depth = indentMatch ? Math.floor(indentMatch[1].length / 2) : 0; // 2 spaces = 1 depth
+                const depth = indentMatch ? Math.floor(indentMatch[1].length / 2) : 0; 
 
-                // Detect Date Header [YYYY-MM-DD]
                 const dateHeaderMatch = clean.match(/\[.*(\d{4}-\d{2}-\d{2}).*\]/);
                 if (dateHeaderMatch) {
                     currentDateContext = dateHeaderMatch[1];
                     return; 
                 }
                 
-                // Detect Tip
                 if (clean.toUpperCase().includes('[TIP]') || clean.toUpperCase().includes('기타 팁')) {
                     const tipText = clean.replace(/\[.*?\]/g, '').replace('기타 팁', '').replace(':', '').trim();
                     if(tipText) newTasks.push({ text: tipText, done: false, isTip: true });
                     return;
                 }
 
-                // Normal Task parsing
                 const datePrefixMatch = clean.match(/^(\d{4}-\d{2}-\d{2})[:\s]+(.*)/);
                 let taskText = clean;
                 let taskDate = currentDateContext;
@@ -623,7 +637,6 @@
                      taskText = datePrefixMatch[2];
                 }
                 
-                // Remove bullet points if present
                 taskText = taskText.replace(/^[-*•]\s*/, '');
 
                 newTasks.push({ text: taskText, done: false, date: taskDate, depth: depth });
@@ -898,6 +911,8 @@ ${dateContext}
         let dateDisplay = '';
         let type = '';
         let dateArray = null;
+        let startDate = null;
+        let endDate = null;
 
         if(projMode === 'range') {
             const start = document.getElementById('projStart').value;
@@ -905,12 +920,16 @@ ${dateContext}
             if(!start || !end) return alert('기간을 설정해주세요');
             dateDisplay = `${start} ~ ${end}`;
             type = 'range';
+            startDate = start;
+            endDate = end;
         } else {
             if(selectedProjDates.size === 0) return alert('날짜를 선택해주세요');
             const sorted = Array.from(selectedProjDates).sort();
             dateDisplay = `총 ${selectedProjDates.size}일 (${sorted[0]}...)`;
             type = 'select';
-            dateArray = Array.from(selectedProjDates).sort();
+            dateArray = sorted;
+            startDate = sorted[0];
+            endDate = sorted[sorted.length-1];
         }
 
         appData.projects.push({
@@ -919,6 +938,8 @@ ${dateContext}
             desc: desc,
             dateDisplay: dateDisplay,
             dates: type === 'select' ? dateArray : null,
+            startDate: startDate,
+            endDate: endDate,
             tasks:[],
             completed: false
         });
@@ -1039,7 +1060,7 @@ ${dateContext}
         for(let i=0; i<7; i++) {
             const d = new Date(currentSun);
             d.setDate(d.getDate() + i);
-            const dayStr = d.toISOString().split('T')[0];
+            const dayStr = getLocalDateStr(d);
             const dayTasks = weeklyData.tasks.filter(t => !t.isMessage && t.specificDate === dayStr);
             
             const daySection = document.createElement('div');
@@ -1119,7 +1140,6 @@ ${dateContext}
                 
                 const sortedDates = Object.keys(groupedTasks).sort();
                 
-                // Tips Section
                 if (tips.length > 0) {
                     const tipBox = document.createElement('div');
                     tipBox.className = 'proj-tip-box';
@@ -1130,7 +1150,6 @@ ${dateContext}
                     card.appendChild(tipBox);
                 }
 
-                // Header
                 const headerHtml = `
                     <div class="absolute top-2 right-2 flex gap-1 z-10">
                         <button class="p-1 text-[#A1887F] hover:text-[#8D6E63]" onclick="window.completeProject('${p.id}', true)">${ICONS.check}</button>
@@ -1145,7 +1164,6 @@ ${dateContext}
                         </div>
                     </div>`;
                 
-                // Append Header + Content Container
                 const contentContainer = document.createElement('div');
                 contentContainer.innerHTML = headerHtml;
                 
@@ -1154,18 +1172,49 @@ ${dateContext}
                 contentContainer.appendChild(taskListContainer);
                 card.appendChild(contentContainer);
 
+                // Determine project deadline (endDate) for D-day calculation
+                let deadline = p.endDate;
+                // Fallback for old data or select mode without explicit end
+                if (!deadline && p.dates && p.dates.length > 0) {
+                     const sorted = [...p.dates].sort();
+                     deadline = sorted[sorted.length-1];
+                }
+                if (!deadline && p.dateDisplay && p.dateDisplay.includes('~')) {
+                     const parts = p.dateDisplay.split('~');
+                     if(parts.length===2) deadline = parts[1].trim();
+                }
+
                 sortedDates.forEach(date => {
                     const displayDate = date === '기타 (General)' ? '기타' : date;
+                    
+                    // D-day Calculation
+                    let dDayLabel = '';
+                    if (deadline && date !== '기타 (General)' && /\d{4}-\d{2}-\d{2}/.test(date)) {
+                         const target = new Date(deadline); target.setHours(0,0,0,0);
+                         // Use local time parsing for date group to avoid timezone shift
+                         // date is 'YYYY-MM-DD'
+                         const [y,m,d] = date.split('-').map(Number);
+                         const current = new Date(y, m-1, d); // Local time
+                         
+                         const diffTime = target - current;
+                         const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
+                         // diffDays is days remaining from 'current'(group date) to 'target'(deadline)
+                         
+                         // Label logic: "How far is this task from the deadline?"
+                         // Usually milestones are marked "D-30" (30 days before deadline)
+                         if (diffDays > 0) dDayLabel = ` <span class="text-[#FF8A65] ml-1 text-[10px] font-normal">(D-${diffDays})</span>`;
+                         else if (diffDays === 0) dDayLabel = ` <span class="text-[#FF8A65] ml-1 text-[10px] font-normal">(D-Day)</span>`;
+                         else dDayLabel = ` <span class="text-[#FF8A65] ml-1 text-[10px] font-normal">(D+${Math.abs(diffDays)})</span>`;
+                    }
+
                     const dateHeader = document.createElement('div');
                     dateHeader.className = 'proj-date-header';
-                    dateHeader.innerText = displayDate;
+                    dateHeader.innerHTML = displayDate + dDayLabel;
                     taskListContainer.appendChild(dateHeader);
                     
                     const ul = document.createElement('ul');
                     groupedTasks[date].forEach(item => {
-                        // Use createTaskEl to render Checklist Items
                         const taskEl = createTaskEl(item, 'project', p.id, item.originalIndex);
-                        // Apply indentation based on depth
                         if (item.depth && item.depth > 0) {
                             taskEl.classList.add(`task-depth-${Math.min(item.depth, 2)}`);
                         }
@@ -1289,8 +1338,6 @@ ${dateContext}
         const li = document.createElement('li');
         li.className = 'timeline-container flex flex-col mb-4';
         
-        // Hide dot/line for projects if desired, or keep them for consistency
-        // Let's keep a simpler look for projects
         const isProject = type === 'project';
         
         if (!isProject) {
@@ -1301,15 +1348,12 @@ ${dateContext}
             li.appendChild(line);
             li.appendChild(dot);
         } else {
-            // Minimalist dot for project
             const dot = document.createElement('div');
             dot.className = 'absolute left-0 top-2 w-1.5 h-1.5 bg-[#D7CCC8] rounded-full';
-            // li.appendChild(dot); // Optional: indentation already provides cue
         }
 
         const content = document.createElement('div');
         content.className = 'relative z-10 w-full';
-        // Adjust padding if not using timeline lines
         if (isProject) { 
             li.style.paddingLeft = '0'; 
             li.style.marginBottom = '0.5rem';
@@ -1350,12 +1394,10 @@ ${dateContext}
         title.innerHTML = displayText;
         if(task.done) title.classList.add('line-through', 'text-opacity-50', 'text-[#A1887F]');
         
-        // Edit time modal only for Daily/Weekly (or implement for project if needed, currently reusing logic)
         title.onclick = () => window.openEditTimeModal(type, key, index, task);
         
         actionGroup.appendChild(title);
 
-        // Checkbox
         const chk = document.createElement('input');
         chk.type = 'checkbox';
         chk.className = 'custom-checkbox';
@@ -1366,7 +1408,6 @@ ${dateContext}
         };
         actionGroup.appendChild(chk);
 
-        // Delete Button (Added for ALL types including Weekly)
         const delBtn = document.createElement('button');
         delBtn.className = 'text-[#D7CCC8] hover:text-[#FF7F50] text-xs px-1';
         delBtn.innerHTML = 'x';
@@ -1393,30 +1434,51 @@ ${dateContext}
             const timerRow = document.createElement('div');
             timerRow.className = 'flex items-center gap-2 mt-2 pl-2';
             
-            if(!task.actualStartTime) {
-                const btn = document.createElement('button');
-                btn.className = 'font-hand text-sm text-[#A1887F] hover:text-[#FF8A65] border border-[#D7CCC8] px-2 py-0.5 rounded-full bg-white';
-                btn.textContent = 'start !';
-                btn.onclick = () => window.updateTask(type, key, index, {actualStartTime: new Date().toISOString()});
-                timerRow.appendChild(btn);
-            } else if (!task.actualEndTime) {
-                const btn = document.createElement('button');
-                btn.className = 'font-hand text-sm text-white bg-[#FFAB91] hover:bg-[#FF8A65] px-2 py-0.5 rounded-full';
-                btn.textContent = 'stop !';
-                btn.onclick = () => window.updateTask(type, key, index, {actualEndTime: new Date().toISOString()});
-                timerRow.appendChild(btn);
-            } else if (!task.feedback) {
-                const btn = document.createElement('button');
-                btn.className = 'text-[#BCAAA4] hover:text-[#8D6E63]';
-                btn.innerHTML = ICONS.speech;
-                btn.onclick = () => window.openInputModal('한줄 피드백', (val) => window.updateTask(type, key, index, {feedback: val}));
-                timerRow.appendChild(btn);
+            // [NEW] Display actual time & duration if both exist
+            if (task.actualStartTime && task.actualEndTime) {
+                const s = new Date(task.actualStartTime);
+                const e = new Date(task.actualEndTime);
+                const diff = Math.floor((e - s) / (1000 * 60)); // minutes
+                const timeStr = `${formatTimeSimple(task.actualStartTime)}~${formatTimeSimple(task.actualEndTime)} (${diff}m)`;
+                
+                const displaySpan = document.createElement('span');
+                displaySpan.className = 'text-xs text-[#5D4037] font-bold bg-[#F1F8E9] px-2 py-1 rounded border border-[#C5E1A5]';
+                displaySpan.innerText = timeStr;
+                timerRow.appendChild(displaySpan);
+                
+                // Show feedback button next to time if no feedback yet
+                if (!task.feedback) {
+                     const btn = document.createElement('button');
+                     btn.className = 'text-[#BCAAA4] hover:text-[#8D6E63] ml-1';
+                     btn.innerHTML = ICONS.speech;
+                     btn.onclick = () => window.openInputModal('한줄 피드백', (val) => window.updateTask(type, key, index, {feedback: val}));
+                     timerRow.appendChild(btn);
+                }
             } else {
+                // Show Start/Stop buttons if not completed
+                if(!task.actualStartTime) {
+                    const btn = document.createElement('button');
+                    btn.className = 'font-hand text-sm text-[#A1887F] hover:text-[#FF8A65] border border-[#D7CCC8] px-2 py-0.5 rounded-full bg-white';
+                    btn.textContent = 'start !';
+                    btn.onclick = () => window.updateTask(type, key, index, {actualStartTime: new Date().toISOString()});
+                    timerRow.appendChild(btn);
+                } else if (!task.actualEndTime) {
+                    const btn = document.createElement('button');
+                    btn.className = 'font-hand text-sm text-white bg-[#FFAB91] hover:bg-[#FF8A65] px-2 py-0.5 rounded-full';
+                    btn.textContent = 'stop !';
+                    btn.onclick = () => window.updateTask(type, key, index, {actualEndTime: new Date().toISOString()});
+                    timerRow.appendChild(btn);
+                }
+            }
+
+            // Always show feedback if exists
+            if (task.feedback) {
                 const fb = document.createElement('span');
-                fb.className = 'text-xs text-[#8D6E63] bg-[#FDFCF5] px-2 py-1 rounded border border-[#EFEBE9]';
+                fb.className = 'text-xs text-[#8D6E63] bg-[#FDFCF5] px-2 py-1 rounded border border-[#EFEBE9] ml-1';
                 fb.innerText = `"${task.feedback}"`;
                 timerRow.appendChild(fb);
             }
+            
             if(timerRow.hasChildNodes()) li.appendChild(timerRow);
         }
         
