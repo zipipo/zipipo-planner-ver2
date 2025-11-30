@@ -44,22 +44,13 @@
             border-bottom: 1px solid #EFEBE9;
         }
 
-        /* Pillow Frame (Flat) */
+        /* Pillow Frame */
         .pillow-frame {
             background-color: white;
             border-radius: 24px;
             border: 1px solid #D7CCC8;
             overflow: hidden;
             position: relative;
-        }
-        .pillow-frame::after {
-            content: '';
-            position: absolute;
-            top: 6px; left: 6px; right: 6px; bottom: 6px;
-            border: 2px dashed #D7CCC8;
-            border-radius: 20px;
-            pointer-events: none;
-            opacity: 0.4;
         }
 
         /* Timeline - Daily */
@@ -83,14 +74,14 @@
             position: absolute;
             left: 4px;
             top: 7px;
-            width: 8px; /* Small dot */
+            width: 8px;
             height: 8px;
             background-color: var(--wood-text);
             border-radius: 50%;
             z-index: 2;
         }
 
-        /* Timeline - Weekly (No Line, Small Dot) */
+        /* Timeline - Weekly */
         .weekly-item .timeline-line { display: none !important; }
         .weekly-item .timeline-dot {
             width: 5px;
@@ -99,9 +90,7 @@
             top: 9px;
             background-color: var(--sage-green);
         }
-        .weekly-item.timeline-container {
-            padding-left: 18px; 
-        }
+        .weekly-item.timeline-container { padding-left: 18px; }
         
         .empty-state {
             display: flex;
@@ -141,7 +130,7 @@
             border-radius: 50%;
         }
 
-        /* Checkbox (Flat) */
+        /* Checkbox */
         .custom-checkbox {
             appearance: none;
             width: 18px;
@@ -152,6 +141,7 @@
             position: relative;
             background-color: #fff;
             transition: all 0.2s;
+            flex-shrink: 0;
         }
         .custom-checkbox:checked {
             background-color: var(--sage-green);
@@ -167,7 +157,7 @@
             transform: translate(-50%, -50%);
         }
 
-        /* FAB (Flat) */
+        /* FAB */
         .fab-house {
             background-color: #A5D6A7;
             clip-path: polygon(50% 0%, 100% 35%, 100% 100%, 0% 100%, 0% 35%);
@@ -177,11 +167,11 @@
             padding-bottom: 8px;
         }
         
-        /* Modals */
+        /* Modals & Animations */
         @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
         .modal-content { animation: slideUp 0.3s ease-out; }
-        .toast-enter { animation: slideUp 0.3s ease-out forwards; }
-
+        
+        /* Time Select & Mini Cal */
         .time-select {
             border: 1px solid #EFEBE9;
             border-radius: 8px;
@@ -191,7 +181,6 @@
             background-color: white;
             outline: none;
         }
-
         .mini-cal-grid {
             display: grid;
             grid-template-columns: repeat(7, 1fr);
@@ -210,9 +199,6 @@
             color: white;
             font-weight: bold;
         }
-        .mini-cal-cell:hover:not(.selected) {
-            background-color: #F1F8E9;
-        }
         .modal-tab {
             padding: 8px;
             font-size: 0.9rem;
@@ -226,7 +212,7 @@
             font-weight: bold;
         }
 
-        /* Specific styles for requests */
+        /* Task Styles */
         .task-time-label {
             font-size: 0.7rem;
             color: #BCAAA4;
@@ -241,18 +227,36 @@
             margin-left: 26px; 
         }
         
-        /* Project Date Header */
+        /* Project Specifics */
         .proj-date-header {
-            font-size: 0.75rem;
+            font-size: 0.8rem;
             font-weight: bold;
             color: #556B2F;
             background-color: #F1F8E9;
-            padding: 2px 8px;
-            border-radius: 12px;
+            padding: 4px 10px;
+            border-radius: 8px;
             display: inline-block;
-            margin-bottom: 4px;
-            margin-top: 8px;
+            margin-bottom: 6px;
+            margin-top: 12px;
             border: 1px solid #DCEDC8;
+        }
+        .proj-tip-box {
+            background-color: #FFF8E1;
+            border: 1px solid #FFE0B2;
+            border-radius: 12px;
+            padding: 10px;
+            margin-top: 8px;
+            margin-bottom: 8px;
+            font-size: 0.8rem;
+            color: #E65100;
+            line-height: 1.5;
+        }
+        .proj-tip-label {
+            font-weight: bold;
+            font-size: 0.7rem;
+            color: #FFB74D;
+            display: block;
+            margin-bottom: 2px;
         }
     </style>
 </head>
@@ -425,11 +429,9 @@
     const GEMINI_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent';
     
     const ICONS = {
-        lightWood: `<svg class="w-6 h-6 inline-block mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 0V6" stroke="#D7CCC8" stroke-width="1.5"/><path d="M4 14C4 9.5 7.58 6 12 6C16.42 6 20 9.5 20 14H4Z" fill="#FFF8E1" stroke="#D7CCC8" stroke-width="1.5"/><path d="M10 14H14V15C14 15.55 13.55 16 13 16H11C10.45 16 10 15.55 10 15V14Z" fill="#D7CCC8" stroke="none"/></svg>`,
         check: `<svg class="w-4 h-4 text-[#8D6E63] hover:text-[#5D4037]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"></path></svg>`,
         undo: `<svg class="w-4 h-4 text-[#8D6E63] hover:text-[#5D4037]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"></path></svg>`,
         closeX: `<svg class="w-4 h-4 text-[#D7CCC8] hover:text-[#FF7F50]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path></svg>`,
-        edit: `<svg class="w-3 h-3 text-[#BCAAA4] hover:text-[#8D6E63]" fill="currentColor" viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>`,
         speech: `<svg class="w-4 h-4 text-[#BCAAA4] hover:text-[#8D6E63] transition" fill="currentColor" viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg>`
     };
 
@@ -454,7 +456,6 @@
     function parseTasks(text) { return text.split('\n').map(l=>l.trim()).filter(l=>l.length>0 && !l.startsWith('---')); }
     function getWeekKey(d) { const date = new Date(d.getTime()); date.setHours(0,0,0,0); date.setDate(date.getDate() + 3 - (date.getDay() + 6) % 7); const week1 = new Date(date.getFullYear(), 0, 4); return 1 + Math.round(((date.getTime() - week1.getTime()) / 86400000 - 3 + (week1.getDay() + 6) % 7) / 7) + ''; }
     function getWeekRangeStr(d) { const curr = new Date(d); const first = curr.getDate() - curr.getDay(); const last = first + 6; const f = new Date(curr.setDate(first)); const l = new Date(curr.setDate(last)); return `${f.getMonth()+1}.${f.getDate()} ~ ${l.getMonth()+1}.${l.getDate()}`; }
-    function formatTime(iso) { const d = new Date(iso); return `${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`; }
     function getSunday(d) { d = new Date(d); var day = d.getDay(); var diff = d.getDate() - day; return new Date(d.setDate(diff)); }
     function toggleApiKeyInput() { document.getElementById('apiKeyContainer').classList.toggle('hidden'); }
     function changeDate(v) { selectedDate = v; renderApp(); }
@@ -569,6 +570,7 @@
             });
 
             if (type === 'daily') {
+                // 기존 데이터 명시적 삭제
                 appData.daily[selectedDate] = [];
                 appData.daily[selectedDate].push(...newTasks);
             } else {
@@ -590,25 +592,36 @@
         showLoading("프로젝트 계획 중");
         
         await callGemini(prompt, (text) => {
-            let lines = parseTasks(text);
+            const lines = parseTasks(text);
             const newTasks = [];
-            
+            let currentDateContext = null;
+
             lines.forEach(line => {
-                let clean = line.replace(/\*\*/g, '').replace(/\|/g, '').trim();
+                const clean = line.replace(/\*\*/g, '').replace(/\|/g, '').trim();
                 if (clean.length === 0) return;
 
-                // Extract date if present (YYYY-MM-DD or MM.DD)
-                let taskDate = null;
-                const dateMatch = clean.match(/^(\d{4}-\d{2}-\d{2}|\d{1,2}\.\d{1,2})[:\s]+(.*)/);
+                // Detect Date Header [YYYY-MM-DD]
+                const dateHeaderMatch = clean.match(/\[.*(\d{4}-\d{2}-\d{2}).*\]/);
+                if (dateHeaderMatch) {
+                    currentDateContext = dateHeaderMatch[1];
+                    return; // Don't add header as task
+                }
                 
-                if (dateMatch) {
-                    taskDate = dateMatch[1];
-                    clean = dateMatch[2];
-                    // Normalize MM.DD to current year YYYY-MM-DD if needed, but for simplicity keep as is
-                    // If parsing needed: new Date().getFullYear() + '-' + ...
+                // Detect Tip
+                if (clean.toUpperCase().includes('[TIP]') || clean.toUpperCase().includes('기타 팁')) {
+                    const tipText = clean.replace(/\[.*?\]/g, '').replace('기타 팁', '').replace(':', '').trim();
+                    if(tipText) newTasks.push({ text: tipText, done: false, isTip: true });
+                    return;
                 }
 
-                newTasks.push({ text: clean, done: false, date: taskDate });
+                // Normal Task
+                // If line starts with date-like string, use it
+                const datePrefixMatch = clean.match(/^(\d{4}-\d{2}-\d{2})[:\s]+(.*)/);
+                if (datePrefixMatch) {
+                     newTasks.push({ text: datePrefixMatch[2], done: false, date: datePrefixMatch[1] });
+                } else {
+                     newTasks.push({ text: clean, done: false, date: currentDateContext });
+                }
             });
 
             const p = appData.projects.find(x => x.id === pid);
@@ -686,10 +699,11 @@
         activeProjectId = pid;
         const p = appData.projects.find(x => x.id === pid);
         
-        // Build Date Context
         let dateContext = "";
+        let dateListStr = "";
         if (p.dates && p.dates.length > 0) {
             dateContext = `선택된 날짜들: ${p.dates.join(', ')}`;
+            dateListStr = p.dates.join(', ');
         } else if (p.dateDisplay) {
             dateContext = `기간: ${p.dateDisplay}`;
         }
@@ -699,10 +713,19 @@
 목표: ${p.desc || '목표 없음'}
 ${dateContext}
 
-위 기간 동안 프로젝트 목표를 달성하기 위한 구체적인 계획을 짜줘.
-반드시 날짜별로 구분해서 아래 형식으로 작성해줘.
-형식: YYYY-MM-DD: 할일 내용
-(예: 2024-05-01: 자료 조사하기)
+위 일정을 고려하여 구체적인 실행 계획을 짜줘.
+[필수 형식]
+1. 날짜별 구분: 날짜 헤더는 반드시 '[Day N: YYYY-MM-DD]' 형식으로 써줘. (예: [Day 1: 2024-05-01])
+2. 할 일: 헤더 아래에 할 일을 나열해.
+3. 팁/조언: 팁이나 조언은 '[TIP] 내용' 형식으로 써줘. (별도 박스로 표시될 거야)
+
+작성 예시:
+[Day 1: 2024-05-01]
+- 자료 수집하기
+- 목차 작성하기
+[TIP] 무리하지 말고 30분씩 나눠서 하세요.
+[Day 2: 2024-05-02]
+- 초안 작성
 `;
 
         document.getElementById('projectPlanPrompt').value = p.customPrompt || defaultPrompt;
@@ -976,9 +999,7 @@ ${dateContext}
         
         if (realDailyTasks.length > 0) {
             const ulDaily = document.createElement('ul');
-            // Sort by Time (Earliest First)
             realDailyTasks.sort((a,b) => getTaskTimeVal(a) - getTaskTimeVal(b));
-            
             realDailyTasks.forEach((t, i) => ulDaily.appendChild(createTaskEl(t, 'daily', selectedDate, i)));
             contentDaily.appendChild(ulDaily);
         } else {
@@ -1076,20 +1097,33 @@ ${dateContext}
                 const card = document.createElement('div');
                 card.className = 'wood-frame p-4 bg-white border border-[#C5E1A5] relative group w-full';
                 
-                // Group tasks by Date
+                // --- Group tasks by Date & Tips ---
                 const groupedTasks = {};
+                const tips = [];
+                
                 p.tasks.forEach((t, idx) => {
-                    const d = t.date || 'General';
-                    if (!groupedTasks[d]) groupedTasks[d] = [];
-                    groupedTasks[d].push({ ...t, originalIndex: idx });
+                    if (t.isTip) {
+                        tips.push({ ...t, originalIndex: idx });
+                    } else {
+                        const d = t.date || '기타 (General)';
+                        if (!groupedTasks[d]) groupedTasks[d] = [];
+                        groupedTasks[d].push({ ...t, originalIndex: idx });
+                    }
                 });
                 
-                // Sort Dates (General at end or beginning? Let's put dates first)
                 const sortedDates = Object.keys(groupedTasks).sort();
                 let taskListHtml = '';
 
+                // 1. Render Tips Box first (or last) - Let's do TOP if exist
+                if (tips.length > 0) {
+                     taskListHtml += `<div class="proj-tip-box"><span class="proj-tip-label">TIP</span>${tips.map(tip => `<div>• ${tip.text} <button class="text-[#D7CCC8] hover:text-[#FF7F50]" onclick="window.deleteTaskItem('project', '${p.id}', ${tip.originalIndex})">x</button></div>`).join('')}</div>`;
+                }
+
+                // 2. Render Date Groups
                 sortedDates.forEach(date => {
-                    const displayDate = date === 'General' ? '기타' : date;
+                    const displayDate = date === '기타 (General)' ? '기타' : date;
+                    // Format Day Header if it looks like [Day N: YYYY-MM-DD] (Already in text if parsed well, but here we just show the grouping key)
+                    // If date contains "Day", it's fine.
                     taskListHtml += `<div class="proj-date-header">${displayDate}</div>`;
                     
                     groupedTasks[date].forEach(item => {
@@ -1115,7 +1149,7 @@ ${dateContext}
                             <span class="text-xs font-bold text-[#556B2F]">Project Plan</span>
                             <button onclick="openProjectPlanModal('${p.id}')" class="text-[10px] bg-[#F1F8E9] text-[#33691E] px-2 py-1 rounded-full border border-[#AED581] hover:bg-[#AED581] hover:text-white transition">AI 계획 짜기</button>
                         </div>
-                        <ul class="max-h-60 overflow-y-auto pl-1 text-sm">
+                        <ul class="max-h-80 overflow-y-auto pl-1 text-sm">
                             ${taskListHtml}
                         </ul>
                     </div>
@@ -1151,7 +1185,11 @@ ${dateContext}
                 
                 if(p.tasks.length > 0) {
                     p.tasks.forEach(t => {
-                         taskList.innerHTML += `<li class="text-xs text-[#5D4037] flex items-start gap-1"><div class="w-0.5 h-3 bg-[#D7CCC8] mt-1"></div> ${t.text}</li>`;
+                         if(t.isTip) {
+                            taskList.innerHTML += `<li class="text-xs text-[#FF8A65] flex items-start gap-1">Tip: ${t.text}</li>`;
+                         } else {
+                            taskList.innerHTML += `<li class="text-xs text-[#5D4037] flex items-start gap-1"><div class="w-0.5 h-3 bg-[#D7CCC8] mt-1"></div> ${t.text}</li>`;
+                         }
                     });
                 }
                 detailDiv.appendChild(taskList);
@@ -1342,7 +1380,7 @@ ${dateContext}
     const savedKey = localStorage.getItem(STORAGE_KEY_API);
     if(!savedKey) toggleApiKeyInput();
 
-    // Export to global for HTML attributes
+    // Export to global
     window.closeModal = closeModal;
     window.saveApiKey = saveApiKey;
     window.toggleApiKeyInput = toggleApiKeyInput;
