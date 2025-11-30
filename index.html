@@ -250,9 +250,19 @@
             display: block;
             margin-bottom: 2px;
         }
-        /* Project Subtask Indentation */
-        .task-depth-1 { margin-left: 1.5rem; border-left: 2px solid #E0E0E0; padding-left: 0.5rem; }
-        .task-depth-2 { margin-left: 3rem; border-left: 2px solid #E0E0E0; padding-left: 0.5rem; }
+        
+        /* [NEW] Project Subtask Styles - No border, just indent */
+        .task-depth-1 { margin-left: 1rem; }
+        .task-depth-2 { margin-left: 2rem; }
+        .proj-msg-box {
+            font-size: 0.8rem;
+            color: #795548;
+            background-color: #EFEBE9;
+            padding: 6px 10px;
+            border-radius: 8px;
+            margin-bottom: 4px;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body class="max-w-md mx-auto min-h-screen flex flex-col pb-28 relative bg-[#FDFCF5]">
@@ -549,6 +559,10 @@
         const promptText = document.getElementById('taskPrompt').value;
         if(!promptText) return alert('내용을 입력해주세요');
         
+        // [NEW] Project Integration for Daily
+        const checkboxes = document.querySelectorAll('input[name="projSelect"]:checked');
+        const selectedProjIds = Array.from(checkboxes).map(cb => cb.value);
+        
         showLoading("zipipo가 만들고 있어요");
         document.getElementById('generatorModal').classList.add('hidden');
 
@@ -600,6 +614,19 @@
                 }
             });
 
+            // [NEW] Add Project Tasks to Daily
+            if (type === 'daily' && selectedProjIds.length > 0) {
+                selectedProjIds.forEach(pid => {
+                    const proj = appData.projects.find(p => p.id === pid);
+                    if (proj) {
+                        const pTasks = proj.tasks.filter(t => t.date === selectedDate);
+                        pTasks.forEach(pt => {
+                            newTasks.push({ text: `[${proj.title}] ${pt.text}`, done: false, isMessage: false });
+                        });
+                    }
+                });
+            }
+
             if (type === 'daily') {
                 appData.daily[selectedDate] = [];
                 appData.daily[selectedDate].push(...newTasks);
@@ -608,6 +635,10 @@
                 if(!appData.weekly[wk]) appData.weekly[wk] = { tasks: [] };
                 appData.weekly[wk].tasks.push(...newTasks);
             }
+            
+            // [NEW] Clear Prompt Input after success
+            document.getElementById('taskPrompt').value = '';
+            
             hideLoading();
             saveData();
             renderApp();
@@ -630,8 +661,12 @@
                 const clean = line.replace(/\*\*/g, '').replace(/\|/g, '').trim();
                 if (clean.length === 0) return;
 
-                // [Enhanced Parsing] Ignore structural keywords like Phase, Step if they don't look like tasks
-                if (/^(Phase|Step|Stage)\s+\d+/.test(clean)) return;
+                // [NEW] Parsing: Detect Header/Message lines (###)
+                if (/^#{1,3}/.test(clean) || /^(Phase|Step|Stage)\s+\d+/.test(clean)) {
+                    // Treat as message/header task
+                    newTasks.push({ text: clean.replace(/#/g, '').trim(), done: false, type: 'header', date: currentDateContext });
+                    return;
+                }
 
                 const indentMatch = line.match(/^(\s+)/);
                 const depth = indentMatch ? Math.floor(indentMatch[1].length / 2) : 0; 
@@ -657,13 +692,9 @@
                      taskText = datePrefixMatch[2];
                 }
                 
-                // If text is not empty and seems valid task
-                // Filter out description lines that end up in 'General' if they don't look like tasks (optional, strictly based on user request)
-                // Let's rely on bullet point removal and length.
                 taskText = taskText.replace(/^[-*•]\s*/, '');
                 
                 if(!taskDate && taskText.length > 50 && !taskText.includes('-')) {
-                    // Assume long description text without date is not a task
                     return;
                 }
 
@@ -689,12 +720,14 @@
         const completed = tasks.filter(t => t.done && !t.isMessage).map(t => t.text).join(', ');
         const feedbacks = tasks.filter(t => t.feedback).map(t => t.feedback).join(', ');
         
-        // Allow regeneration even if empty (maybe user wants empty summary?) - but usually needs data
-        // if(!completed && !feedbacks) return alert('회고할 데이터가 없습니다.');
-        
         showLoading("zipipo가 회고 중");
         
-        const sysPrompt = `날짜: ${dateStr}. 완료: ${completed}. 피드백: ${feedbacks}. 하루 3문장 요약 회고 (따뜻한 말투). 답변만 출력해.`;
+        // [NEW] Summary Constraint: 5 lines, remove instructions from output
+        const sysPrompt = `날짜: ${dateStr}. 완료: ${completed}. 피드백: ${feedbacks}. 
+        위 내용을 바탕으로 하루를 5줄 이내로 따뜻하게 회고해줘.
+        [규칙]
+        1. 답변만 출력하세요. 
+        2. (따뜻한 말투) 같은 지시문이나 괄호 설명은 포함하지 마세요.`;
         
         await callGemini(sysPrompt, (text) => {
             if(!appData.dailySummaries) appData.dailySummaries = {};
@@ -741,30 +774,24 @@
         renderApp();
     }
     
-    // [NEW] Edit Message Function
     function editDailyMessage(dateStr) {
         const tasks = appData.daily[dateStr] || [];
-        // Combine all message lines
         const msgs = tasks.filter(t => t.isMessage);
         const combinedText = msgs.map(m => m.text).join('\n');
         
         openInputModal('오늘의 한마디 수정', (newText) => {
-            // Remove old messages
             appData.daily[dateStr] = tasks.filter(t => !t.isMessage);
-            // Add new message as single block (or split if needed, but single is easier to manage)
             if(newText.trim()) {
                 appData.daily[dateStr].unshift({ text: newText, done: false, isMessage: true });
             }
             saveData();
             renderApp();
         });
-        // Pre-fill
         document.getElementById('inputModalField').value = combinedText;
     }
 
     // 7. Modals & Interaction
     function openProjectModal() {
-        // [NEW] Clear inputs
         document.getElementById('projTitle').value = '';
         document.getElementById('projDesc').value = '';
         document.getElementById('projStart').value = '';
@@ -960,6 +987,11 @@ ${dateContext}
         }
     }
 
+    function moveProjCal(d) {
+        projCalDate.setMonth(projCalDate.getMonth() + d);
+        renderProjCal();
+    }
+
     function confirmCreateProject() {
         const title = document.getElementById('projTitle').value;
         const desc = document.getElementById('projDesc').value;
@@ -1008,19 +1040,8 @@ ${dateContext}
     function openGeneratorModal(forceType) {
         document.getElementById('generatorModal').classList.remove('hidden');
         
-        // [NEW] Load prompt based on current context
-        let savedPrompt = '';
-        if (forceType === 'daily' || currentTab === 'home') {
-             // In Daily context
-             savedPrompt = appData.dailyPrompts[selectedDate] || '';
-        } else {
-             // Default fallback or weekly logic could go here
-        }
-        
-        // But the modal buttons trigger daily/weekly generation. 
-        // So we just load the Daily prompt of selectedDate if available for convenience
-        // Or if we clicked 'Edit Prompt' from Weekly section, load Weekly prompt.
-        // Let's refine: The prompt box is shared.
+        // Load Daily Prompt by default
+        let savedPrompt = appData.dailyPrompts[selectedDate] || '';
         
         const container = document.getElementById('projectMultiSelect');
         container.innerHTML = '';
@@ -1037,7 +1058,6 @@ ${dateContext}
         document.getElementById('taskPrompt').value = savedPrompt;
     }
     
-    // [NEW] Helper to open prompt for Weekly specific
     function openWeeklyGenerator() {
         const wk = getWeekKey(currentWeekBaseDate);
         const saved = appData.weeklyPrompts[wk] || '';
@@ -1093,7 +1113,6 @@ ${dateContext}
         if (dailyMsgs.length > 0) {
             const msgBox = document.createElement('div');
             msgBox.className = 'mx-6 mt-1 mb-3 p-3 bg-white/60 rounded-xl border border-[#C5E1A5] text-sm text-[#556B2F] relative z-10 font-wando leading-relaxed cursor-pointer hover:bg-white/80 transition';
-            // [NEW] Click to Edit
             msgBox.onclick = () => editDailyMessage(selectedDate);
             msgBox.innerHTML = dailyMsgs.map(m => m.text).join('<br>');
             secDaily.appendChild(msgBox);
@@ -1102,10 +1121,10 @@ ${dateContext}
         const contentDaily = document.createElement('div');
         contentDaily.className = 'bg-white rounded-[24px] border border-[#EFEBE9] p-5 relative min-h-[300px] shadow-sm';
         
-        // [NEW] Prompt Edit Button
+        // [NEW] Button Text Change
         const promptBtn = document.createElement('button');
         promptBtn.className = 'absolute top-3 right-3 text-[10px] text-[#A1887F] bg-[#FDFCF5] border border-[#D7CCC8] px-2 py-1 rounded-full hover:bg-[#EFEBE9] z-20 flex items-center gap-1';
-        promptBtn.innerHTML = `📝 프롬프트 수정/재생성`;
+        promptBtn.innerHTML = `📝 프롬프트 수정`;
         promptBtn.onclick = () => openGeneratorModal(null);
         contentDaily.appendChild(promptBtn);
 
@@ -1304,12 +1323,25 @@ ${dateContext}
                     taskListContainer.appendChild(dateHeader);
                     
                     const ul = document.createElement('ul');
+                    
+                    // [NEW] Numbering Logic
+                    let taskCounter = 1;
+                    
                     groupedTasks[date].forEach(item => {
-                        const taskEl = createTaskEl(item, 'project', p.id, item.originalIndex);
-                        if (item.depth && item.depth > 0) {
-                            taskEl.classList.add(`task-depth-${Math.min(item.depth, 2)}`);
+                        // [NEW] Render Headers differently
+                        if (item.type === 'header') {
+                            const headerDiv = document.createElement('div');
+                            headerDiv.className = 'proj-msg-box';
+                            headerDiv.innerHTML = `${item.text} <button class="text-[#D7CCC8] hover:text-[#FF7F50] float-right" onclick="window.deleteTaskItem('project', '${p.id}', ${item.originalIndex})">x</button>`;
+                            ul.appendChild(headerDiv);
+                        } else {
+                            // Pass number as prefix only for display in Project tab
+                            const taskEl = createTaskEl(item, 'project', p.id, item.originalIndex, taskCounter++);
+                            if (item.depth && item.depth > 0) {
+                                taskEl.classList.add(`task-depth-${Math.min(item.depth, 2)}`);
+                            }
+                            ul.appendChild(taskEl);
                         }
-                        ul.appendChild(taskEl);
                     });
                     taskListContainer.appendChild(ul);
                 });
@@ -1402,10 +1434,9 @@ ${dateContext}
         
         const fbSection = document.createElement('div');
         fbSection.className = 'mt-auto pt-4 border-t border-[#EFEBE9]';
-        let detailsHtml = `<h3 class="font-hand text-lg text-[#5D4037] mb-2 border-b border-[#EFEBE9] pb-1 flex justify-between items-center">${achievementViewDate}</h3>`;
+        let detailsHtml = `<h3 class="font-hand text-lg text-[#5D4037] mb-2 border-b border-[#EFEBE9] pb-1">${achievementViewDate}</h3>`;
         
         if (summary) {
-            // [NEW] Regenerate Button
             detailsHtml += `<div class="mb-4 p-3 bg-[#F1F8E9] rounded-xl text-xs text-[#33691E] leading-relaxed font-wando border border-[#AED581] relative">
                                 <button onclick="window.generateDailySummary('${achievementViewDate}')" class="absolute top-1 right-1 text-[#8D6E63] hover:bg-white rounded-full p-1">${ICONS.refresh}</button>
                                 <div class="font-bold mb-1">✨ zipipo 회고 요약</div>${summary}
@@ -1418,10 +1449,7 @@ ${dateContext}
         if(completedTasks.length === 0) detailsHtml += `<li class="text-xs text-[#BCAAA4] italic text-center">완료된 일정이 없어요.</li>`;
         else {
             completedTasks.forEach(t => {
-                // [NEW] Remove timestamps from achievement list
-                // Regex matches: 12:00~13:00 (60m) or 12:00~ or (60m)
                 let cleanText = t.text.replace(/(\d{1,2}:\d{2})?(~)?(\d{1,2}:\d{2})?(\s*\(.*?m\))?/, '').trim();
-                // Also remove parentheses content if it looks like time duration (already handled above, but ensure cleanliness)
                 detailsHtml += `<li class="text-xs flex gap-2 items-start text-[#5D4037]"><span class="w-1.5 h-1.5 rounded-full bg-[#A1887F] mt-1.5"></span> ${cleanText}</li>`;
             });
         }
@@ -1432,7 +1460,7 @@ ${dateContext}
         container.appendChild(wrapper);
     }
 
-    function createTaskEl(task, type, key, index) {
+    function createTaskEl(task, type, key, index, numberPrefix = null) {
         const li = document.createElement('li');
         li.className = 'timeline-container flex flex-col mb-4';
         
@@ -1446,8 +1474,8 @@ ${dateContext}
             li.appendChild(line);
             li.appendChild(dot);
         } else {
-            const dot = document.createElement('div');
-            dot.className = 'absolute left-0 top-2 w-1.5 h-1.5 bg-[#D7CCC8] rounded-full';
+            // [NEW] Remove dot/line logic for Project items to implement text hierarchy
+            // No dot appended for project items
         }
 
         const content = document.createElement('div');
@@ -1460,6 +1488,16 @@ ${dateContext}
         let displayTime = '';
         let displayText = task.text;
         let subText = '';
+        
+        // [NEW] Project numbering
+        if (isProject && numberPrefix) {
+            // - format
+            if (task.depth && task.depth > 0) {
+                displayText = `- ${displayText}`;
+            } else {
+                displayText = `${numberPrefix}. ${displayText}`;
+            }
+        }
         
         if (type === 'daily') {
             const timeMatch = displayText.match(/(\d{1,2}:\d{2})(~\d{1,2}:\d{2})?/);
