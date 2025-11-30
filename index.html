@@ -18,9 +18,10 @@
             --point-coral: #FF8A65;
         }
         
+        /* Font: S-Core Dream (Light) */
         @font-face {
-            font-family: 'WandoCleanSea';
-            src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_20-04@2.1/WandoCleanSea.woff') format('woff');
+            font-family: 'S-CoreDream';
+            src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_six@1.2/S-CoreDream-3Light.woff') format('woff');
             font-weight: normal;
             font-style: normal;
         }
@@ -31,7 +32,7 @@
             -webkit-tap-highlight-color: transparent;
         }
         .font-hand { font-family: 'Kirang Haerang', cursive !important; }
-        .font-wando { font-family: 'WandoCleanSea', sans-serif !important; } 
+        .font-wando { font-family: 'S-CoreDream', sans-serif !important; } 
         
         body { background-color: var(--bg-ivory); }
 
@@ -42,15 +43,6 @@
             z-index: 40;
             background-color: var(--bg-ivory);
             border-bottom: 1px solid #EFEBE9;
-        }
-
-        /* Pillow Frame */
-        .pillow-frame {
-            background-color: white;
-            border-radius: 24px;
-            border: 1px solid #D7CCC8;
-            overflow: hidden;
-            position: relative;
         }
 
         /* Timeline - Daily */
@@ -258,6 +250,9 @@
             display: block;
             margin-bottom: 2px;
         }
+        /* Project Subtask Indentation */
+        .task-depth-1 { margin-left: 1.5rem; border-left: 2px solid #E0E0E0; padding-left: 0.5rem; }
+        .task-depth-2 { margin-left: 3rem; border-left: 2px solid #E0E0E0; padding-left: 0.5rem; }
     </style>
 </head>
 <body class="max-w-md mx-auto min-h-screen flex flex-col pb-28 relative bg-[#FDFCF5]">
@@ -283,12 +278,12 @@
     <main id="appContent" class="p-5 flex-1 space-y-6 overflow-y-auto"></main>
 
     <div id="saveToast" class="fixed bottom-24 left-1/2 transform -translate-x-1/2 bg-[#5D4037] text-white text-xs px-4 py-2 rounded-full shadow-none opacity-0 transition-opacity duration-300 pointer-events-none z-50 bg-opacity-90 backdrop-blur-sm">
-        저장됨
+        저장됨 ✨
     </div>
 
     <div id="aiLoadingPopup" class="fixed inset-0 bg-black/10 z-[70] hidden flex items-center justify-center backdrop-blur-[1px]">
-        <div class="bg-white px-8 py-6 rounded-3xl shadow-lg border-2 border-[#EFEBE9] max-w-[200px] w-full mx-4 text-center">
-            <div class="text-[#5D4037] font-hand text-xl mb-1">
+        <div class="bg-white px-8 py-6 rounded-3xl shadow-lg border-2 border-[#EFEBE9] w-[280px] mx-4 text-center">
+            <div class="text-[#5D4037] font-hand text-xl mb-1 whitespace-nowrap">
                 zipipo가 만들고 있어요<span id="loadingDots" class="inline-block w-6 text-left"></span>
             </div>
             <div class="text-[10px] text-[#A1887F]">잠시만 기다려주세요</div>
@@ -338,7 +333,7 @@
     <div id="projectPlanModal" class="fixed inset-0 bg-[#4E342E]/20 z-50 hidden flex items-center justify-center backdrop-blur-[1px]">
         <div class="bg-[#FDFCF5] w-full max-w-md p-6 rounded-2xl shadow-none border-2 border-[#EFEBE9] m-4 wood-frame modal-content">
             <h3 class="font-hand text-xl text-[#8D6E63] mb-2">프로젝트 계획 짜기</h3>
-            <p class="text-xs text-[#A1887F] mb-4">날짜별로 할일을 구분해달라고 요청해보세요.</p>
+            <p class="text-xs text-[#A1887F] mb-4">구체적인 실행 계획을 요청하세요.</p>
             <textarea id="projectPlanPrompt" rows="6" class="w-full p-4 border-2 border-[#EFEBE9] rounded-xl mb-4 resize-none focus:outline-none focus:border-[#D7CCC8] bg-white text-sm text-[#5D4037] leading-relaxed"></textarea>
             <div class="flex gap-3">
                 <button onclick="closeModal('projectPlanModal')" class="flex-1 py-3 bg-gray-100 text-[#8D6E63] rounded-xl text-xs hover:bg-gray-200">취소</button>
@@ -423,7 +418,7 @@
     </div>
 
 <script>
-    // 1. CONSTANTS & CONFIG
+    // 1. CONSTANTS
     const STORAGE_KEY_API = 'zipipo_v2_apikey';
     const STORAGE_KEY_DATA = 'zipipo_v2_data'; 
     const GEMINI_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent';
@@ -453,7 +448,7 @@
 
     // 3. HELPER FUNCTIONS
     function getTodayStr() { return new Date().toISOString().split('T')[0]; }
-    function parseTasks(text) { return text.split('\n').map(l=>l.trim()).filter(l=>l.length>0 && !l.startsWith('---')); }
+    function parseTasks(text) { return text.split('\n').map(l=>l).filter(l=>l.trim().length>0 && !l.trim().startsWith('---')); } // Keep indentation for project parsing
     function getWeekKey(d) { const date = new Date(d.getTime()); date.setHours(0,0,0,0); date.setDate(date.getDate() + 3 - (date.getDay() + 6) % 7); const week1 = new Date(date.getFullYear(), 0, 4); return 1 + Math.round(((date.getTime() - week1.getTime()) / 86400000 - 3 + (week1.getDay() + 6) % 7) / 7) + ''; }
     function getWeekRangeStr(d) { const curr = new Date(d); const first = curr.getDate() - curr.getDay(); const last = first + 6; const f = new Date(curr.setDate(first)); const l = new Date(curr.setDate(last)); return `${f.getMonth()+1}.${f.getDate()} ~ ${l.getMonth()+1}.${l.getDate()}`; }
     function getSunday(d) { d = new Date(d); var day = d.getDay(); var diff = d.getDate() - day; return new Date(d.setDate(diff)); }
@@ -558,19 +553,19 @@
             const newTasks = [];
             
             lines.forEach(line => {
-                if (/\d{1,2}:\d{2}/.test(line)) {
-                    newTasks.push({ text: line, done: false, isMessage: false });
-                } else if (/\d{4}-\d{2}-\d{2}/.test(line)) {
-                    const dateMatch = line.match(/(\d{4}-\d{2}-\d{2})[:\s]*(.*)/);
+                const trimLine = line.trim();
+                if (/\d{1,2}:\d{2}/.test(trimLine)) {
+                    newTasks.push({ text: trimLine, done: false, isMessage: false });
+                } else if (/\d{4}-\d{2}-\d{2}/.test(trimLine)) {
+                    const dateMatch = trimLine.match(/(\d{4}-\d{2}-\d{2})[:\s]*(.*)/);
                     if(dateMatch) newTasks.push({ text: dateMatch[2], done: false, isMessage: false, specificDate: dateMatch[1] });
-                    else newTasks.push({ text: line, done: false, isMessage: false });
-                } else if (line.length > 5 && !line.includes('|')) {
-                    newTasks.push({ text: line, done: false, isMessage: true });
+                    else newTasks.push({ text: trimLine, done: false, isMessage: false });
+                } else if (trimLine.length > 5 && !trimLine.includes('|')) {
+                    newTasks.push({ text: trimLine, done: false, isMessage: true });
                 }
             });
 
             if (type === 'daily') {
-                // 기존 데이터 명시적 삭제
                 appData.daily[selectedDate] = [];
                 appData.daily[selectedDate].push(...newTasks);
             } else {
@@ -600,11 +595,15 @@
                 const clean = line.replace(/\*\*/g, '').replace(/\|/g, '').trim();
                 if (clean.length === 0) return;
 
+                // Indentation Check for Hierarchy
+                const indentMatch = line.match(/^(\s+)/);
+                const depth = indentMatch ? Math.floor(indentMatch[1].length / 2) : 0; // 2 spaces = 1 depth
+
                 // Detect Date Header [YYYY-MM-DD]
                 const dateHeaderMatch = clean.match(/\[.*(\d{4}-\d{2}-\d{2}).*\]/);
                 if (dateHeaderMatch) {
                     currentDateContext = dateHeaderMatch[1];
-                    return; // Don't add header as task
+                    return; 
                 }
                 
                 // Detect Tip
@@ -614,14 +613,20 @@
                     return;
                 }
 
-                // Normal Task
-                // If line starts with date-like string, use it
+                // Normal Task parsing
                 const datePrefixMatch = clean.match(/^(\d{4}-\d{2}-\d{2})[:\s]+(.*)/);
+                let taskText = clean;
+                let taskDate = currentDateContext;
+
                 if (datePrefixMatch) {
-                     newTasks.push({ text: datePrefixMatch[2], done: false, date: datePrefixMatch[1] });
-                } else {
-                     newTasks.push({ text: clean, done: false, date: currentDateContext });
+                     taskDate = datePrefixMatch[1];
+                     taskText = datePrefixMatch[2];
                 }
+                
+                // Remove bullet points if present
+                taskText = taskText.replace(/^[-*•]\s*/, '');
+
+                newTasks.push({ text: taskText, done: false, date: taskDate, depth: depth });
             });
 
             const p = appData.projects.find(x => x.id === pid);
@@ -698,12 +703,11 @@
     function openProjectPlanModal(pid) {
         activeProjectId = pid;
         const p = appData.projects.find(x => x.id === pid);
+        const currentYear = new Date().getFullYear();
         
         let dateContext = "";
-        let dateListStr = "";
         if (p.dates && p.dates.length > 0) {
             dateContext = `선택된 날짜들: ${p.dates.join(', ')}`;
-            dateListStr = p.dates.join(', ');
         } else if (p.dateDisplay) {
             dateContext = `기간: ${p.dateDisplay}`;
         }
@@ -712,19 +716,22 @@
 `프로젝트: ${p.title}
 목표: ${p.desc || '목표 없음'}
 ${dateContext}
+(참고: 오늘은 ${currentYear}년이야. 날짜 계산 시 연도를 ${currentYear}년으로 맞춰줘.)
 
 위 일정을 고려하여 구체적인 실행 계획을 짜줘.
 [필수 형식]
-1. 날짜별 구분: 날짜 헤더는 반드시 '[Day N: YYYY-MM-DD]' 형식으로 써줘. (예: [Day 1: 2024-05-01])
+1. 날짜별 구분: 날짜 헤더는 반드시 '[Day N: YYYY-MM-DD]' 형식으로 써줘. (예: [Day 1: ${currentYear}-05-01])
 2. 할 일: 헤더 아래에 할 일을 나열해.
-3. 팁/조언: 팁이나 조언은 '[TIP] 내용' 형식으로 써줘. (별도 박스로 표시될 거야)
+3. 하위 항목: 하위 단계가 필요하면 들여쓰기(스페이스 2칸)나 '>'를 사용해줘.
+4. 팁/조언: 팁이나 조언은 '[TIP] 내용' 형식으로 써줘.
 
 작성 예시:
-[Day 1: 2024-05-01]
+[Day 1: ${currentYear}-05-01]
 - 자료 수집하기
-- 목차 작성하기
+  - 구글 학술 검색
+  - 도서관 방문
 [TIP] 무리하지 말고 30분씩 나눠서 하세요.
-[Day 2: 2024-05-02]
+[Day 2: ${currentYear}-05-02]
 - 초안 작성
 `;
 
@@ -1097,7 +1104,6 @@ ${dateContext}
                 const card = document.createElement('div');
                 card.className = 'wood-frame p-4 bg-white border border-[#C5E1A5] relative group w-full';
                 
-                // --- Group tasks by Date & Tips ---
                 const groupedTasks = {};
                 const tips = [];
                 
@@ -1112,32 +1118,20 @@ ${dateContext}
                 });
                 
                 const sortedDates = Object.keys(groupedTasks).sort();
-                let taskListHtml = '';
-
-                // 1. Render Tips Box first (or last) - Let's do TOP if exist
+                
+                // Tips Section
                 if (tips.length > 0) {
-                     taskListHtml += `<div class="proj-tip-box"><span class="proj-tip-label">TIP</span>${tips.map(tip => `<div>• ${tip.text} <button class="text-[#D7CCC8] hover:text-[#FF7F50]" onclick="window.deleteTaskItem('project', '${p.id}', ${tip.originalIndex})">x</button></div>`).join('')}</div>`;
+                    const tipBox = document.createElement('div');
+                    tipBox.className = 'proj-tip-box';
+                    tipBox.innerHTML = `<span class="proj-tip-label">TIP</span>`;
+                    tips.forEach(tip => {
+                        tipBox.innerHTML += `<div>• ${tip.text} <button class="text-[#D7CCC8] hover:text-[#FF7F50]" onclick="window.deleteTaskItem('project', '${p.id}', ${tip.originalIndex})">x</button></div>`;
+                    });
+                    card.appendChild(tipBox);
                 }
 
-                // 2. Render Date Groups
-                sortedDates.forEach(date => {
-                    const displayDate = date === '기타 (General)' ? '기타' : date;
-                    // Format Day Header if it looks like [Day N: YYYY-MM-DD] (Already in text if parsed well, but here we just show the grouping key)
-                    // If date contains "Day", it's fine.
-                    taskListHtml += `<div class="proj-date-header">${displayDate}</div>`;
-                    
-                    groupedTasks[date].forEach(item => {
-                         taskListHtml += `
-                            <li class="flex items-start gap-2 text-[#5D4037] mb-1">
-                                <div class="w-0.5 h-full bg-[#D7CCC8] mt-1.5 opacity-50"></div>
-                                <span class="flex-1">${item.text}</span>
-                                <button class="text-[#D7CCC8] hover:text-[#FF7F50] text-xs" onclick="window.deleteTaskItem('project', '${p.id}', ${item.originalIndex})">x</button>
-                            </li>
-                        `;
-                    });
-                });
-
-                card.innerHTML = `
+                // Header
+                const headerHtml = `
                     <div class="absolute top-2 right-2 flex gap-1 z-10">
                         <button class="p-1 text-[#A1887F] hover:text-[#8D6E63]" onclick="window.completeProject('${p.id}', true)">${ICONS.check}</button>
                         <button class="p-1 text-[#D7CCC8] hover:text-[#FF7F50]" onclick="window.deleteProject('${p.id}')">${ICONS.closeX}</button>
@@ -1149,11 +1143,37 @@ ${dateContext}
                             <span class="text-xs font-bold text-[#556B2F]">Project Plan</span>
                             <button onclick="openProjectPlanModal('${p.id}')" class="text-[10px] bg-[#F1F8E9] text-[#33691E] px-2 py-1 rounded-full border border-[#AED581] hover:bg-[#AED581] hover:text-white transition">AI 계획 짜기</button>
                         </div>
-                        <ul class="max-h-80 overflow-y-auto pl-1 text-sm">
-                            ${taskListHtml}
-                        </ul>
-                    </div>
-                `;
+                    </div>`;
+                
+                // Append Header + Content Container
+                const contentContainer = document.createElement('div');
+                contentContainer.innerHTML = headerHtml;
+                
+                const taskListContainer = document.createElement('div');
+                taskListContainer.className = 'max-h-80 overflow-y-auto pl-1 text-sm';
+                contentContainer.appendChild(taskListContainer);
+                card.appendChild(contentContainer);
+
+                sortedDates.forEach(date => {
+                    const displayDate = date === '기타 (General)' ? '기타' : date;
+                    const dateHeader = document.createElement('div');
+                    dateHeader.className = 'proj-date-header';
+                    dateHeader.innerText = displayDate;
+                    taskListContainer.appendChild(dateHeader);
+                    
+                    const ul = document.createElement('ul');
+                    groupedTasks[date].forEach(item => {
+                        // Use createTaskEl to render Checklist Items
+                        const taskEl = createTaskEl(item, 'project', p.id, item.originalIndex);
+                        // Apply indentation based on depth
+                        if (item.depth && item.depth > 0) {
+                            taskEl.classList.add(`task-depth-${Math.min(item.depth, 2)}`);
+                        }
+                        ul.appendChild(taskEl);
+                    });
+                    taskListContainer.appendChild(ul);
+                });
+                
                 scrollDiv.appendChild(card);
             });
             secProj.appendChild(scrollDiv);
@@ -1269,15 +1289,31 @@ ${dateContext}
         const li = document.createElement('li');
         li.className = 'timeline-container flex flex-col mb-4';
         
-        const dot = document.createElement('div');
-        dot.className = 'timeline-dot';
-        const line = document.createElement('div');
-        line.className = 'timeline-line';
-        li.appendChild(line);
-        li.appendChild(dot);
+        // Hide dot/line for projects if desired, or keep them for consistency
+        // Let's keep a simpler look for projects
+        const isProject = type === 'project';
+        
+        if (!isProject) {
+            const dot = document.createElement('div');
+            dot.className = 'timeline-dot';
+            const line = document.createElement('div');
+            line.className = 'timeline-line';
+            li.appendChild(line);
+            li.appendChild(dot);
+        } else {
+            // Minimalist dot for project
+            const dot = document.createElement('div');
+            dot.className = 'absolute left-0 top-2 w-1.5 h-1.5 bg-[#D7CCC8] rounded-full';
+            // li.appendChild(dot); // Optional: indentation already provides cue
+        }
 
         const content = document.createElement('div');
         content.className = 'relative z-10 w-full';
+        // Adjust padding if not using timeline lines
+        if (isProject) { 
+            li.style.paddingLeft = '0'; 
+            li.style.marginBottom = '0.5rem';
+        }
 
         let displayTime = '';
         let displayText = task.text;
@@ -1313,9 +1349,13 @@ ${dateContext}
         title.className = 'flex-1 text-sm cursor-pointer hover:text-[#8D6E63] transition leading-relaxed';
         title.innerHTML = displayText;
         if(task.done) title.classList.add('line-through', 'text-opacity-50', 'text-[#A1887F]');
+        
+        // Edit time modal only for Daily/Weekly (or implement for project if needed, currently reusing logic)
         title.onclick = () => window.openEditTimeModal(type, key, index, task);
+        
         actionGroup.appendChild(title);
 
+        // Checkbox
         const chk = document.createElement('input');
         chk.type = 'checkbox';
         chk.className = 'custom-checkbox';
@@ -1325,6 +1365,18 @@ ${dateContext}
             window.updateTask(type, key, index, {done: chk.checked}); 
         };
         actionGroup.appendChild(chk);
+
+        // Delete Button (Added for ALL types including Weekly)
+        const delBtn = document.createElement('button');
+        delBtn.className = 'text-[#D7CCC8] hover:text-[#FF7F50] text-xs px-1';
+        delBtn.innerHTML = 'x';
+        delBtn.onclick = (e) => {
+            e.stopPropagation();
+            if(confirm('삭제하시겠습니까?')) {
+                window.deleteTaskItem(type, key, index);
+            }
+        };
+        actionGroup.appendChild(delBtn);
 
         content.appendChild(actionGroup);
 
