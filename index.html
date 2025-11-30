@@ -305,7 +305,7 @@
     </footer>
 
     <div class="fixed bottom-8 right-6 z-30">
-        <button onclick="openGeneratorModal()" class="w-14 h-14 fab-house text-white hover:scale-105 transition active:scale-95 shadow-sm">
+        <button onclick="openGeneratorModal(null)" class="w-14 h-14 fab-house text-white hover:scale-105 transition active:scale-95 shadow-sm">
             <span class="text-2xl font-bold font-hand">+</span>
         </button>
     </div>
@@ -409,7 +409,7 @@
     <div id="inputModal" class="fixed inset-0 bg-black/20 z-[60] hidden flex items-center justify-center backdrop-blur-[1px]">
         <div class="bg-white p-5 rounded-2xl shadow-lg w-80 wood-frame modal-content text-center">
             <h3 id="inputModalTitle" class="font-hand text-xl text-[#8D6E63] mb-3">입력</h3>
-            <input type="text" id="inputModalField" class="w-full border-b-2 border-[#D7CCC8] p-2 mb-4 focus:outline-none text-center" placeholder="내용을 입력하세요">
+            <textarea id="inputModalField" rows="3" class="w-full border-2 border-[#EFEBE9] rounded-xl p-2 mb-4 focus:outline-none focus:border-[#D7CCC8] text-center resize-none bg-transparent" placeholder="내용을 입력하세요"></textarea>
             <div class="flex gap-2 justify-center">
                 <button onclick="closeModal('inputModal')" class="px-4 py-2 bg-gray-200 rounded-lg text-xs text-gray-500">취소</button>
                 <button onclick="confirmInput()" class="px-4 py-2 bg-[#8D6E63] text-white rounded-lg text-xs font-bold">확인</button>
@@ -427,11 +427,13 @@
         check: `<svg class="w-4 h-4 text-[#8D6E63] hover:text-[#5D4037]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"></path></svg>`,
         undo: `<svg class="w-4 h-4 text-[#8D6E63] hover:text-[#5D4037]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"></path></svg>`,
         closeX: `<svg class="w-4 h-4 text-[#D7CCC8] hover:text-[#FF7F50]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path></svg>`,
-        speech: `<svg class="w-4 h-4 text-[#BCAAA4] hover:text-[#8D6E63] transition" fill="currentColor" viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg>`
+        speech: `<svg class="w-4 h-4 text-[#BCAAA4] hover:text-[#8D6E63] transition" fill="currentColor" viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg>`,
+        edit: `<svg class="w-3 h-3 text-[#BCAAA4] hover:text-[#8D6E63]" fill="currentColor" viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>`,
+        refresh: `<svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>`
     };
 
     // 2. STATE
-    let appData = { daily: {}, weekly: {}, projects: [], dailySummaries: {} };
+    let appData = { daily: {}, weekly: {}, projects: [], dailySummaries: {}, dailyPrompts: {}, weeklyPrompts: {} };
     let currentTab = 'home';
     let selectedDate = new Date().toISOString().split('T')[0];
     let currentWeekBaseDate = new Date();
@@ -511,6 +513,8 @@
         if (!appData.weekly) appData.weekly = {};
         if (!appData.projects) appData.projects = [];
         if (!appData.dailySummaries) appData.dailySummaries = {};
+        if (!appData.dailyPrompts) appData.dailyPrompts = {};
+        if (!appData.weeklyPrompts) appData.weeklyPrompts = {};
     }
     function saveData() {
         localStorage.setItem(STORAGE_KEY_DATA, JSON.stringify(appData));
@@ -559,11 +563,17 @@
         let sysPrompt = "";
         
         if (type === 'daily') {
+             // Save Prompt
+             appData.dailyPrompts[selectedDate] = promptText;
+             
              const isTargetToday = selectedDate === todayStr;
              const timeConstraint = isTargetToday ? `2. 현재 시각(${currentTimeStr}) 이후의 일정만 계획할 것.` : `2. 하루 전체 일정을 계획할 것.`;
              sysPrompt = `역할: 플래너 (MBTI T). 날짜: ${selectedDate}. 요청: "${promptText}". [규칙] 1. 인사말 금지. ${timeConstraint} 3. 꿀팁 1~2문장. 4. 형식: 'HH:MM~HH:MM 할일'. 5. 마크다운 금지.`;
         } else {
-             // Upgraded Weekly Prompt for recommendation
+             // Save Prompt
+             const wk = getWeekKey(currentWeekBaseDate);
+             appData.weeklyPrompts[wk] = promptText;
+
              sysPrompt = `역할: 주간 플래너. 기간: ${weekRangeStr}. 요청: "${promptText}".
              [규칙]
              1. 사용자의 요청 내용을 바탕으로, 일주일 치 균형 잡힌 계획을 세워주세요.
@@ -620,6 +630,9 @@
                 const clean = line.replace(/\*\*/g, '').replace(/\|/g, '').trim();
                 if (clean.length === 0) return;
 
+                // [Enhanced Parsing] Ignore structural keywords like Phase, Step if they don't look like tasks
+                if (/^(Phase|Step|Stage)\s+\d+/.test(clean)) return;
+
                 const indentMatch = line.match(/^(\s+)/);
                 const depth = indentMatch ? Math.floor(indentMatch[1].length / 2) : 0; 
 
@@ -644,7 +657,15 @@
                      taskText = datePrefixMatch[2];
                 }
                 
+                // If text is not empty and seems valid task
+                // Filter out description lines that end up in 'General' if they don't look like tasks (optional, strictly based on user request)
+                // Let's rely on bullet point removal and length.
                 taskText = taskText.replace(/^[-*•]\s*/, '');
+                
+                if(!taskDate && taskText.length > 50 && !taskText.includes('-')) {
+                    // Assume long description text without date is not a task
+                    return;
+                }
 
                 newTasks.push({ text: taskText, done: false, date: taskDate, depth: depth });
             });
@@ -668,7 +689,8 @@
         const completed = tasks.filter(t => t.done && !t.isMessage).map(t => t.text).join(', ');
         const feedbacks = tasks.filter(t => t.feedback).map(t => t.feedback).join(', ');
         
-        if(!completed && !feedbacks) return alert('회고할 데이터가 없습니다.');
+        // Allow regeneration even if empty (maybe user wants empty summary?) - but usually needs data
+        // if(!completed && !feedbacks) return alert('회고할 데이터가 없습니다.');
         
         showLoading("zipipo가 회고 중");
         
@@ -676,7 +698,6 @@
         
         await callGemini(sysPrompt, (text) => {
             if(!appData.dailySummaries) appData.dailySummaries = {};
-            // [NEW] Clean Markdown here
             appData.dailySummaries[dateStr] = cleanMarkdown(text);
             hideLoading();
             saveData();
@@ -719,8 +740,41 @@
         saveData();
         renderApp();
     }
+    
+    // [NEW] Edit Message Function
+    function editDailyMessage(dateStr) {
+        const tasks = appData.daily[dateStr] || [];
+        // Combine all message lines
+        const msgs = tasks.filter(t => t.isMessage);
+        const combinedText = msgs.map(m => m.text).join('\n');
+        
+        openInputModal('오늘의 한마디 수정', (newText) => {
+            // Remove old messages
+            appData.daily[dateStr] = tasks.filter(t => !t.isMessage);
+            // Add new message as single block (or split if needed, but single is easier to manage)
+            if(newText.trim()) {
+                appData.daily[dateStr].unshift({ text: newText, done: false, isMessage: true });
+            }
+            saveData();
+            renderApp();
+        });
+        // Pre-fill
+        document.getElementById('inputModalField').value = combinedText;
+    }
 
     // 7. Modals & Interaction
+    function openProjectModal() {
+        // [NEW] Clear inputs
+        document.getElementById('projTitle').value = '';
+        document.getElementById('projDesc').value = '';
+        document.getElementById('projStart').value = '';
+        document.getElementById('projEnd').value = '';
+        selectedProjDates.clear();
+        switchProjMode('range');
+        
+        document.getElementById('projectInputModal').classList.remove('hidden');
+    }
+
     function openProjectPlanModal(pid) {
         activeProjectId = pid;
         const p = appData.projects.find(x => x.id === pid);
@@ -906,11 +960,6 @@ ${dateContext}
         }
     }
 
-    function moveProjCal(d) {
-        projCalDate.setMonth(projCalDate.getMonth() + d);
-        renderProjCal();
-    }
-
     function confirmCreateProject() {
         const title = document.getElementById('projTitle').value;
         const desc = document.getElementById('projDesc').value;
@@ -956,8 +1005,23 @@ ${dateContext}
         closeModal('projectInputModal');
     }
 
-    function openGeneratorModal() {
+    function openGeneratorModal(forceType) {
         document.getElementById('generatorModal').classList.remove('hidden');
+        
+        // [NEW] Load prompt based on current context
+        let savedPrompt = '';
+        if (forceType === 'daily' || currentTab === 'home') {
+             // In Daily context
+             savedPrompt = appData.dailyPrompts[selectedDate] || '';
+        } else {
+             // Default fallback or weekly logic could go here
+        }
+        
+        // But the modal buttons trigger daily/weekly generation. 
+        // So we just load the Daily prompt of selectedDate if available for convenience
+        // Or if we clicked 'Edit Prompt' from Weekly section, load Weekly prompt.
+        // Let's refine: The prompt box is shared.
+        
         const container = document.getElementById('projectMultiSelect');
         container.innerHTML = '';
         if (appData.projects.length === 0) {
@@ -970,7 +1034,15 @@ ${dateContext}
                 container.appendChild(label);
             });
         }
-        document.getElementById('taskPrompt').value = '';
+        document.getElementById('taskPrompt').value = savedPrompt;
+    }
+    
+    // [NEW] Helper to open prompt for Weekly specific
+    function openWeeklyGenerator() {
+        const wk = getWeekKey(currentWeekBaseDate);
+        const saved = appData.weeklyPrompts[wk] || '';
+        document.getElementById('taskPrompt').value = saved;
+        document.getElementById('generatorModal').classList.remove('hidden');
     }
 
     function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
@@ -1019,12 +1091,24 @@ ${dateContext}
         // Render Message first
         const dailyMsgs = dailyData.filter(t => t.isMessage);
         if (dailyMsgs.length > 0) {
-            secDaily.innerHTML += `<div class="mx-6 mt-1 mb-3 p-3 bg-white/60 rounded-xl border border-[#C5E1A5] text-sm text-[#556B2F] relative z-10 font-wando leading-relaxed">${dailyMsgs.map(m => m.text).join('<br>')}</div>`;
+            const msgBox = document.createElement('div');
+            msgBox.className = 'mx-6 mt-1 mb-3 p-3 bg-white/60 rounded-xl border border-[#C5E1A5] text-sm text-[#556B2F] relative z-10 font-wando leading-relaxed cursor-pointer hover:bg-white/80 transition';
+            // [NEW] Click to Edit
+            msgBox.onclick = () => editDailyMessage(selectedDate);
+            msgBox.innerHTML = dailyMsgs.map(m => m.text).join('<br>');
+            secDaily.appendChild(msgBox);
         }
 
         const contentDaily = document.createElement('div');
         contentDaily.className = 'bg-white rounded-[24px] border border-[#EFEBE9] p-5 relative min-h-[300px] shadow-sm';
         
+        // [NEW] Prompt Edit Button
+        const promptBtn = document.createElement('button');
+        promptBtn.className = 'absolute top-3 right-3 text-[10px] text-[#A1887F] bg-[#FDFCF5] border border-[#D7CCC8] px-2 py-1 rounded-full hover:bg-[#EFEBE9] z-20 flex items-center gap-1';
+        promptBtn.innerHTML = `📝 프롬프트 수정/재생성`;
+        promptBtn.onclick = () => openGeneratorModal(null);
+        contentDaily.appendChild(promptBtn);
+
         const gridBg = document.createElement('div');
         gridBg.className = 'absolute inset-0 pointer-events-none opacity-30';
         gridBg.style.backgroundImage = 'linear-gradient(#EFEBE9 1px, transparent 1px)';
@@ -1037,7 +1121,6 @@ ${dateContext}
             const ulDaily = document.createElement('ul');
             realDailyTasks.sort((a,b) => getTaskTimeVal(a) - getTaskTimeVal(b));
             
-            // [Fix] Use ORIGINAL index for deletion
             realDailyTasks.forEach((t) => {
                 const originalIndex = dailyData.indexOf(t);
                 ulDaily.appendChild(createTaskEl(t, 'daily', selectedDate, originalIndex));
@@ -1061,6 +1144,7 @@ ${dateContext}
                     <button onclick="window.moveWeek(-1)" class="text-[#A1887F] hover:text-[#5D4037]">◀</button>
                     <span class="text-xs font-bold text-[#5D4037]">${getWeekRangeStr(currentWeekBaseDate)}</span>
                     <button onclick="window.moveWeek(1)" class="text-[#A1887F] hover:text-[#5D4037]">▶</button>
+                    <button onclick="window.openWeeklyGenerator()" class="ml-1 text-[10px] text-[#8D6E63] border border-[#D7CCC8] px-2 py-1 rounded bg-white hover:bg-[#EFEBE9]">📝 프롬프트</button>
                     <button onclick="window.openAddTaskModal(null, 'weekly')" class="border border-[#D7CCC8] bg-white rounded-full w-6 h-6 flex items-center justify-center text-[#8D6E63] text-sm ml-1 hover:bg-[#EFEBE9]">+</button>
                 </div>
             </div>`;
@@ -1163,7 +1247,6 @@ ${dateContext}
                     card.appendChild(tipBox);
                 }
 
-                // [NEW] Design: Date Top, Title Bottom (Big)
                 const headerHtml = `
                     <div class="absolute top-2 right-2 flex gap-1 z-10">
                         <button class="p-1 text-[#A1887F] hover:text-[#8D6E63]" onclick="window.completeProject('${p.id}', true)">${ICONS.check}</button>
@@ -1319,10 +1402,14 @@ ${dateContext}
         
         const fbSection = document.createElement('div');
         fbSection.className = 'mt-auto pt-4 border-t border-[#EFEBE9]';
-        let detailsHtml = `<h3 class="font-hand text-lg text-[#5D4037] mb-2 border-b border-[#EFEBE9] pb-1">${achievementViewDate}</h3>`;
+        let detailsHtml = `<h3 class="font-hand text-lg text-[#5D4037] mb-2 border-b border-[#EFEBE9] pb-1 flex justify-between items-center">${achievementViewDate}</h3>`;
         
         if (summary) {
-            detailsHtml += `<div class="mb-4 p-3 bg-[#F1F8E9] rounded-xl text-xs text-[#33691E] leading-relaxed font-wando border border-[#AED581]"><div class="font-bold mb-1">✨ zipipo 회고 요약</div>${summary}</div>`;
+            // [NEW] Regenerate Button
+            detailsHtml += `<div class="mb-4 p-3 bg-[#F1F8E9] rounded-xl text-xs text-[#33691E] leading-relaxed font-wando border border-[#AED581] relative">
+                                <button onclick="window.generateDailySummary('${achievementViewDate}')" class="absolute top-1 right-1 text-[#8D6E63] hover:bg-white rounded-full p-1">${ICONS.refresh}</button>
+                                <div class="font-bold mb-1">✨ zipipo 회고 요약</div>${summary}
+                            </div>`;
         } else if (completedTasks.length > 0) {
             detailsHtml += `<button onclick="window.generateDailySummary('${achievementViewDate}')" class="w-full mb-4 py-2 bg-white border border-[#D7CCC8] text-[#8D6E63] rounded-xl text-xs hover:bg-[#FDFCF5] transition flex items-center justify-center gap-1"><span>✨ zipipo 회고 정리</span></button>`;
         }
@@ -1331,7 +1418,10 @@ ${dateContext}
         if(completedTasks.length === 0) detailsHtml += `<li class="text-xs text-[#BCAAA4] italic text-center">완료된 일정이 없어요.</li>`;
         else {
             completedTasks.forEach(t => {
-                let cleanText = t.text.replace(/\(.*\)/, '').trim();
+                // [NEW] Remove timestamps from achievement list
+                // Regex matches: 12:00~13:00 (60m) or 12:00~ or (60m)
+                let cleanText = t.text.replace(/(\d{1,2}:\d{2})?(~)?(\d{1,2}:\d{2})?(\s*\(.*?m\))?/, '').trim();
+                // Also remove parentheses content if it looks like time duration (already handled above, but ensure cleanliness)
                 detailsHtml += `<li class="text-xs flex gap-2 items-start text-[#5D4037]"><span class="w-1.5 h-1.5 rounded-full bg-[#A1887F] mt-1.5"></span> ${cleanText}</li>`;
             });
         }
@@ -1504,10 +1594,11 @@ ${dateContext}
     window.toggleApiKeyInput = toggleApiKeyInput;
     window.generateSchedule = generateSchedule;
     window.openGeneratorModal = openGeneratorModal;
+    window.openWeeklyGenerator = openWeeklyGenerator;
     window.openAddTaskModal = openAddTaskModal;
     window.closeAddTaskModal = () => closeModal('addTaskModal');
     window.confirmTaskAction = confirmTaskAction;
-    window.openProjectModal = () => document.getElementById('projectInputModal').classList.remove('hidden');
+    window.openProjectModal = openProjectModal;
     window.closeProjectModal = () => closeModal('projectInputModal');
     window.switchProjMode = switchProjMode;
     window.confirmCreateProject = confirmCreateProject;
