@@ -51,7 +51,7 @@
             z-index: 40;
             background-color: var(--bg-ivory);
             border-bottom: 1px solid #EFEBE9;
-            padding-top: env(safe-area-inset-top); /* For iPhone notch */
+            padding-top: env(safe-area-inset-top);
         }
 
         /* Timeline - Daily */
@@ -310,7 +310,7 @@
     <main id="appContent" class="p-5 flex-1 space-y-6 overflow-y-auto"></main>
 
     <div id="saveToast" class="fixed bottom-24 left-1/2 transform -translate-x-1/2 bg-[#5D4037] text-white text-xs px-4 py-2 rounded-full shadow-none opacity-0 transition-opacity duration-300 pointer-events-none z-50 bg-opacity-90 backdrop-blur-sm">
-        저장됨
+        저장됨 ✨
     </div>
 
     <div id="aiLoadingPopup" class="fixed inset-0 bg-black/10 z-[70] hidden flex items-center justify-center backdrop-blur-[1px]">
@@ -324,10 +324,6 @@
 
     <footer id="homeFooter" class="mt-auto py-8 text-center">
         <div class="flex justify-center gap-4 text-xs text-[#BCAAA4]">
-            <button onclick="openRoutineModal()" class="hover:text-[#8D6E63] font-hand text-lg flex items-center gap-1">
-                Routine
-            </button>
-            <span class="text-gray-300">|</span>
             <button onclick="toggleApiKeyInput()" class="hover:text-[#8D6E63] font-hand text-lg flex items-center gap-1">
                 <svg class="w-4 h-4 text-[#D7CCC8]" fill="currentColor" viewBox="0 0 24 24"><path d="M12.65 10C11.83 7.67 9.61 6 7 6c-3.31 0-6 2.69-6 6s2.69 6 6 6c2.61 0 4.83-1.67 5.65-4H17v4h4v-4h2v-4H12.65zM7 14c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z"/></svg>
                 Key Setting
@@ -520,6 +516,7 @@
         return getLocalDateStr(sunday);
     }
     
+    // [FIX] Correct Weekly Range Calculation Logic
     function getWeekRangeStr(d) { 
         const curr = new Date(d); // base date
         const day = curr.getDay(); // 0(Sun) ~ 6(Sat)
@@ -1492,7 +1489,13 @@ ${dateContext}
                             headerDiv.innerHTML = `${item.text} <button class="text-[#D7CCC8] hover:text-[#FF7F50] float-right" onclick="window.deleteTaskItem('project', '${p.id}', ${item.originalIndex})">x</button>`;
                             ul.appendChild(headerDiv);
                         } else {
-                            const taskEl = createTaskEl(item, 'project', p.id, item.originalIndex, taskCounter++);
+                            // [FIX] Pass numberPrefix only for non-indented items
+                            let numberPrefix = null;
+                            if (!item.depth || item.depth === 0) {
+                                numberPrefix = taskCounter++;
+                            }
+                            
+                            const taskEl = createTaskEl(item, 'project', p.id, item.originalIndex, numberPrefix);
                             if (item.depth && item.depth > 0) {
                                 taskEl.classList.add(`task-depth-${Math.min(item.depth, 2)}`);
                             }
@@ -1603,19 +1606,18 @@ ${dateContext}
         
         const fbSection = document.createElement('div');
         fbSection.className = 'mt-auto pt-4 border-t border-[#EFEBE9]';
-        let detailsHtml = `<h3 class="font-hand text-lg text-[#5D4037] border-b border-[#EFEBE9]">${achievementViewDate}</h3>`;
+        let detailsHtml = `<h3 class="font-hand text-lg text-[#5D4037] mb-2 border-b border-[#EFEBE9] pb-1">${achievementViewDate}</h3>`;
         
         if (summary) {
-            // [FIX] Reduced margin/padding
-            detailsHtml += `<div class="mb-2 mt-2 p-2 bg-[#F1F8E9] rounded-xl text-xs text-[#33691E] leading-relaxed font-wando border border-[#AED581] relative whitespace-pre-wrap">
+            detailsHtml += `<div class="mb-4 p-2 bg-[#F1F8E9] rounded-xl text-xs text-[#33691E] leading-relaxed font-wando border border-[#AED581] relative whitespace-pre-wrap">
                                 <button onclick="window.generateDailySummary('${achievementViewDate}')" class="absolute top-1 right-1 text-[#8D6E63] hover:bg-white rounded-full p-1">${ICONS.refresh}</button>
-                                <div class="font-bold mb-1"> zipipo 회고 요약</div>${summary}
+                                <div class="font-bold mb-0"> zipipo 회고 요약</div>${summary}
                             </div>`;
         } else if (completedTasks.length > 0) {
-            detailsHtml += `<button onclick="window.generateDailySummary('${achievementViewDate}')" class="w-full mb-4 mt-2 py-2 bg-white border border-[#D7CCC8] text-[#8D6E63] rounded-xl text-xs hover:bg-[#FDFCF5] transition flex items-center justify-center gap-1"><span>✨ zipipo 회고 정리</span></button>`;
+            detailsHtml += `<button onclick="window.generateDailySummary('${achievementViewDate}')" class="w-full mb-4 py-2 bg-white border border-[#D7CCC8] text-[#8D6E63] rounded-xl text-xs hover:bg-[#FDFCF5] transition flex items-center justify-center gap-1"><span>✨ zipipo 회고 정리</span></button>`;
         }
         
-        detailsHtml += `<ul class="space-y-2 mb-4 mt-2">`;
+        detailsHtml += `<ul class="space-y-2 mb-4">`;
         if(completedTasks.length === 0) detailsHtml += `<li class="text-xs text-[#BCAAA4] italic text-center">완료된 일정이 없어요.</li>`;
         else {
             completedTasks.forEach(t => {
@@ -1697,16 +1699,20 @@ ${dateContext}
         
         title.onclick = () => window.openEditTimeModal(type, key, index, task);
         
-        // Feedback Button Left of Checkbox
-        if (type === 'daily' && !task.feedback) {
-             const fbBtn = document.createElement('button');
-             fbBtn.className = 'text-[#BCAAA4] hover:text-[#8D6E63] mx-1';
-             fbBtn.innerHTML = ICONS.speech;
-             fbBtn.onclick = (e) => {
-                 e.stopPropagation();
-                 window.openInputModal('한줄 피드백', (val) => window.updateTask(type, key, index, {feedback: val}));
-             };
-             actionGroup.appendChild(fbBtn);
+        // [MODIFIED] Feedback Button Left of Checkbox
+        if (type === 'daily') {
+             // Always create button, but hide it if feedback exists (or show different icon?)
+             // Requirement: "쓰고 나면 수정 필요없으니까 사라지게 해줘!!"
+             if (!task.feedback) {
+                 const fbBtn = document.createElement('button');
+                 fbBtn.className = 'text-[#BCAAA4] hover:text-[#8D6E63] mx-1';
+                 fbBtn.innerHTML = ICONS.speech;
+                 fbBtn.onclick = (e) => {
+                     e.stopPropagation();
+                     window.openInputModal('한줄 피드백', (val) => window.updateTask(type, key, index, {feedback: val}));
+                 };
+                 actionGroup.appendChild(fbBtn);
+             }
         }
 
         actionGroup.appendChild(title);
