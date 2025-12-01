@@ -3,6 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="zipipo">
+    <meta name="mobile-web-app-capable" content="yes">
+    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏠</text></svg>">
+    <link rel="shortcut icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏠</text></svg>">
+
     <title>zipipo planner</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -316,6 +324,10 @@
 
     <footer id="homeFooter" class="mt-auto py-8 text-center">
         <div class="flex justify-center gap-4 text-xs text-[#BCAAA4]">
+            <button onclick="openRoutineModal()" class="hover:text-[#8D6E63] font-hand text-lg flex items-center gap-1">
+                Routine
+            </button>
+            <span class="text-gray-300">|</span>
             <button onclick="toggleApiKeyInput()" class="hover:text-[#8D6E63] font-hand text-lg flex items-center gap-1">
                 <svg class="w-4 h-4 text-[#D7CCC8]" fill="currentColor" viewBox="0 0 24 24"><path d="M12.65 10C11.83 7.67 9.61 6 7 6c-3.31 0-6 2.69-6 6s2.69 6 6 6c2.61 0 4.83-1.67 5.65-4H17v4h4v-4h2v-4H12.65zM7 14c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z"/></svg>
                 Key Setting
@@ -345,6 +357,21 @@
                 <button onclick="generateSchedule('daily')" class="flex-1 py-3 bg-[#FFAB91] text-white font-bold rounded-xl hover:bg-[#FF8A65] transition shadow-sm text-sm">Daily</button>
                 <button onclick="generateSchedule('weekly')" class="flex-1 py-3 bg-[#A5D6A7] text-white font-bold rounded-xl hover:bg-[#81C784] transition shadow-sm text-sm">Weekly</button>
             </div>
+        </div>
+    </div>
+
+    <div id="routineModal" class="fixed inset-0 bg-[#4E342E]/20 z-50 hidden flex items-center justify-center backdrop-blur-[1px]">
+        <div class="bg-[#FDFCF5] w-full max-w-md p-6 rounded-2xl shadow-none border-2 border-[#EFEBE9] m-4 wood-frame modal-content">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="font-hand text-xl text-[#8D6E63]">루틴 관리</h3>
+                <button onclick="closeModal('routineModal')" class="text-[#BCAAA4] hover:text-[#8D6E63] text-xl">✕</button>
+            </div>
+            <div class="flex gap-2 mb-4">
+                <input type="text" id="newRoutineInput" class="flex-1 border-b-2 border-[#D7CCC8] p-1 text-sm focus:outline-none bg-transparent" placeholder="새 루틴 (예: 🧘 스트레칭)">
+                <button onclick="addRoutine()" class="bg-[#D7CCC8] text-white px-3 py-1 rounded-lg text-xs font-bold hover:bg-[#A1887F]">+</button>
+            </div>
+            <div id="routineList" class="max-h-60 overflow-y-auto space-y-2">
+                </div>
         </div>
     </div>
 
@@ -451,7 +478,7 @@
     };
 
     // 2. STATE
-    let appData = { daily: {}, weekly: {}, projects: [], dailySummaries: {}, dailyPrompts: {}, weeklyPrompts: {} };
+    let appData = { daily: {}, weekly: {}, projects: [], dailySummaries: {}, dailyPrompts: {}, weeklyPrompts: {}, routines: [] };
     let currentTab = 'home';
     let selectedDate = new Date().toISOString().split('T')[0];
     let lastKnownToday = new Date().toISOString().split('T')[0]; 
@@ -493,17 +520,18 @@
         return getLocalDateStr(sunday);
     }
     
+    // [FIX] Correct Weekly Range Calculation Logic (Fixed for month crossing)
     function getWeekRangeStr(d) { 
-        const curr = new Date(d);
-        const day = curr.getDay();
+        const curr = new Date(d); // base date
+        const day = curr.getDay(); // 0(Sun) ~ 6(Sat)
         
-        // Sun
+        // Sunday (Start)
         const first = new Date(curr);
         first.setDate(curr.getDate() - day);
         
-        // Sat
+        // Saturday (End)
         const last = new Date(first);
-        last.setDate(first.getDate() + 6);
+        last.setDate(first.getDate() + 6); // Add 6 days to Sunday
         
         return `${first.getMonth()+1}.${first.getDate()} ~ ${last.getMonth()+1}.${last.getDate()}`;
     }
@@ -559,6 +587,7 @@
         if (!appData.dailySummaries) appData.dailySummaries = {};
         if (!appData.dailyPrompts) appData.dailyPrompts = {};
         if (!appData.weeklyPrompts) appData.weeklyPrompts = {};
+        if (!appData.routines) appData.routines = [];
     }
     function saveData() {
         localStorage.setItem(STORAGE_KEY_DATA, JSON.stringify(appData));
@@ -801,7 +830,7 @@
                 renderApp();
             });
         } catch(e) {
-            alert("회고 생성 중 오류가 발생했습니다.");
+            alert("회고 생성 중 오류가 발생했습니다.\n" + e.message);
             console.error(e);
             hideLoading();
         }
@@ -833,6 +862,7 @@
     }
 
     function updateTask(type, key, index, changes) {
+        // [FIX] Store Project Scroll before update
         if(currentTab === 'project') {
             const scrollEl = document.getElementById('projectScrollContainer');
             if(scrollEl) lastProjectScrollTop = scrollEl.scrollTop;
@@ -846,6 +876,14 @@
         Object.assign(targetArr[index], changes);
         saveData();
         renderApp();
+        
+        // [FIX] Restore Scroll via setTimeout to wait for DOM update
+        if(currentTab === 'project' && lastProjectScrollTop > 0) {
+            setTimeout(() => {
+                const scrollEl = document.getElementById('projectScrollContainer');
+                if(scrollEl) scrollEl.scrollTop = lastProjectScrollTop;
+            }, 0);
+        }
     }
     
     function updateProjectMemo(pid, val) {
@@ -870,6 +908,48 @@
             renderApp();
         });
         document.getElementById('inputModalField').value = combinedText;
+    }
+
+    // Routine Logic
+    function openRoutineModal() {
+        document.getElementById('routineModal').classList.remove('hidden');
+        renderRoutineList();
+    }
+    function renderRoutineList() {
+        const list = document.getElementById('routineList');
+        list.innerHTML = '';
+        (appData.routines || []).forEach((r, i) => {
+            list.innerHTML += `
+                <div class="flex justify-between items-center bg-white border border-[#EFEBE9] p-2 rounded">
+                    <span class="text-sm">${r.text}</span>
+                    <button onclick="window.deleteRoutine(${i})" class="text-[#D7CCC8] hover:text-[#FF8A65]">x</button>
+                </div>`;
+        });
+    }
+    function addRoutine() {
+        const input = document.getElementById('newRoutineInput');
+        const text = input.value.trim();
+        if(text) {
+            appData.routines.push({ text: text });
+            input.value = '';
+            saveData();
+            renderRoutineList();
+        }
+    }
+    function deleteRoutine(i) {
+        appData.routines.splice(i, 1);
+        saveData();
+        renderRoutineList();
+    }
+    function applyRoutinesToDaily() {
+        if(!appData.routines || appData.routines.length === 0) return alert('등록된 루틴이 없습니다.');
+        if(!appData.daily[selectedDate]) appData.daily[selectedDate] = [];
+        
+        appData.routines.forEach(r => {
+            appData.daily[selectedDate].push({ text: `[Routine] ${r.text}`, done: false, isMessage: false });
+        });
+        saveData();
+        renderApp();
     }
 
     // 7. Modals & Interaction
@@ -1177,6 +1257,7 @@ ${dateContext}
                     <span class="text-sm text-[#A1887F] font-sans font-bold">${dayNames[d.getDay()]}</span>
                 </div>
                 <div class="flex gap-2">
+                    <button onclick="window.applyRoutinesToDaily()" class="text-[10px] bg-white border border-[#D7CCC8] px-2 py-1 rounded-full text-[#8D6E63] hover:bg-[#EFEBE9]">루틴 가져오기</button>
                     <input type="date" class="border border-[#D7CCC8] rounded px-2 py-1 text-xs bg-white" value="${selectedDate}" onchange="window.changeDate(this.value)">
                 </div>
             </div>`;
@@ -1523,7 +1604,7 @@ ${dateContext}
         let detailsHtml = `<h3 class="font-hand text-lg text-[#5D4037] mb-2 border-b border-[#EFEBE9] pb-1">${achievementViewDate}</h3>`;
         
         if (summary) {
-            detailsHtml += `<div class="mb-4 p-3 bg-[#F1F8E9] rounded-xl text-xs text-[#33691E] leading-relaxed font-wando border border-[#AED581] relative whitespace-pre-wrap">
+            detailsHtml += `<div class="mb-4 p-2.5 bg-[#F1F8E9] rounded-xl text-xs text-[#33691E] leading-relaxed font-wando border border-[#AED581] relative whitespace-pre-wrap">
                                 <button onclick="window.generateDailySummary('${achievementViewDate}')" class="absolute top-1 right-1 text-[#8D6E63] hover:bg-white rounded-full p-1">${ICONS.refresh}</button>
                                 <div class="font-bold mb-1">✨ zipipo 회고 요약</div>${summary}
                             </div>`;
@@ -1613,8 +1694,6 @@ ${dateContext}
         
         title.onclick = () => window.openEditTimeModal(type, key, index, task);
         
-        actionGroup.appendChild(title);
-
         // [MODIFIED] Feedback Button Left of Checkbox
         if (type === 'daily' && !task.feedback) {
              const fbBtn = document.createElement('button');
@@ -1753,6 +1832,53 @@ ${dateContext}
     window.addManualTask = addManualTask;
     window.changeDate = changeDate;
     window.updateProjectMemo = updateProjectMemo;
+
+    // [NEW] Routine Logic
+    window.openRoutineModal = openRoutineModal;
+    window.addRoutine = addRoutine;
+    window.deleteRoutine = deleteRoutine;
+    window.applyRoutinesToDaily = applyRoutinesToDaily;
+
+    function openRoutineModal() {
+        document.getElementById('routineModal').classList.remove('hidden');
+        renderRoutineList();
+    }
+    function renderRoutineList() {
+        const list = document.getElementById('routineList');
+        list.innerHTML = '';
+        (appData.routines || []).forEach((r, i) => {
+            list.innerHTML += `
+                <div class="flex justify-between items-center bg-white border border-[#EFEBE9] p-2 rounded">
+                    <span class="text-sm">${r.text}</span>
+                    <button onclick="window.deleteRoutine(${i})" class="text-[#D7CCC8] hover:text-[#FF8A65]">x</button>
+                </div>`;
+        });
+    }
+    function addRoutine() {
+        const input = document.getElementById('newRoutineInput');
+        const text = input.value.trim();
+        if(text) {
+            appData.routines.push({ text: text });
+            input.value = '';
+            saveData();
+            renderRoutineList();
+        }
+    }
+    function deleteRoutine(i) {
+        appData.routines.splice(i, 1);
+        saveData();
+        renderRoutineList();
+    }
+    function applyRoutinesToDaily() {
+        if(!appData.routines || appData.routines.length === 0) return alert('등록된 루틴이 없습니다.');
+        if(!appData.daily[selectedDate]) appData.daily[selectedDate] = [];
+        
+        appData.routines.forEach(r => {
+            appData.daily[selectedDate].push({ text: `[Routine] ${r.text}`, done: false, isMessage: false });
+        });
+        saveData();
+        renderApp();
+    }
 
 </script>
 </body>
