@@ -467,7 +467,7 @@
     let loadingInterval;
     let calendarDate = new Date();
     
-    // [NEW] To maintain scroll position in projects
+    // To maintain scroll position in projects
     let lastProjectScrollTop = 0;
 
     // 3. HELPER FUNCTIONS
@@ -486,7 +486,6 @@
     function getTodayStr() { return getLocalDateStr(new Date()); }
     function parseTasks(text) { return text.split('\n').map(l=>l).filter(l=>l.trim().length>0 && !l.trim().startsWith('---')); } 
     
-    // [FIX] New Weekly Key Logic
     function getWeekKey(d) { 
         const date = new Date(d);
         const diff = date.getDate() - date.getDay(); 
@@ -494,7 +493,6 @@
         return getLocalDateStr(sunday);
     }
     
-    // [FIX] Correct Weekly Range Calculation
     function getWeekRangeStr(d) { 
         const curr = new Date(d);
         const day = curr.getDay();
@@ -790,7 +788,8 @@
             4. 내일 계획 반영 (구체적인 조언)
 
             [규칙]
-            - 각 항목은 소제목과 내용으로 구분.
+            - 각 항목의 제목과 내용은 반드시 줄바꿈으로 구분하세요.
+            - 내용은 간결하게 개조식(- 기호 사용)으로 작성하세요.
             - 마크다운(bold 등)은 쓰지 말고 깔끔한 텍스트로.
             - 따뜻하고 격려하는 말투.`;
             
@@ -834,7 +833,6 @@
     }
 
     function updateTask(type, key, index, changes) {
-        // [FIX] Store Project Scroll
         if(currentTab === 'project') {
             const scrollEl = document.getElementById('projectScrollContainer');
             if(scrollEl) lastProjectScrollTop = scrollEl.scrollTop;
@@ -1525,7 +1523,7 @@ ${dateContext}
         let detailsHtml = `<h3 class="font-hand text-lg text-[#5D4037] mb-2 border-b border-[#EFEBE9] pb-1">${achievementViewDate}</h3>`;
         
         if (summary) {
-            detailsHtml += `<div class="mb-4 p-3 bg-[#F1F8E9] rounded-xl text-xs text-[#33691E] leading-relaxed font-wando border border-[#AED581] relative">
+            detailsHtml += `<div class="mb-4 p-3 bg-[#F1F8E9] rounded-xl text-xs text-[#33691E] leading-relaxed font-wando border border-[#AED581] relative whitespace-pre-wrap">
                                 <button onclick="window.generateDailySummary('${achievementViewDate}')" class="absolute top-1 right-1 text-[#8D6E63] hover:bg-white rounded-full p-1">${ICONS.refresh}</button>
                                 <div class="font-bold mb-1">✨ zipipo 회고 요약</div>${summary}
                             </div>`;
