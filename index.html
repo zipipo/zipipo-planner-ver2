@@ -261,7 +261,6 @@
             margin-bottom: 4px;
             font-weight: bold;
         }
-        /* Memo Area Style */
         .proj-memo-area {
             width: 100%;
             background-color: #FDFCF5;
@@ -455,7 +454,7 @@
     let appData = { daily: {}, weekly: {}, projects: [], dailySummaries: {}, dailyPrompts: {}, weeklyPrompts: {} };
     let currentTab = 'home';
     let selectedDate = new Date().toISOString().split('T')[0];
-    let lastKnownToday = new Date().toISOString().split('T')[0]; // To track date changes
+    let lastKnownToday = new Date().toISOString().split('T')[0]; 
     let currentWeekBaseDate = new Date();
     let achievementViewDate = new Date().toISOString().split('T')[0];
     let inputCallback = null;
@@ -467,6 +466,9 @@
     let currentTaskTypeForAdd = 'daily'; 
     let loadingInterval;
     let calendarDate = new Date();
+    
+    // [NEW] To maintain scroll position in projects
+    let lastProjectScrollTop = 0;
 
     // 3. HELPER FUNCTIONS
     function getLocalDateStr(d) {
@@ -477,23 +479,37 @@
         return `${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`;
     }
     function cleanMarkdown(text) {
+        if (!text) return "";
         return text.replace(/\*\*/g, '').replace(/\*/g, '').replace(/###/g, '').replace(/##/g, '').replace(/#/g, '').replace(/-/g, '').trim();
     }
 
     function getTodayStr() { return getLocalDateStr(new Date()); }
     function parseTasks(text) { return text.split('\n').map(l=>l).filter(l=>l.trim().length>0 && !l.trim().startsWith('---')); } 
     
-    // [FIX] New Weekly Key Logic: YYYY-MM-DD of Sunday of that week
+    // [FIX] New Weekly Key Logic
     function getWeekKey(d) { 
         const date = new Date(d);
-        // Calculate the Sunday of this week
-        // d.getDay(): Sun=0, Mon=1...
         const diff = date.getDate() - date.getDay(); 
         const sunday = new Date(date.setDate(diff));
         return getLocalDateStr(sunday);
     }
     
-    function getWeekRangeStr(d) { const curr = new Date(d); const first = curr.getDate() - curr.getDay(); const last = first + 6; const f = new Date(curr.setDate(first)); const l = new Date(curr.setDate(last)); return `${f.getMonth()+1}.${f.getDate()} ~ ${l.getMonth()+1}.${l.getDate()}`; }
+    // [FIX] Correct Weekly Range Calculation
+    function getWeekRangeStr(d) { 
+        const curr = new Date(d);
+        const day = curr.getDay();
+        
+        // Sun
+        const first = new Date(curr);
+        first.setDate(curr.getDate() - day);
+        
+        // Sat
+        const last = new Date(first);
+        last.setDate(first.getDate() + 6);
+        
+        return `${first.getMonth()+1}.${first.getDate()} ~ ${last.getMonth()+1}.${last.getDate()}`;
+    }
+    
     function getSunday(d) { d = new Date(d); var day = d.getDay(); var diff = d.getDate() - day; return new Date(d.setDate(diff)); }
     function toggleApiKeyInput() { document.getElementById('apiKeyContainer').classList.toggle('hidden'); }
     function changeDate(v) { selectedDate = v; renderApp(); }
@@ -559,6 +575,11 @@
     // 5. API INTERACTION
     async function callGemini(sysPrompt, cb) {
         const key = localStorage.getItem(STORAGE_KEY_API);
+        if (!key) {
+            alert("API Key가 없습니다. 하단 Key Setting에서 키를 입력해주세요.");
+            hideLoading();
+            return;
+        }
         try {
             const res = await fetch(`${GEMINI_URL}?key=${key}`, {
                 method: 'POST',
@@ -568,8 +589,16 @@
             const data = await res.json();
             if(data.candidates && data.candidates[0].content) {
                 cb(data.candidates[0].content.parts[0].text);
-            } else { alert('오류가 발생했습니다.'); hideLoading(); }
-        } catch(e) { alert('API 요청 실패'); console.error(e); hideLoading(); }
+            } else { 
+                console.error("Gemini Error:", data);
+                alert('오류가 발생했습니다. 잠시 후 다시 시도해주세요.\n' + (data.error ? data.error.message : 'Unknown Error')); 
+                hideLoading(); 
+            }
+        } catch(e) { 
+            alert('API 요청 실패 (네트워크 오류 등)'); 
+            console.error(e); 
+            hideLoading(); 
+        }
     }
 
     // 6. LOGIC
@@ -590,11 +619,9 @@
         const currSat = new Date(currSun); currSat.setDate(currSat.getDate()+6);
         const weekRangeStr = `${getLocalDateStr(currSun)} ~ ${getLocalDateStr(currSat)}`;
 
-        // [NEW] Context Integration
         let contextInfo = "";
         
         if (type === 'daily') {
-             // 1. Previous Day Summary (Plan for Tomorrow)
              const prevDate = new Date(selectedDate);
              prevDate.setDate(prevDate.getDate() - 1);
              const prevDateStr = getLocalDateStr(prevDate);
@@ -602,7 +629,6 @@
                  contextInfo += `\n[참고: 어제의 회고 및 내일 계획 반영]\n${appData.dailySummaries[prevDateStr]}\n`;
              }
              
-             // 2. Weekly Tasks for Today
              const wkKey = getWeekKey(new Date(selectedDate));
              if (appData.weekly[wkKey] && appData.weekly[wkKey].tasks) {
                  const todaysWeeklyTasks = appData.weekly[wkKey].tasks.filter(t => 
@@ -618,7 +644,6 @@
         let sysPrompt = "";
         
         if (type === 'daily') {
-             // Save Prompt
              appData.dailyPrompts[selectedDate] = promptText;
              
              const isTargetToday = selectedDate === todayStr;
@@ -627,7 +652,6 @@
              ${contextInfo}
              [규칙] 1. 인사말 금지. ${timeConstraint} 3. 꿀팁 1~2문장. 4. 형식: 'HH:MM~HH:MM 할일'. 5. 마크다운 금지.`;
         } else {
-             // Save Prompt
              const wk = getWeekKey(currentWeekBaseDate);
              appData.weeklyPrompts[wk] = promptText;
 
@@ -666,7 +690,6 @@
                 appData.weekly[wk].tasks.push(...newTasks);
             }
             
-            // Clear prompt input after generation
             document.getElementById('taskPrompt').value = '';
             
             hideLoading();
@@ -744,44 +767,45 @@
         const key = localStorage.getItem(STORAGE_KEY_API);
         if(!key) return alert('API Key가 필요해요!');
         
-        const tasks = appData.daily[dateStr] || [];
-        
-        // [NEW] Gather ALL tasks and feedbacks (Completed + Incomplete)
-        let summaryContext = "";
-        tasks.forEach(t => {
-            if (t.isMessage) return;
-            const status = t.done ? "완료" : "미완료";
-            const fb = t.feedback ? `(피드백: ${t.feedback})` : "";
-            summaryContext += `- ${t.text} [${status}] ${fb}\n`;
-        });
-        
-        showLoading("zipipo가 회고 중");
-        
-        // [NEW] Structured Retrospective Prompt
-        const sysPrompt = `날짜: ${dateStr}.
-        
-        [오늘의 활동 내역]
-        ${summaryContext}
-        
-        위 내용을 바탕으로 아래 4가지 항목으로 정리해줘.
-        
-        1. 오늘 잘한 점
-        2. 아쉬운 점 (미완료 원인 등)
-        3. 마인드셋 (동기부여)
-        4. 내일 계획 반영 (구체적인 조언)
+        try {
+            const tasks = appData.daily[dateStr] || [];
+            let summaryContext = "";
+            tasks.forEach(t => {
+                if (t.isMessage) return;
+                const status = t.done ? "완료" : "미완료";
+                const fb = t.feedback ? `(피드백: ${t.feedback})` : "";
+                summaryContext += `- ${t.text} [${status}] ${fb}\n`;
+            });
+            
+            showLoading("zipipo가 회고 중");
+            
+            const sysPrompt = `날짜: ${dateStr}.
+            [오늘의 활동 내역]
+            ${summaryContext}
+            
+            위 내용을 바탕으로 아래 4가지 항목으로 정리해줘.
+            1. 오늘 잘한 점
+            2. 아쉬운 점 (미완료 원인 등)
+            3. 마인드셋 (동기부여)
+            4. 내일 계획 반영 (구체적인 조언)
 
-        [규칙]
-        - 각 항목은 소제목과 내용으로 구분.
-        - 마크다운(bold 등)은 쓰지 말고 깔끔한 텍스트로.
-        - 따뜻하고 격려하는 말투.`;
-        
-        await callGemini(sysPrompt, (text) => {
-            if(!appData.dailySummaries) appData.dailySummaries = {};
-            appData.dailySummaries[dateStr] = cleanMarkdown(text);
+            [규칙]
+            - 각 항목은 소제목과 내용으로 구분.
+            - 마크다운(bold 등)은 쓰지 말고 깔끔한 텍스트로.
+            - 따뜻하고 격려하는 말투.`;
+            
+            await callGemini(sysPrompt, (text) => {
+                if(!appData.dailySummaries) appData.dailySummaries = {};
+                appData.dailySummaries[dateStr] = cleanMarkdown(text);
+                hideLoading();
+                saveData();
+                renderApp();
+            });
+        } catch(e) {
+            alert("회고 생성 중 오류가 발생했습니다.");
+            console.error(e);
             hideLoading();
-            saveData();
-            renderApp();
-        });
+        }
     }
 
     function completeProject(id, isComplete) {
@@ -810,6 +834,12 @@
     }
 
     function updateTask(type, key, index, changes) {
+        // [FIX] Store Project Scroll
+        if(currentTab === 'project') {
+            const scrollEl = document.getElementById('projectScrollContainer');
+            if(scrollEl) lastProjectScrollTop = scrollEl.scrollTop;
+        }
+
         let targetArr;
         if(type==='daily') targetArr = appData.daily[key];
         else if(type==='weekly') targetArr = appData.weekly[key].tasks;
@@ -1276,8 +1306,10 @@ ${dateContext}
         addBtnContainer.innerHTML = `<button onclick="window.openProjectModal()" class="w-full py-4 border-2 border-dashed border-[#A1887F] text-[#8D6E63] font-hand text-xl rounded-2xl hover:bg-[#FDFCF5] active:bg-[#D7CCC8] active:text-white transition bg-white shadow-none flex items-center justify-center gap-2"><span class="text-2xl">+</span> 새로운 프로젝트 심기</button>`;
         container.appendChild(addBtnContainer);
         
+        // [FIX] Add Scroll ID
         const scrollDiv = document.createElement('div');
-        scrollDiv.className = 'flex flex-col gap-4 pb-4 px-1';
+        scrollDiv.id = 'projectScrollContainer';
+        scrollDiv.className = 'flex flex-col gap-4 pb-4 px-1 overflow-y-auto max-h-[70vh]';
         
         const activeProjects = appData.projects.filter(p => !p.completed);
         const completedProjects = appData.projects.filter(p => p.completed);
@@ -1294,8 +1326,7 @@ ${dateContext}
                     if (t.isTip) {
                         tips.push({ ...t, originalIndex: idx });
                     } else {
-                        const d = t.date || '기타 (General)';
-                        // Ignore General section
+                        const d = t.date || '기타';
                         if (d === '기타 (General)' || d === '기타') return;
                         if (!groupedTasks[d]) groupedTasks[d] = [];
                         groupedTasks[d].push({ ...t, originalIndex: idx });
@@ -1304,7 +1335,6 @@ ${dateContext}
                 
                 const sortedDates = Object.keys(groupedTasks).sort();
                 
-                // Tips Section
                 if (tips.length > 0) {
                     const tipBox = document.createElement('div');
                     tipBox.className = 'proj-tip-box';
@@ -1350,10 +1380,10 @@ ${dateContext}
                 }
 
                 sortedDates.forEach(date => {
-                    const displayDate = date === '기타 (General)' ? '기타' : date;
+                    const displayDate = date;
                     
                     let dDayLabel = '';
-                    if (deadline && date !== '기타 (General)' && /\d{4}-\d{2}-\d{2}/.test(date)) {
+                    if (deadline && /\d{4}-\d{2}-\d{2}/.test(date)) {
                          const target = new Date(deadline); target.setHours(0,0,0,0);
                          const [y,m,d] = date.split('-').map(Number);
                          const current = new Date(y, m-1, d);
@@ -1372,7 +1402,6 @@ ${dateContext}
                     taskListContainer.appendChild(dateHeader);
                     
                     const ul = document.createElement('ul');
-                    
                     let taskCounter = 1;
                     
                     groupedTasks[date].forEach(item => {
@@ -1392,7 +1421,6 @@ ${dateContext}
                     taskListContainer.appendChild(ul);
                 });
                 
-                // Memo Area
                 const memoArea = document.createElement('textarea');
                 memoArea.className = 'proj-memo-area';
                 memoArea.rows = 2;
@@ -1449,6 +1477,11 @@ ${dateContext}
             secProj.appendChild(completedSec);
         }
         container.appendChild(secProj);
+        
+        // [FIX] Restore Scroll
+        if(lastProjectScrollTop > 0) {
+            scrollDiv.scrollTop = lastProjectScrollTop;
+        }
     }
 
     function renderCalendar(container) {
@@ -1528,8 +1561,6 @@ ${dateContext}
             line.className = 'timeline-line';
             li.appendChild(line);
             li.appendChild(dot);
-        } else {
-            // No dot appended for project items
         }
 
         const content = document.createElement('div');
@@ -1586,6 +1617,18 @@ ${dateContext}
         
         actionGroup.appendChild(title);
 
+        // [MODIFIED] Feedback Button Left of Checkbox
+        if (type === 'daily' && !task.feedback) {
+             const fbBtn = document.createElement('button');
+             fbBtn.className = 'text-[#BCAAA4] hover:text-[#8D6E63] mx-1';
+             fbBtn.innerHTML = ICONS.speech;
+             fbBtn.onclick = (e) => {
+                 e.stopPropagation();
+                 window.openInputModal('한줄 피드백', (val) => window.updateTask(type, key, index, {feedback: val}));
+             };
+             actionGroup.appendChild(fbBtn);
+        }
+
         const chk = document.createElement('input');
         chk.type = 'checkbox';
         chk.className = 'custom-checkbox';
@@ -1632,13 +1675,6 @@ ${dateContext}
                 displaySpan.className = 'text-xs text-[#5D4037] font-bold bg-[#F1F8E9] px-2 py-1 rounded border border-[#C5E1A5]';
                 displaySpan.innerText = timeStr;
                 timerRow.appendChild(displaySpan);
-                
-                // [MODIFIED] Feedback Button always visible next to time
-                const btn = document.createElement('button');
-                btn.className = 'text-[#BCAAA4] hover:text-[#8D6E63] ml-1';
-                btn.innerHTML = ICONS.speech;
-                btn.onclick = () => window.openInputModal('한줄 피드백', (val) => window.updateTask(type, key, index, {feedback: val}));
-                timerRow.appendChild(btn);
             } else {
                 if(!task.actualStartTime) {
                     const btn = document.createElement('button');
@@ -1653,13 +1689,6 @@ ${dateContext}
                     btn.onclick = () => window.updateTask(type, key, index, {actualEndTime: new Date().toISOString()});
                     timerRow.appendChild(btn);
                 }
-                
-                // [MODIFIED] Feedback Button always visible even if not started/stopped
-                const btn = document.createElement('button');
-                btn.className = 'text-[#BCAAA4] hover:text-[#8D6E63] ml-1';
-                btn.innerHTML = ICONS.speech;
-                btn.onclick = () => window.openInputModal('한줄 피드백', (val) => window.updateTask(type, key, index, {feedback: val}));
-                timerRow.appendChild(btn);
             }
 
             if (task.feedback) {
@@ -1676,16 +1705,15 @@ ${dateContext}
     }
 
     // --- Init ---
-    // [NEW] Auto-date check
     setInterval(() => {
         const now = getLocalDateStr(new Date());
         if (now !== lastKnownToday) {
             lastKnownToday = now;
-            selectedDate = now; // Force jump to today
-            currentWeekBaseDate = new Date(); // Reset base date
+            selectedDate = now; 
+            currentWeekBaseDate = new Date(); 
             renderApp();
         }
-    }, 60000); // Check every minute
+    }, 60000); 
 
     renderHeader();
     initTimeSelects();
@@ -1695,7 +1723,6 @@ ${dateContext}
     const savedKey = localStorage.getItem(STORAGE_KEY_API);
     if(!savedKey) toggleApiKeyInput();
 
-    // Export to global
     window.closeModal = closeModal;
     window.saveApiKey = saveApiKey;
     window.toggleApiKeyInput = toggleApiKeyInput;
