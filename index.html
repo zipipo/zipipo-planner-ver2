@@ -455,6 +455,7 @@
     let appData = { daily: {}, weekly: {}, projects: [], dailySummaries: {}, dailyPrompts: {}, weeklyPrompts: {} };
     let currentTab = 'home';
     let selectedDate = new Date().toISOString().split('T')[0];
+    let lastKnownToday = new Date().toISOString().split('T')[0]; // To track date changes
     let currentWeekBaseDate = new Date();
     let achievementViewDate = new Date().toISOString().split('T')[0];
     let inputCallback = null;
@@ -481,7 +482,17 @@
 
     function getTodayStr() { return getLocalDateStr(new Date()); }
     function parseTasks(text) { return text.split('\n').map(l=>l).filter(l=>l.trim().length>0 && !l.trim().startsWith('---')); } 
-    function getWeekKey(d) { const date = new Date(d.getTime()); date.setHours(0,0,0,0); date.setDate(date.getDate() + 3 - (date.getDay() + 6) % 7); const week1 = new Date(date.getFullYear(), 0, 4); return 1 + Math.round(((date.getTime() - week1.getTime()) / 86400000 - 3 + (week1.getDay() + 6) % 7) / 7) + ''; }
+    
+    // [FIX] New Weekly Key Logic: YYYY-MM-DD of Sunday of that week
+    function getWeekKey(d) { 
+        const date = new Date(d);
+        // Calculate the Sunday of this week
+        // d.getDay(): Sun=0, Mon=1...
+        const diff = date.getDate() - date.getDay(); 
+        const sunday = new Date(date.setDate(diff));
+        return getLocalDateStr(sunday);
+    }
+    
     function getWeekRangeStr(d) { const curr = new Date(d); const first = curr.getDate() - curr.getDay(); const last = first + 6; const f = new Date(curr.setDate(first)); const l = new Date(curr.setDate(last)); return `${f.getMonth()+1}.${f.getDate()} ~ ${l.getMonth()+1}.${l.getDate()}`; }
     function getSunday(d) { d = new Date(d); var day = d.getDay(); var diff = d.getDate() - day; return new Date(d.setDate(diff)); }
     function toggleApiKeyInput() { document.getElementById('apiKeyContainer').classList.toggle('hidden'); }
@@ -579,6 +590,31 @@
         const currSat = new Date(currSun); currSat.setDate(currSat.getDate()+6);
         const weekRangeStr = `${getLocalDateStr(currSun)} ~ ${getLocalDateStr(currSat)}`;
 
+        // [NEW] Context Integration
+        let contextInfo = "";
+        
+        if (type === 'daily') {
+             // 1. Previous Day Summary (Plan for Tomorrow)
+             const prevDate = new Date(selectedDate);
+             prevDate.setDate(prevDate.getDate() - 1);
+             const prevDateStr = getLocalDateStr(prevDate);
+             if (appData.dailySummaries[prevDateStr]) {
+                 contextInfo += `\n[참고: 어제의 회고 및 내일 계획 반영]\n${appData.dailySummaries[prevDateStr]}\n`;
+             }
+             
+             // 2. Weekly Tasks for Today
+             const wkKey = getWeekKey(new Date(selectedDate));
+             if (appData.weekly[wkKey] && appData.weekly[wkKey].tasks) {
+                 const todaysWeeklyTasks = appData.weekly[wkKey].tasks.filter(t => 
+                     !t.isMessage && (t.specificDate === selectedDate || !t.specificDate)
+                 );
+                 if (todaysWeeklyTasks.length > 0) {
+                     const taskList = todaysWeeklyTasks.map(t => `- ${t.text}`).join('\n');
+                     contextInfo += `\n[참고: 이번 주 할 일 중 오늘(${selectedDate}) 챙길 항목]\n${taskList}\n`;
+                 }
+             }
+        }
+
         let sysPrompt = "";
         
         if (type === 'daily') {
@@ -587,7 +623,9 @@
              
              const isTargetToday = selectedDate === todayStr;
              const timeConstraint = isTargetToday ? `2. 현재 시각(${currentTimeStr}) 이후의 일정만 계획할 것.` : `2. 하루 전체 일정을 계획할 것.`;
-             sysPrompt = `역할: 플래너 (MBTI T). 날짜: ${selectedDate}. 요청: "${promptText}". [규칙] 1. 인사말 금지. ${timeConstraint} 3. 꿀팁 1~2문장. 4. 형식: 'HH:MM~HH:MM 할일'. 5. 마크다운 금지.`;
+             sysPrompt = `역할: 플래너 (MBTI T). 날짜: ${selectedDate}. 요청: "${promptText}". 
+             ${contextInfo}
+             [규칙] 1. 인사말 금지. ${timeConstraint} 3. 꿀팁 1~2문장. 4. 형식: 'HH:MM~HH:MM 할일'. 5. 마크다운 금지.`;
         } else {
              // Save Prompt
              const wk = getWeekKey(currentWeekBaseDate);
@@ -707,16 +745,35 @@
         if(!key) return alert('API Key가 필요해요!');
         
         const tasks = appData.daily[dateStr] || [];
-        const completed = tasks.filter(t => t.done && !t.isMessage).map(t => t.text).join(', ');
-        const feedbacks = tasks.filter(t => t.feedback).map(t => t.feedback).join(', ');
+        
+        // [NEW] Gather ALL tasks and feedbacks (Completed + Incomplete)
+        let summaryContext = "";
+        tasks.forEach(t => {
+            if (t.isMessage) return;
+            const status = t.done ? "완료" : "미완료";
+            const fb = t.feedback ? `(피드백: ${t.feedback})` : "";
+            summaryContext += `- ${t.text} [${status}] ${fb}\n`;
+        });
         
         showLoading("zipipo가 회고 중");
         
-        const sysPrompt = `날짜: ${dateStr}. 완료: ${completed}. 피드백: ${feedbacks}. 
-        위 내용을 바탕으로 하루를 5줄 이내로 따뜻하게 회고해줘.
+        // [NEW] Structured Retrospective Prompt
+        const sysPrompt = `날짜: ${dateStr}.
+        
+        [오늘의 활동 내역]
+        ${summaryContext}
+        
+        위 내용을 바탕으로 아래 4가지 항목으로 정리해줘.
+        
+        1. 오늘 잘한 점
+        2. 아쉬운 점 (미완료 원인 등)
+        3. 마인드셋 (동기부여)
+        4. 내일 계획 반영 (구체적인 조언)
+
         [규칙]
-        1. 답변만 출력하세요. 
-        2. (따뜻한 말투) 같은 지시문이나 괄호 설명은 포함하지 마세요.`;
+        - 각 항목은 소제목과 내용으로 구분.
+        - 마크다운(bold 등)은 쓰지 말고 깔끔한 텍스트로.
+        - 따뜻하고 격려하는 말투.`;
         
         await callGemini(sysPrompt, (text) => {
             if(!appData.dailySummaries) appData.dailySummaries = {};
@@ -1034,7 +1091,6 @@ ${dateContext}
         closeModal('projectInputModal');
     }
 
-    // [MODIFIED] Open Generator Modal: 'new' clears, 'daily'/'weekly' loads
     function openGeneratorModal(mode) {
         document.getElementById('generatorModal').classList.remove('hidden');
         const txt = document.getElementById('taskPrompt');
@@ -1047,6 +1103,13 @@ ${dateContext}
             const wk = getWeekKey(currentWeekBaseDate);
             txt.value = appData.weeklyPrompts[wk] || '';
         }
+    }
+    
+    function openWeeklyGenerator() {
+        const wk = getWeekKey(currentWeekBaseDate);
+        const saved = appData.weeklyPrompts[wk] || '';
+        document.getElementById('taskPrompt').value = saved;
+        document.getElementById('generatorModal').classList.remove('hidden');
     }
 
     function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
@@ -1105,7 +1168,6 @@ ${dateContext}
         const contentDaily = document.createElement('div');
         contentDaily.className = 'bg-white rounded-[24px] border border-[#EFEBE9] p-5 relative min-h-[300px] shadow-sm';
         
-        // [FIX] Button Text: No Emoji
         const promptBtn = document.createElement('button');
         promptBtn.className = 'absolute top-3 right-3 text-[10px] text-[#A1887F] bg-[#FDFCF5] border border-[#D7CCC8] px-2 py-1 rounded-full hover:bg-[#EFEBE9] z-20 flex items-center gap-1';
         promptBtn.innerHTML = `수정`;
@@ -1147,7 +1209,7 @@ ${dateContext}
                     <button onclick="window.moveWeek(-1)" class="text-[#A1887F] hover:text-[#5D4037]">◀</button>
                     <span class="text-xs font-bold text-[#5D4037]">${getWeekRangeStr(currentWeekBaseDate)}</span>
                     <button onclick="window.moveWeek(1)" class="text-[#A1887F] hover:text-[#5D4037]">▶</button>
-                    <button onclick="window.openGeneratorModal('weekly')" class="ml-1 text-[10px] text-[#8D6E63] border border-[#D7CCC8] px-2 py-1 rounded bg-white hover:bg-[#EFEBE9]">수정</button>
+                    <button onclick="window.openWeeklyGenerator()" class="ml-1 text-[10px] text-[#8D6E63] border border-[#D7CCC8] px-2 py-1 rounded bg-white hover:bg-[#EFEBE9]">수정</button>
                     <button onclick="window.openAddTaskModal(null, 'weekly')" class="border border-[#D7CCC8] bg-white rounded-full w-6 h-6 flex items-center justify-center text-[#8D6E63] text-sm ml-1 hover:bg-[#EFEBE9]">+</button>
                 </div>
             </div>`;
@@ -1571,13 +1633,12 @@ ${dateContext}
                 displaySpan.innerText = timeStr;
                 timerRow.appendChild(displaySpan);
                 
-                if (!task.feedback) {
-                     const btn = document.createElement('button');
-                     btn.className = 'text-[#BCAAA4] hover:text-[#8D6E63] ml-1';
-                     btn.innerHTML = ICONS.speech;
-                     btn.onclick = () => window.openInputModal('한줄 피드백', (val) => window.updateTask(type, key, index, {feedback: val}));
-                     timerRow.appendChild(btn);
-                }
+                // [MODIFIED] Feedback Button always visible next to time
+                const btn = document.createElement('button');
+                btn.className = 'text-[#BCAAA4] hover:text-[#8D6E63] ml-1';
+                btn.innerHTML = ICONS.speech;
+                btn.onclick = () => window.openInputModal('한줄 피드백', (val) => window.updateTask(type, key, index, {feedback: val}));
+                timerRow.appendChild(btn);
             } else {
                 if(!task.actualStartTime) {
                     const btn = document.createElement('button');
@@ -1592,6 +1653,13 @@ ${dateContext}
                     btn.onclick = () => window.updateTask(type, key, index, {actualEndTime: new Date().toISOString()});
                     timerRow.appendChild(btn);
                 }
+                
+                // [MODIFIED] Feedback Button always visible even if not started/stopped
+                const btn = document.createElement('button');
+                btn.className = 'text-[#BCAAA4] hover:text-[#8D6E63] ml-1';
+                btn.innerHTML = ICONS.speech;
+                btn.onclick = () => window.openInputModal('한줄 피드백', (val) => window.updateTask(type, key, index, {feedback: val}));
+                timerRow.appendChild(btn);
             }
 
             if (task.feedback) {
@@ -1608,6 +1676,17 @@ ${dateContext}
     }
 
     // --- Init ---
+    // [NEW] Auto-date check
+    setInterval(() => {
+        const now = getLocalDateStr(new Date());
+        if (now !== lastKnownToday) {
+            lastKnownToday = now;
+            selectedDate = now; // Force jump to today
+            currentWeekBaseDate = new Date(); // Reset base date
+            renderApp();
+        }
+    }, 60000); // Check every minute
+
     renderHeader();
     initTimeSelects();
     loadData(); 
@@ -1622,6 +1701,7 @@ ${dateContext}
     window.toggleApiKeyInput = toggleApiKeyInput;
     window.generateSchedule = generateSchedule;
     window.openGeneratorModal = openGeneratorModal;
+    window.openWeeklyGenerator = openWeeklyGenerator;
     window.openAddTaskModal = openAddTaskModal;
     window.closeAddTaskModal = () => closeModal('addTaskModal');
     window.confirmTaskAction = confirmTaskAction;
