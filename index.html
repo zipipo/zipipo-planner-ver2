@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -51,6 +51,7 @@
             z-index: 40;
             background-color: var(--bg-ivory);
             border-bottom: 1px solid #EFEBE9;
+            padding-top: env(safe-area-inset-top); /* For iPhone notch */
         }
 
         /* Timeline - Daily */
@@ -245,7 +246,6 @@
             border: 1px solid #FFE0B2;
             border-radius: 12px;
             padding: 10px;
-            margin-top: 30px; 
             margin-bottom: 12px;
             font-size: 0.8rem;
             color: #E65100;
@@ -310,7 +310,7 @@
     <main id="appContent" class="p-5 flex-1 space-y-6 overflow-y-auto"></main>
 
     <div id="saveToast" class="fixed bottom-24 left-1/2 transform -translate-x-1/2 bg-[#5D4037] text-white text-xs px-4 py-2 rounded-full shadow-none opacity-0 transition-opacity duration-300 pointer-events-none z-50 bg-opacity-90 backdrop-blur-sm">
-        저장됨 ✨
+        저장됨
     </div>
 
     <div id="aiLoadingPopup" class="fixed inset-0 bg-black/10 z-[70] hidden flex items-center justify-center backdrop-blur-[1px]">
@@ -520,7 +520,6 @@
         return getLocalDateStr(sunday);
     }
     
-    // [FIX] Correct Weekly Range Calculation Logic (Fixed for month crossing)
     function getWeekRangeStr(d) { 
         const curr = new Date(d); // base date
         const day = curr.getDay(); // 0(Sun) ~ 6(Sat)
@@ -531,7 +530,7 @@
         
         // Saturday (End)
         const last = new Date(first);
-        last.setDate(first.getDate() + 6); // Add 6 days to Sunday
+        last.setDate(first.getDate() + 6);
         
         return `${first.getMonth()+1}.${first.getDate()} ~ ${last.getMonth()+1}.${last.getDate()}`;
     }
@@ -647,6 +646,12 @@
         const weekRangeStr = `${getLocalDateStr(currSun)} ~ ${getLocalDateStr(currSat)}`;
 
         let contextInfo = "";
+        
+        // [NEW] Routine Context Injection
+        if (appData.routines && appData.routines.length > 0) {
+            const routineList = appData.routines.map(r => r.text).join(', ');
+            contextInfo += `\n[사용자의 고정 루틴]\n${routineList} (이 루틴들도 포함해서 적절한 시간에 배치해줘)\n`;
+        }
         
         if (type === 'daily') {
              const prevDate = new Date(selectedDate);
@@ -862,7 +867,6 @@
     }
 
     function updateTask(type, key, index, changes) {
-        // [FIX] Store Project Scroll before update
         if(currentTab === 'project') {
             const scrollEl = document.getElementById('projectScrollContainer');
             if(scrollEl) lastProjectScrollTop = scrollEl.scrollTop;
@@ -940,16 +944,6 @@
         appData.routines.splice(i, 1);
         saveData();
         renderRoutineList();
-    }
-    function applyRoutinesToDaily() {
-        if(!appData.routines || appData.routines.length === 0) return alert('등록된 루틴이 없습니다.');
-        if(!appData.daily[selectedDate]) appData.daily[selectedDate] = [];
-        
-        appData.routines.forEach(r => {
-            appData.daily[selectedDate].push({ text: `[Routine] ${r.text}`, done: false, isMessage: false });
-        });
-        saveData();
-        renderApp();
     }
 
     // 7. Modals & Interaction
@@ -1257,7 +1251,7 @@ ${dateContext}
                     <span class="text-sm text-[#A1887F] font-sans font-bold">${dayNames[d.getDay()]}</span>
                 </div>
                 <div class="flex gap-2">
-                    <button onclick="window.applyRoutinesToDaily()" class="text-[10px] bg-white border border-[#D7CCC8] px-2 py-1 rounded-full text-[#8D6E63] hover:bg-[#EFEBE9]">루틴 가져오기</button>
+                    <button onclick="window.openRoutineModal()" class="text-[10px] bg-white border border-[#D7CCC8] px-2 py-1 rounded-full text-[#8D6E63] hover:bg-[#EFEBE9]"> 루틴 등록하기</button>
                     <input type="date" class="border border-[#D7CCC8] rounded px-2 py-1 text-xs bg-white" value="${selectedDate}" onchange="window.changeDate(this.value)">
                 </div>
             </div>`;
@@ -1390,6 +1384,9 @@ ${dateContext}
         scrollDiv.id = 'projectScrollContainer';
         scrollDiv.className = 'flex flex-col gap-4 pb-4 px-1 overflow-y-auto max-h-[70vh]';
         
+        // [FIX] Ensure appData.projects exists
+        if (!appData.projects) appData.projects = [];
+        
         const activeProjects = appData.projects.filter(p => !p.completed);
         const completedProjects = appData.projects.filter(p => p.completed);
         
@@ -1414,16 +1411,6 @@ ${dateContext}
                 
                 const sortedDates = Object.keys(groupedTasks).sort();
                 
-                if (tips.length > 0) {
-                    const tipBox = document.createElement('div');
-                    tipBox.className = 'proj-tip-box';
-                    tipBox.innerHTML = `<span class="proj-tip-label">TIP</span>`;
-                    tips.forEach(tip => {
-                        tipBox.innerHTML += `<div>• ${tip.text} <button class="text-[#D7CCC8] hover:text-[#FF7F50]" onclick="window.deleteTaskItem('project', '${p.id}', ${tip.originalIndex})">x</button></div>`;
-                    });
-                    card.appendChild(tipBox);
-                }
-
                 const headerHtml = `
                     <div class="absolute top-2 right-2 flex gap-1 z-10">
                         <button class="p-1 text-[#A1887F] hover:text-[#8D6E63]" onclick="window.completeProject('${p.id}', true)">${ICONS.check}</button>
@@ -1432,16 +1419,31 @@ ${dateContext}
                     <div class="mb-3">
                         <p class="text-[10px] text-[#A1887F] font-bold tracking-wide uppercase">${p.dateDisplay}</p>
                         <h4 class="font-bold text-lg text-[#5D4037] mt-1 pr-16 leading-tight">${p.title}</h4>
-                    </div>
-                    <div class="border-t border-dashed border-[#C5E1A5] pt-2 mt-2">
-                        <div class="flex justify-between items-center mb-2">
-                            <span class="text-xs font-bold text-[#556B2F]">Project Plan</span>
-                            <button onclick="openProjectPlanModal('${p.id}')" class="text-[10px] bg-[#F1F8E9] text-[#33691E] px-2 py-1 rounded-full border border-[#AED581] hover:bg-[#AED581] hover:text-white transition">AI 계획 짜기</button>
-                        </div>
                     </div>`;
                 
                 const contentContainer = document.createElement('div');
                 contentContainer.innerHTML = headerHtml;
+                
+                // [NEW] Tips Between Title and Plan
+                if (tips.length > 0) {
+                    const tipBox = document.createElement('div');
+                    tipBox.className = 'proj-tip-box';
+                    tipBox.innerHTML = `<span class="proj-tip-label">TIP</span>`;
+                    tips.forEach(tip => {
+                        tipBox.innerHTML += `<div>• ${tip.text} <button class="text-[#D7CCC8] hover:text-[#FF7F50]" onclick="window.deleteTaskItem('project', '${p.id}', ${tip.originalIndex})">x</button></div>`;
+                    });
+                    contentContainer.appendChild(tipBox);
+                }
+
+                // AI Plan Button & Divider
+                const planControl = document.createElement('div');
+                planControl.className = "border-t border-dashed border-[#C5E1A5] pt-2 mt-2 mb-2";
+                planControl.innerHTML = `
+                    <div class="flex justify-between items-center">
+                        <span class="text-xs font-bold text-[#556B2F]">Project Plan</span>
+                        <button onclick="openProjectPlanModal('${p.id}')" class="text-[10px] bg-[#F1F8E9] text-[#33691E] px-2 py-1 rounded-full border border-[#AED581] hover:bg-[#AED581] hover:text-white transition">AI 계획 짜기</button>
+                    </div>`;
+                contentContainer.appendChild(planControl);
                 
                 const taskListContainer = document.createElement('div');
                 taskListContainer.className = 'max-h-80 overflow-y-auto pl-1 text-sm';
@@ -1601,18 +1603,19 @@ ${dateContext}
         
         const fbSection = document.createElement('div');
         fbSection.className = 'mt-auto pt-4 border-t border-[#EFEBE9]';
-        let detailsHtml = `<h3 class="font-hand text-lg text-[#5D4037] mb-2 border-b border-[#EFEBE9] pb-1">${achievementViewDate}</h3>`;
+        let detailsHtml = `<h3 class="font-hand text-lg text-[#5D4037] border-b border-[#EFEBE9]">${achievementViewDate}</h3>`;
         
         if (summary) {
-            detailsHtml += `<div class="mb-4 p-2.5 bg-[#F1F8E9] rounded-xl text-xs text-[#33691E] leading-relaxed font-wando border border-[#AED581] relative whitespace-pre-wrap">
+            // [FIX] Reduced margin/padding
+            detailsHtml += `<div class="mb-2 mt-2 p-2 bg-[#F1F8E9] rounded-xl text-xs text-[#33691E] leading-relaxed font-wando border border-[#AED581] relative whitespace-pre-wrap">
                                 <button onclick="window.generateDailySummary('${achievementViewDate}')" class="absolute top-1 right-1 text-[#8D6E63] hover:bg-white rounded-full p-1">${ICONS.refresh}</button>
-                                <div class="font-bold mb-1">✨ zipipo 회고 요약</div>${summary}
+                                <div class="font-bold mb-1"> zipipo 회고 요약</div>${summary}
                             </div>`;
         } else if (completedTasks.length > 0) {
-            detailsHtml += `<button onclick="window.generateDailySummary('${achievementViewDate}')" class="w-full mb-4 py-2 bg-white border border-[#D7CCC8] text-[#8D6E63] rounded-xl text-xs hover:bg-[#FDFCF5] transition flex items-center justify-center gap-1"><span>✨ zipipo 회고 정리</span></button>`;
+            detailsHtml += `<button onclick="window.generateDailySummary('${achievementViewDate}')" class="w-full mb-4 mt-2 py-2 bg-white border border-[#D7CCC8] text-[#8D6E63] rounded-xl text-xs hover:bg-[#FDFCF5] transition flex items-center justify-center gap-1"><span>✨ zipipo 회고 정리</span></button>`;
         }
         
-        detailsHtml += `<ul class="space-y-2 mb-4">`;
+        detailsHtml += `<ul class="space-y-2 mb-4 mt-2">`;
         if(completedTasks.length === 0) detailsHtml += `<li class="text-xs text-[#BCAAA4] italic text-center">완료된 일정이 없어요.</li>`;
         else {
             completedTasks.forEach(t => {
@@ -1694,7 +1697,7 @@ ${dateContext}
         
         title.onclick = () => window.openEditTimeModal(type, key, index, task);
         
-        // [MODIFIED] Feedback Button Left of Checkbox
+        // Feedback Button Left of Checkbox
         if (type === 'daily' && !task.feedback) {
              const fbBtn = document.createElement('button');
              fbBtn.className = 'text-[#BCAAA4] hover:text-[#8D6E63] mx-1';
@@ -1705,6 +1708,8 @@ ${dateContext}
              };
              actionGroup.appendChild(fbBtn);
         }
+
+        actionGroup.appendChild(title);
 
         const chk = document.createElement('input');
         chk.type = 'checkbox';
@@ -1833,11 +1838,10 @@ ${dateContext}
     window.changeDate = changeDate;
     window.updateProjectMemo = updateProjectMemo;
 
-    // [NEW] Routine Logic
+    // Routine Logic
     window.openRoutineModal = openRoutineModal;
     window.addRoutine = addRoutine;
     window.deleteRoutine = deleteRoutine;
-    window.applyRoutinesToDaily = applyRoutinesToDaily;
 
     function openRoutineModal() {
         document.getElementById('routineModal').classList.remove('hidden');
@@ -1868,16 +1872,6 @@ ${dateContext}
         appData.routines.splice(i, 1);
         saveData();
         renderRoutineList();
-    }
-    function applyRoutinesToDaily() {
-        if(!appData.routines || appData.routines.length === 0) return alert('등록된 루틴이 없습니다.');
-        if(!appData.daily[selectedDate]) appData.daily[selectedDate] = [];
-        
-        appData.routines.forEach(r => {
-            appData.daily[selectedDate].push({ text: `[Routine] ${r.text}`, done: false, isMessage: false });
-        });
-        saveData();
-        renderApp();
     }
 
 </script>
