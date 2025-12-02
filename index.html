@@ -8,8 +8,8 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="zipipo">
     <meta name="mobile-web-app-capable" content="yes">
-    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏠</text></svg>">
-    <link rel="shortcut icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏠</text></svg>">
+    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📅</text></svg>">
+    <link rel="shortcut icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📅</text></svg>">
 
     <title>zipipo planner</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -246,6 +246,7 @@
             border: 1px solid #FFE0B2;
             border-radius: 12px;
             padding: 10px;
+            margin-top: 10px; 
             margin-bottom: 12px;
             font-size: 0.8rem;
             color: #E65100;
@@ -516,7 +517,6 @@
         return getLocalDateStr(sunday);
     }
     
-    // [FIX] Correct Weekly Range Calculation Logic
     function getWeekRangeStr(d) { 
         const curr = new Date(d); // base date
         const day = curr.getDay(); // 0(Sun) ~ 6(Sat)
@@ -644,7 +644,6 @@
 
         let contextInfo = "";
         
-        // [NEW] Routine Context Injection
         if (appData.routines && appData.routines.length > 0) {
             const routineList = appData.routines.map(r => r.text).join(', ');
             contextInfo += `\n[사용자의 고정 루틴]\n${routineList} (이 루틴들도 포함해서 적절한 시간에 배치해줘)\n`;
@@ -878,7 +877,6 @@
         saveData();
         renderApp();
         
-        // [FIX] Restore Scroll via setTimeout to wait for DOM update
         if(currentTab === 'project' && lastProjectScrollTop > 0) {
             setTimeout(() => {
                 const scrollEl = document.getElementById('projectScrollContainer');
@@ -912,6 +910,10 @@
     }
 
     // Routine Logic
+    window.openRoutineModal = openRoutineModal;
+    window.addRoutine = addRoutine;
+    window.deleteRoutine = deleteRoutine;
+
     function openRoutineModal() {
         document.getElementById('routineModal').classList.remove('hidden');
         renderRoutineList();
@@ -1248,7 +1250,7 @@ ${dateContext}
                     <span class="text-sm text-[#A1887F] font-sans font-bold">${dayNames[d.getDay()]}</span>
                 </div>
                 <div class="flex gap-2">
-                    <button onclick="window.openRoutineModal()" class="text-[10px] bg-white border border-[#D7CCC8] px-2 py-1 rounded-full text-[#8D6E63] hover:bg-[#EFEBE9]"> 루틴 등록하기</button>
+                    <button onclick="window.openRoutineModal()" class="text-[10px] bg-white border border-[#D7CCC8] px-2 py-1 rounded-full text-[#8D6E63] hover:bg-[#EFEBE9]">✨ 루틴 등록하기</button>
                     <input type="date" class="border border-[#D7CCC8] rounded px-2 py-1 text-xs bg-white" value="${selectedDate}" onchange="window.changeDate(this.value)">
                 </div>
             </div>`;
@@ -1480,6 +1482,8 @@ ${dateContext}
                     taskListContainer.appendChild(dateHeader);
                     
                     const ul = document.createElement('ul');
+                    
+                    // [MODIFIED] Numbering Logic: Only increment for non-depth items
                     let taskCounter = 1;
                     
                     groupedTasks[date].forEach(item => {
@@ -1489,8 +1493,8 @@ ${dateContext}
                             headerDiv.innerHTML = `${item.text} <button class="text-[#D7CCC8] hover:text-[#FF7F50] float-right" onclick="window.deleteTaskItem('project', '${p.id}', ${item.originalIndex})">x</button>`;
                             ul.appendChild(headerDiv);
                         } else {
-                            // [FIX] Pass numberPrefix only for non-indented items
                             let numberPrefix = null;
+                            // Only number top-level items (depth 0 or undefined)
                             if (!item.depth || item.depth === 0) {
                                 numberPrefix = taskCounter++;
                             }
@@ -1609,9 +1613,10 @@ ${dateContext}
         let detailsHtml = `<h3 class="font-hand text-lg text-[#5D4037] mb-2 border-b border-[#EFEBE9] pb-1">${achievementViewDate}</h3>`;
         
         if (summary) {
-            detailsHtml += `<div class="mb-4 p-2 bg-[#F1F8E9] rounded-xl text-xs text-[#33691E] leading-relaxed font-wando border border-[#AED581] relative whitespace-pre-wrap">
+            // [FIX] Reduced margin/padding
+            detailsHtml += `<div class="mb-4 p-2.5 bg-[#F1F8E9] rounded-xl text-xs text-[#33691E] leading-relaxed font-wando border border-[#AED581] relative whitespace-pre-wrap" style="padding-top: 6px;">
                                 <button onclick="window.generateDailySummary('${achievementViewDate}')" class="absolute top-1 right-1 text-[#8D6E63] hover:bg-white rounded-full p-1">${ICONS.refresh}</button>
-                                <div class="font-bold mb-0"> zipipo 회고 요약</div>${summary}
+                                <div class="font-bold mb-1">✨ zipipo 회고 요약</div>${summary}
                             </div>`;
         } else if (completedTasks.length > 0) {
             detailsHtml += `<button onclick="window.generateDailySummary('${achievementViewDate}')" class="w-full mb-4 py-2 bg-white border border-[#D7CCC8] text-[#8D6E63] rounded-xl text-xs hover:bg-[#FDFCF5] transition flex items-center justify-center gap-1"><span>✨ zipipo 회고 정리</span></button>`;
@@ -1699,20 +1704,16 @@ ${dateContext}
         
         title.onclick = () => window.openEditTimeModal(type, key, index, task);
         
-        // [MODIFIED] Feedback Button Left of Checkbox
-        if (type === 'daily') {
-             // Always create button, but hide it if feedback exists (or show different icon?)
-             // Requirement: "쓰고 나면 수정 필요없으니까 사라지게 해줘!!"
-             if (!task.feedback) {
-                 const fbBtn = document.createElement('button');
-                 fbBtn.className = 'text-[#BCAAA4] hover:text-[#8D6E63] mx-1';
-                 fbBtn.innerHTML = ICONS.speech;
-                 fbBtn.onclick = (e) => {
-                     e.stopPropagation();
-                     window.openInputModal('한줄 피드백', (val) => window.updateTask(type, key, index, {feedback: val}));
-                 };
-                 actionGroup.appendChild(fbBtn);
-             }
+        // [MODIFIED] Feedback Button MOVED before title
+        if (type === 'daily' && !task.feedback) {
+             const fbBtn = document.createElement('button');
+             fbBtn.className = 'text-[#BCAAA4] hover:text-[#8D6E63] mx-1';
+             fbBtn.innerHTML = ICONS.speech;
+             fbBtn.onclick = (e) => {
+                 e.stopPropagation();
+                 window.openInputModal('한줄 피드백', (val) => window.updateTask(type, key, index, {feedback: val}));
+             };
+             actionGroup.appendChild(fbBtn);
         }
 
         actionGroup.appendChild(title);
