@@ -148,15 +148,12 @@
             background-color: var(--sage-green);
             border-color: var(--sage-green);
         }
-        .custom-checkbox:checked::after {
-            content: '✔';
-            position: absolute;
-            color: white;
-            font-size: 11px;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-        }
+       .custom-checkbox:checked::after {
+    	/* 체크 마크 제거: content 비우기 */
+   	    content: '';
+ 	/* (선택) 여분의 스타일을 없애기 위해 크기/포지션 초기화 */
+   	    display: none;
+	}
 
         /* FAB */
         .fab-house {
@@ -311,7 +308,7 @@
     <main id="appContent" class="p-5 flex-1 space-y-6 overflow-y-auto"></main>
 
     <div id="saveToast" class="fixed bottom-24 left-1/2 transform -translate-x-1/2 bg-[#5D4037] text-white text-xs px-4 py-2 rounded-full shadow-none opacity-0 transition-opacity duration-300 pointer-events-none z-50 bg-opacity-90 backdrop-blur-sm">
-        저장됨 ✨
+        저장됨
     </div>
 
     <div id="aiLoadingPopup" class="fixed inset-0 bg-black/10 z-[70] hidden flex items-center justify-center backdrop-blur-[1px]">
@@ -1250,7 +1247,7 @@ ${dateContext}
                     <span class="text-sm text-[#A1887F] font-sans font-bold">${dayNames[d.getDay()]}</span>
                 </div>
                 <div class="flex gap-2">
-                    <button onclick="window.openRoutineModal()" class="text-[10px] bg-white border border-[#D7CCC8] px-2 py-1 rounded-full text-[#8D6E63] hover:bg-[#EFEBE9]">✨ 루틴 등록하기</button>
+                    <button onclick="window.openRoutineModal()" class="text-[10px] bg-white border border-[#D7CCC8] px-2 py-1 rounded-full text-[#8D6E63] hover:bg-[#EFEBE9]">루틴 등록</button>
                     <input type="date" class="border border-[#D7CCC8] rounded px-2 py-1 text-xs bg-white" value="${selectedDate}" onchange="window.changeDate(this.value)">
                 </div>
             </div>`;
@@ -1616,10 +1613,10 @@ ${dateContext}
             // [FIX] Reduced margin/padding
             detailsHtml += `<div class="mb-4 p-2.5 bg-[#F1F8E9] rounded-xl text-xs text-[#33691E] leading-relaxed font-wando border border-[#AED581] relative whitespace-pre-wrap" style="padding-top: 6px;">
                                 <button onclick="window.generateDailySummary('${achievementViewDate}')" class="absolute top-1 right-1 text-[#8D6E63] hover:bg-white rounded-full p-1">${ICONS.refresh}</button>
-                                <div class="font-bold mb-1">✨ zipipo 회고 요약</div>${summary}
+                                <div class="font-bold mb-1">zipipo 회고 요약</div>${summary}
                             </div>`;
         } else if (completedTasks.length > 0) {
-            detailsHtml += `<button onclick="window.generateDailySummary('${achievementViewDate}')" class="w-full mb-4 py-2 bg-white border border-[#D7CCC8] text-[#8D6E63] rounded-xl text-xs hover:bg-[#FDFCF5] transition flex items-center justify-center gap-1"><span>✨ zipipo 회고 정리</span></button>`;
+            detailsHtml += `<button onclick="window.generateDailySummary('${achievementViewDate}')" class="w-full mb-4 py-2 bg-white border border-[#D7CCC8] text-[#8D6E63] rounded-xl text-xs hover:bg-[#FDFCF5] transition flex items-center justify-center gap-1"><span>zipipo 회고 정리</span></button>`;
         }
         
         detailsHtml += `<ul class="space-y-2 mb-4">`;
@@ -1701,23 +1698,9 @@ ${dateContext}
         title.className = 'flex-1 text-sm cursor-pointer hover:text-[#8D6E63] transition leading-relaxed';
         title.innerHTML = displayText;
         if(task.done) title.classList.add('line-through', 'text-opacity-50', 'text-[#A1887F]');
-        
         title.onclick = () => window.openEditTimeModal(type, key, index, task);
-        
-        // [MODIFIED] Feedback Button MOVED before title
-        if (type === 'daily' && !task.feedback) {
-             const fbBtn = document.createElement('button');
-             fbBtn.className = 'text-[#BCAAA4] hover:text-[#8D6E63] mx-1';
-             fbBtn.innerHTML = ICONS.speech;
-             fbBtn.onclick = (e) => {
-                 e.stopPropagation();
-                 window.openInputModal('한줄 피드백', (val) => window.updateTask(type, key, index, {feedback: val}));
-             };
-             actionGroup.appendChild(fbBtn);
-        }
 
-        actionGroup.appendChild(title);
-
+        // --- NEW: create checkbox first (so visual order can be adjusted via append order) ---
         const chk = document.createElement('input');
         chk.type = 'checkbox';
         chk.className = 'custom-checkbox';
@@ -1726,7 +1709,21 @@ ${dateContext}
             e.stopPropagation(); 
             window.updateTask(type, key, index, {done: chk.checked}); 
         };
-        actionGroup.appendChild(chk);
+
+        // --- NEW: Feedback button placed immediately BEFORE the checkbox so it appears left of the checkbox ---
+        let fbBtn = null;
+        if (!task.feedback) { // show feedback button whenever feedback 없음 (모든 타입에 적용)
+             fbBtn = document.createElement('button');
+             fbBtn.className = 'text-[#BCAAA4] hover:text-[#8D6E63] mx-1';
+             fbBtn.innerHTML = ICONS.speech;
+             fbBtn.onclick = (e) => {
+                 e.stopPropagation();
+                 window.openInputModal('한줄 피드백', (val) => window.updateTask(type, key, index, {feedback: val}));
+             };
+        }
+
+        // Append in visual order: title (left area) then (optionally) del button, then feedback btn, then checkbox
+        actionGroup.appendChild(title);
 
         const delBtn = document.createElement('button');
         delBtn.className = 'text-[#D7CCC8] hover:text-[#FF7F50] text-xs px-1';
@@ -1739,7 +1736,13 @@ ${dateContext}
         };
         actionGroup.appendChild(delBtn);
 
+        // Append feedback btn (if exists) immediately before checkbox
+        if (fbBtn) actionGroup.appendChild(fbBtn);
+        actionGroup.appendChild(chk);
+
         content.appendChild(actionGroup);
+
+        
 
         if (type === 'daily' && subText) {
             const subDiv = document.createElement('div');
