@@ -149,9 +149,11 @@
             border-color: var(--sage-green);
         }
        .custom-checkbox:checked::after {
-            content: '';
-            display: none;
-        }
+    	/* 체크 마크 제거: content 비우기 */
+   	    content: '';
+ 	/* (선택) 여분의 스타일을 없애기 위해 크기/포지션 초기화 */
+   	    display: none;
+	}
 
         /* FAB */
         .fab-house {
@@ -363,7 +365,7 @@
                 <button onclick="addRoutine()" class="bg-[#D7CCC8] text-white px-3 py-1 rounded-lg text-xs font-bold hover:bg-[#A1887F]">+</button>
             </div>
             <div id="routineList" class="max-h-60 overflow-y-auto space-y-2">
-            </div>
+                </div>
         </div>
     </div>
 
@@ -397,11 +399,7 @@
                 <label class="text-xs text-[#A1887F] block mb-2">수행할 날짜 (선택)</label>
                 <input type="date" id="weeklyTaskDate" class="border border-[#EFEBE9] rounded p-2 text-sm text-[#5D4037] w-full bg-white">
             </div>
-            <div class="flex gap-2 justify-center items-center relative w-full">
-                <button id="modalDeleteBtn" onclick="deleteTaskFromModal()" class="absolute left-0 text-[#FF8A65] text-xs font-bold px-2 py-2 hover:bg-red-50 rounded hidden">
-                    삭제
-                </button>
-                
+            <div class="flex gap-2 justify-center">
                 <button onclick="closeModal('addTaskModal')" class="px-4 py-2 bg-gray-100 rounded-lg text-xs text-gray-500 hover:bg-gray-200">취소</button>
                 <button onclick="confirmTaskAction()" class="px-4 py-2 bg-[#8D6E63] text-white rounded-lg text-xs font-bold hover:bg-[#6D4C41]">확인</button>
             </div>
@@ -440,7 +438,6 @@
                 <div class="mini-cal-grid mb-1" id="projCalGrid"></div>
                 <div class="text-[10px] text-right text-[#8D6E63]"><span id="selectedCount">0</span>일 선택됨</div>
             </div>
-            
             <div class="flex gap-2 justify-center mt-3">
                 <button onclick="closeModal('projectInputModal')" class="px-4 py-2 bg-gray-100 rounded-lg text-xs text-gray-500 hover:bg-gray-200">취소</button>
                 <button onclick="confirmCreateProject()" class="px-4 py-2 bg-[#556B2F] text-white rounded-lg text-xs font-bold hover:bg-[#33691E]">심기</button>
@@ -473,6 +470,7 @@
         edit: `<svg class="w-3 h-3 text-[#BCAAA4] hover:text-[#8D6E63]" fill="currentColor" viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>`,
         refresh: `<svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>`
     };
+
     // 2. STATE
     let appData = { daily: {}, weekly: {}, projects: [], dailySummaries: {}, dailyPrompts: {}, weeklyPrompts: {}, routines: [] };
     let currentTab = 'home';
@@ -482,9 +480,6 @@
     let achievementViewDate = new Date().toISOString().split('T')[0];
     let inputCallback = null;
     let editingTask = null;
-    // [수정] 수정 컨텍스트 저장 변수 추가
-    let currentEditContext = null; 
-
     let activeProjectId = null;
     let projCalDate = new Date();
     let selectedProjDates = new Set();
@@ -494,7 +489,7 @@
     let calendarDate = new Date();
     
     // To maintain scroll position in projects
-    let lastProjectScrollTop = 0; 
+    let lastProjectScrollTop = 0;
 
     // 3. HELPER FUNCTIONS
     function getLocalDateStr(d) {
@@ -508,66 +503,76 @@
         if (!text) return "";
         return text.replace(/\*\*/g, '').replace(/\*/g, '').replace(/###/g, '').replace(/##/g, '').replace(/#/g, '').replace(/-/g, '').trim();
     }
-    function getTodayStr() {
-        return getLocalDateStr(new Date());
-    }
-    function parseTasks(text) {
-        return text.split('\n').map(l=>l).filter(l=>l.trim().length>0 && !l.trim().startsWith('---'));
-    }
-    function getWeekKey(d) {
+
+    function getTodayStr() { return getLocalDateStr(new Date()); }
+    function parseTasks(text) { return text.split('\n').map(l=>l).filter(l=>l.trim().length>0 && !l.trim().startsWith('---')); } 
+    
+    function getWeekKey(d) { 
         const date = new Date(d);
         const diff = date.getDate() - date.getDay(); 
         const sunday = new Date(date.setDate(diff));
         return getLocalDateStr(sunday);
     }
-    function getWeekRangeStr(d) {
-        const curr = new Date(d); 
-        const day = curr.getDay(); 
+    
+    function getWeekRangeStr(d) { 
+        const curr = new Date(d); // base date
+        const day = curr.getDay(); // 0(Sun) ~ 6(Sat)
+        
         // Sunday (Start)
         const first = new Date(curr);
         first.setDate(curr.getDate() - day);
+        
         // Saturday (End)
         const last = new Date(first);
         last.setDate(first.getDate() + 6);
-        return `${getLocalDateStr(first)} ~ ${getLocalDateStr(last)}`;
-    }
-    function getTaskTimeVal(task) {
-        const match = task.text.match(/^(\d{1,2}):(\d{2})/);
-        if(match) return parseInt(match[1])*60 + parseInt(match[2]);
-        return 9999; 
-    }
-    function showLoading(msg) {
-        document.getElementById('aiLoadingPopup').classList.remove('hidden');
-        document.querySelector('#aiLoadingPopup .font-hand').firstChild.textContent = msg;
-        let dots = '';
-        const el = document.getElementById('loadingDots');
-        loadingInterval = setInterval(() => {
-            dots += '.';
-            if(dots.length > 3) dots = '';
-            el.innerText = dots;
-        }, 500);
-    }
-    function hideLoading() {
-        clearInterval(loadingInterval);
-        document.getElementById('aiLoadingPopup').classList.add('hidden');
-    }
-    function closeModal(id) {
-        document.getElementById(id).classList.add('hidden');
-        if(id === 'addTaskModal') {
-            editingTask = null;
-            currentEditContext = null; // 초기화
-        }
-    }
-    function toggleApiKeyInput() {
-        const c = document.getElementById('apiKeyContainer');
-        c.classList.toggle('hidden');
+        
+        return `${first.getMonth()+1}.${first.getDate()} ~ ${last.getMonth()+1}.${last.getDate()}`;
     }
     
-    // 4. STORAGE
+    function getSunday(d) { d = new Date(d); var day = d.getDay(); var diff = d.getDate() - day; return new Date(d.setDate(diff)); }
+    function toggleApiKeyInput() { document.getElementById('apiKeyContainer').classList.toggle('hidden'); }
+    function changeDate(v) { selectedDate = v; renderApp(); }
+    function moveWeek(d) { currentWeekBaseDate.setDate(currentWeekBaseDate.getDate() + (d * 7)); renderApp(); }
+    function moveMonth(d) { calendarDate.setMonth(calendarDate.getMonth() + d); renderApp(); }
+
+    function initTimeSelects() {
+        const hours = Array.from({length:24}, (_,i) => i.toString().padStart(2,'0'));
+        const mins = ['00', '15', '30', '45'];
+        ['startHour', 'endHour'].forEach(id => { const el = document.getElementById(id); if(el) el.innerHTML = '<option value="">--</option>' + hours.map(h => `<option value="${h}">${h}</option>`).join(''); });
+        ['startMin', 'endMin'].forEach(id => { const el = document.getElementById(id); if(el) el.innerHTML = '<option value="">--</option>' + mins.map(m => `<option value="${m}">${m}</option>`).join(''); });
+    }
+
+    function showLoading(msg) {
+        const p = document.getElementById('aiLoadingPopup');
+        p.classList.remove('hidden');
+        let cleanMsg = msg.replace('✨', '').trim();
+        p.querySelector('.font-hand').childNodes[0].nodeValue = cleanMsg;
+        let dots = 0;
+        if(loadingInterval) clearInterval(loadingInterval);
+        loadingInterval = setInterval(() => { dots = (dots+1)%4; document.getElementById('loadingDots').innerText = '.'.repeat(dots); }, 500);
+    }
+    function hideLoading() {
+        document.getElementById('aiLoadingPopup').classList.add('hidden');
+        if(loadingInterval) clearInterval(loadingInterval);
+    }
+
+    function getTaskTimeVal(t) {
+        if(t.manualTimeRange) {
+            const m = t.manualTimeRange.match(/(\d{1,2}):(\d{2})/);
+            if(m) return parseInt(m[1])*60 + parseInt(m[2]);
+        }
+        if(t.text && /^\d{1,2}:\d{2}/.test(t.text)) {
+             const m = t.text.match(/^(\d{1,2}):(\d{2})/);
+             if(m) return parseInt(m[1])*60 + parseInt(m[2]);
+        }
+        return 9999; 
+    }
+
+    // 4. DATA MANAGEMENT
     function loadData() {
-        const raw = localStorage.getItem(STORAGE_KEY_DATA);
-        if(raw) {
-            appData = JSON.parse(raw);
+        const json = localStorage.getItem(STORAGE_KEY_DATA);
+        if (json) {
+            try { appData = JSON.parse(json); } catch(e) { console.error(e); }
         }
         if (!appData.daily) appData.daily = {};
         if (!appData.weekly) appData.weekly = {};
@@ -580,18 +585,11 @@
     function saveData() {
         localStorage.setItem(STORAGE_KEY_DATA, JSON.stringify(appData));
         const toast = document.getElementById('saveToast');
-        if(toast) {
-            toast.style.opacity = '1';
-            setTimeout(() => { toast.style.opacity = '0'; }, 2000);
-        }
+        if(toast) { toast.style.opacity = '1'; setTimeout(() => { toast.style.opacity = '0'; }, 2000); }
     }
     function saveApiKey() {
         const key = document.getElementById('apiKeyInput').value;
-        if(key) {
-            localStorage.setItem(STORAGE_KEY_API, key);
-            alert('저장되었습니다');
-            toggleApiKeyInput();
-        }
+        if(key) { localStorage.setItem(STORAGE_KEY_API, key); alert('저장되었습니다'); toggleApiKeyInput(); }
     }
 
     // 5. API INTERACTION
@@ -606,89 +604,91 @@
             const res = await fetch(`${GEMINI_URL}?key=${key}`, {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({
-                    contents: [{ parts: [{ text: sysPrompt }] }]
-                })
+                body: JSON.stringify({ contents: [{ parts: [{ text: sysPrompt }] }] })
             });
             const data = await res.json();
             if(data.candidates && data.candidates[0].content) {
                 cb(data.candidates[0].content.parts[0].text);
-            } else {
+            } else { 
                 console.error("Gemini Error:", data);
-                alert("오류가 발생했습니다.");
-                hideLoading();
+                alert('오류가 발생했습니다. 잠시 후 다시 시도해주세요.\n' + (data.error ? data.error.message : 'Unknown Error')); 
+                hideLoading(); 
             }
-        } catch(e) {
-            console.error(e);
-            alert("통신 오류");
-            hideLoading();
+        } catch(e) { 
+            alert('API 요청 실패 (네트워크 오류 등)'); 
+            console.error(e); 
+            hideLoading(); 
         }
     }
 
-    async function generateSchedule(mode) {
+    // 6. LOGIC
+    async function generateSchedule(type) {
+        const key = localStorage.getItem(STORAGE_KEY_API);
+        if(!key) return alert('API Key가 필요해요!');
         const promptText = document.getElementById('taskPrompt').value;
-        if(!promptText) return alert('내용을 입력해주세요.');
+        if(!promptText) return alert('내용을 입력해주세요');
         
-        closeModal('generatorModal');
-        showLoading("zipipo가 일정을 짓고 있어요");
+        showLoading("zipipo가 만들고 있어요");
+        document.getElementById('generatorModal').classList.add('hidden');
+
+        const todayStr = getTodayStr();
+        const now = new Date();
+        const currentTimeStr = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+        
+        const currSun = getSunday(currentWeekBaseDate);
+        const currSat = new Date(currSun); currSat.setDate(currSat.getDate()+6);
+        const weekRangeStr = `${getLocalDateStr(currSun)} ~ ${getLocalDateStr(currSat)}`;
+
+        let contextInfo = "";
+        
+        if (appData.routines && appData.routines.length > 0) {
+            const routineList = appData.routines.map(r => r.text).join(', ');
+            contextInfo += `\n[사용자의 고정 루틴]\n${routineList} (이 루틴들도 포함해서 적절한 시간에 배치해줘)\n`;
+        }
+        
+        if (type === 'daily') {
+             const prevDate = new Date(selectedDate);
+             prevDate.setDate(prevDate.getDate() - 1);
+             const prevDateStr = getLocalDateStr(prevDate);
+             if (appData.dailySummaries[prevDateStr]) {
+                 contextInfo += `\n[참고: 어제의 회고 및 내일 계획 반영]\n${appData.dailySummaries[prevDateStr]}\n`;
+             }
+             
+             const wkKey = getWeekKey(new Date(selectedDate));
+             if (appData.weekly[wkKey] && appData.weekly[wkKey].tasks) {
+                 const todaysWeeklyTasks = appData.weekly[wkKey].tasks.filter(t => 
+                     !t.isMessage && (t.specificDate === selectedDate || !t.specificDate)
+                 );
+                 if (todaysWeeklyTasks.length > 0) {
+                     const taskList = todaysWeeklyTasks.map(t => `- ${t.text}`).join('\n');
+                     contextInfo += `\n[참고: 이번 주 할 일 중 오늘(${selectedDate}) 챙길 항목]\n${taskList}\n`;
+                 }
+             }
+        }
 
         let sysPrompt = "";
         
-        // [수정] 보존할 일정 변수 선언
-        let preservedTasks = [];
-        let preservedContext = "";
-
-        if (mode === 'daily') {
-            appData.dailyPrompts[selectedDate] = promptText;
-            
-            // [수정] 기존 완료 항목 또는 피드백 있는 항목 보존 로직
-            const currentTasks = appData.daily[selectedDate] || [];
-            preservedTasks = currentTasks.filter(t => t.done || (t.feedback && t.feedback.trim()));
-            
-            if (preservedTasks.length > 0) {
-                const listStr = preservedTasks.map(t => `- ${t.text} (${t.done ? '완료' : '진행중'})`).join('\n');
-                preservedContext = `\n[현재 상황]\n이미 처리되었거나 유지해야 할 일정이 있습니다:\n${listStr}\n\n위 일정들은 그대로 둘 것이니, 이를 고려하여(중복되지 않게) 나머지 시간대의 일정을 계획해주세요.`;
-            }
-
-            const routines = appData.routines.map(r => r.text).join(', ');
-            let contextInfo = `[루틴] ${routines}\n`;
-            
-            // 어제 회고
-            const yest = new Date(selectedDate);
-            yest.setDate(yest.getDate()-1);
-            const yestStr = getLocalDateStr(yest);
-            if(appData.dailySummaries[yestStr]) {
-                contextInfo += `[어제 회고] ${appData.dailySummaries[yestStr]}\n`;
-            }
-
-            const today = new Date();
-            const isToday = selectedDate === getLocalDateStr(today);
-            let timeConstraint = "";
-            if(isToday) {
-                const nowHour = today.getHours();
-                timeConstraint = `2. 현재 시각은 ${nowHour}시입니다. 지나간 시간의 일정은 잡지 말고, 남은 시간 위주로 계획하세요.`;
-            } else {
-                timeConstraint = `2. 하루 전체 일정을 계획할 것.`;
-            }
-
-            // [수정] 프롬프트에 preservedContext 추가
-            sysPrompt = `역할: 플래너 (MBTI T). 날짜: ${selectedDate}. 요청: "${promptText}".
-${contextInfo}
-${preservedContext}
-[규칙] 1. 인사말 금지. ${timeConstraint} 3. 꿀팁 1~2문장. 4. 형식: 'HH:MM~HH:MM 할일'. 5. 마크다운 금지.`;
-            
+        if (type === 'daily') {
+             appData.dailyPrompts[selectedDate] = promptText;
+             
+             const isTargetToday = selectedDate === todayStr;
+             const timeConstraint = isTargetToday ? `2. 현재 시각(${currentTimeStr}) 이후의 일정만 계획할 것.` : `2. 하루 전체 일정을 계획할 것.`;
+             sysPrompt = `역할: 플래너 (MBTI T). 날짜: ${selectedDate}. 요청: "${promptText}". 
+             ${contextInfo}
+             [규칙] 1. 인사말 금지. ${timeConstraint} 3. 꿀팁 1~2문장. 4. 형식: 'HH:MM~HH:MM 할일'. 5. 마크다운 금지.`;
         } else {
-            const wk = getWeekKey(currentWeekBaseDate);
-            appData.weeklyPrompts[wk] = promptText;
-            const weekRangeStr = getWeekRangeStr(currentWeekBaseDate);
-            
-            sysPrompt = `역할: 주간 플래너. 기간: ${weekRangeStr}. 요청: "${promptText}".
-[규칙] 1. 사용자의 요청 내용을 바탕으로, 일주일 치 균형 잡힌 계획을 세워주세요.
-2. 요청한 일정을 단순히 나열하지 말고, 관련된 추천 활동이나 하위 항목을 추가하여 풍성하게 채워주세요.
-(예: '운동' -> '운동', '단백질 섭취', '스트레칭') 3. 인사말이나 서론 없이 바로 일정만 출력하세요.
-4. 형식: 'YYYY-MM-DD: 할일' (한 줄에 하나씩) 5. 위 기간(${weekRangeStr}) 내의 날짜로만 생성하세요.`;
-        }
+             const wk = getWeekKey(currentWeekBaseDate);
+             appData.weeklyPrompts[wk] = promptText;
 
+             sysPrompt = `역할: 주간 플래너. 기간: ${weekRangeStr}. 요청: "${promptText}".
+             [규칙]
+             1. 사용자의 요청 내용을 바탕으로, 일주일 치 균형 잡힌 계획을 세워주세요.
+             2. 요청한 일정을 단순히 나열하지 말고, 관련된 추천 활동이나 하위 항목을 추가하여 풍성하게 채워주세요. (예: '운동' -> '운동', '단백질 섭취', '스트레칭')
+             3. 인사말이나 서론 없이 바로 일정만 출력하세요.
+             4. 형식: 'YYYY-MM-DD: 할일' (한 줄에 하나씩)
+             5. 위 기간(${weekRangeStr}) 내의 날짜로만 생성하세요.`;
+        }
+            
         await callGemini(sysPrompt, (text) => {
             const lines = parseTasks(text);
             const newTasks = [];
@@ -696,41 +696,27 @@ ${preservedContext}
             lines.forEach(line => {
                 const trimLine = line.trim();
                 if (/\d{1,2}:\d{2}/.test(trimLine)) {
-                     newTasks.push({ text: trimLine, done: false });
-                } else if (/^\d{4}-\d{2}-\d{2}:/.test(trimLine)) {
-                    // Weekly
-                     const parts = trimLine.split(':');
-                     const d = parts[0].trim();
-                     const t = parts.slice(1).join(':').trim();
-                     if(d && t) newTasks.push({ text: t, done: false, date: d });
-                } else if(trimLine.length > 5) {
-                    // Maybe Tip or plain text
-                    newTasks.push({ text: trimLine, done: false, isTip: true });
+                    newTasks.push({ text: trimLine, done: false, isMessage: false });
+                } else if (/\d{4}-\d{2}-\d{2}/.test(trimLine)) {
+                    const dateMatch = trimLine.match(/(\d{4}-\d{2}-\d{2})[:\s]*(.*)/);
+                    if(dateMatch) newTasks.push({ text: dateMatch[2], done: false, isMessage: false, specificDate: dateMatch[1] });
+                    else newTasks.push({ text: trimLine, done: false, isMessage: false });
+                } else if (trimLine.length > 5 && !trimLine.includes('|')) {
+                    newTasks.push({ text: trimLine, done: false, isMessage: true });
                 }
             });
 
-            if (mode === 'daily') {
-                // [수정] 병합 로직
-                if (preservedTasks.length > 0) {
-                    // 기존 보존 항목 + AI가 새로 짠 항목 (시간순 정렬은 렌더링 시 처리됨)
-                    appData.daily[selectedDate] = [...preservedTasks, ...newTasks];
-                } else {
-                    if ((appData.daily[selectedDate] || []).length > 0 && !confirm('기존 일정을 모두 지우고 덮어씌울까요?')) {
-                        appData.daily[selectedDate].push(...newTasks);
-                    } else {
-                        appData.daily[selectedDate] = newTasks;
-                    }
-                }
+            if (type === 'daily') {
+                appData.daily[selectedDate] = [];
+                appData.daily[selectedDate].push(...newTasks);
             } else {
                 const wk = getWeekKey(currentWeekBaseDate);
-                if (!appData.weekly[wk]) appData.weekly[wk] = { tasks: [] };
-                
-                if (appData.weekly[wk].tasks.length > 0 && !confirm('기존 주간 일정을 모두 지우고 덮어씌울까요?')) {
-                     appData.weekly[wk].tasks.push(...newTasks);
-                } else {
-                     appData.weekly[wk].tasks = newTasks;
-                }
+                if(!appData.weekly[wk]) appData.weekly[wk] = { tasks: [] };
+                appData.weekly[wk].tasks.push(...newTasks);
             }
+            
+            document.getElementById('taskPrompt').value = '';
+            
             hideLoading();
             saveData();
             renderApp();
@@ -739,43 +725,55 @@ ${preservedContext}
 
     async function confirmProjectPlan() {
         const pid = activeProjectId;
-        const promptText = document.getElementById('projectPlanPrompt').value;
-        if(!promptText) return alert('내용을 입력해주세요.');
-
+        const prompt = document.getElementById('projectPlanPrompt').value;
+        if(!prompt) return;
         closeModal('projectPlanModal');
-        showLoading("프로젝트 계획을 세우는 중");
+        showLoading("프로젝트 계획 중");
         
-        const proj = appData.projects.find(p => p.id === pid);
-        const sysPrompt = `역할: 프로젝트 매니저. 프로젝트: "${proj.title}" (${proj.desc}). 기간: ${proj.dateDisplay}.
-요청: "${promptText}".
-[규칙] 1. 프로젝트 기간 내에서 실행 가능한 구체적인 계획을 날짜별로 수립하세요.
-2. 형식: '- YYYY-MM-DD: 할일' (날짜는 반드시 프로젝트 기간 내여야 함).
-3. 프로젝트 기간과 상관없는 팁이나 조언은 'Tip: 내용' 형식으로 마지막에 추가하세요.`;
-
-        await callGemini(sysPrompt, (text) => {
+        await callGemini(prompt, (text) => {
             const lines = parseTasks(text);
             const newTasks = [];
+            let currentDateContext = null;
+
             lines.forEach(line => {
-                let taskText = line.trim();
-                let taskDate = null;
-                let depth = 0;
-                
-                if (taskText.startsWith('Tip:')) {
-                    newTasks.push({ text: taskText.replace('Tip:', '').trim(), done: false, isTip: true });
+                const clean = line.replace(/\*\*/g, '').replace(/\|/g, '').trim();
+                if (clean.length === 0) return;
+
+                if (/^#{1,3}/.test(clean) || /^(Phase|Step|Stage)\s+\d+/.test(clean)) {
+                    newTasks.push({ text: clean.replace(/#/g, '').trim(), done: false, type: 'header', date: currentDateContext });
                     return;
                 }
-                
-                const dateMatch = taskText.match(/^[-*•]?\s*(\d{4}-\d{2}-\d{2})[:\s](.*)/);
-                if (dateMatch) {
-                    taskDate = dateMatch[1];
-                    taskText = dateMatch[2].trim();
-                }
-                taskText = taskText.replace(/^[-*•]\s*/, '');
-                
-                if(!taskDate && taskText.length > 50 && !taskText.includes('-')) {
+
+                const indentMatch = line.match(/^(\s+)/);
+                const depth = indentMatch ? Math.floor(indentMatch[1].length / 2) : 0; 
+
+                const dateHeaderMatch = clean.match(/\[.*(\d{4}-\d{2}-\d{2}).*\]/);
+                if (dateHeaderMatch) {
+                    currentDateContext = dateHeaderMatch[1];
                     return; 
                 }
                 
+                if (clean.toUpperCase().includes('[TIP]') || clean.toUpperCase().includes('기타 팁')) {
+                    const tipText = clean.replace(/\[.*?\]/g, '').replace('기타 팁', '').replace(':', '').trim();
+                    if(tipText) newTasks.push({ text: tipText, done: false, isTip: true });
+                    return;
+                }
+
+                const datePrefixMatch = clean.match(/^(\d{4}-\d{2}-\d{2})[:\s]+(.*)/);
+                let taskText = clean;
+                let taskDate = currentDateContext;
+
+                if (datePrefixMatch) {
+                     taskDate = datePrefixMatch[1];
+                     taskText = datePrefixMatch[2];
+                }
+                
+                taskText = taskText.replace(/^[-*•]\s*/, '');
+                
+                if(!taskDate && taskText.length > 50 && !taskText.includes('-')) {
+                    return;
+                }
+
                 newTasks.push({ text: taskText, done: false, date: taskDate, depth: depth });
             });
 
@@ -783,7 +781,7 @@ ${preservedContext}
             if(p.tasks.length > 0 && confirm('덮어씌울까요?')) p.tasks = newTasks;
             else if(p.tasks.length === 0) p.tasks = newTasks;
             else p.tasks.push(...newTasks);
-
+            
             hideLoading();
             saveData();
             renderApp();
@@ -803,55 +801,101 @@ ${preservedContext}
                 const fb = t.feedback ? `(피드백: ${t.feedback})` : "";
                 summaryContext += `- ${t.text} [${status}] ${fb}\n`;
             });
-
+            
             showLoading("zipipo가 회고 중");
             
-            const sysPrompt = `날짜: ${dateStr}. [오늘의 활동 내역]
-${summaryContext}
+            const sysPrompt = `날짜: ${dateStr}.
+            [오늘의 활동 내역]
+            ${summaryContext}
+            
+            위 내용을 바탕으로 아래 4가지 항목으로 정리해줘.
+            1. 오늘 잘한 점
+            2. 아쉬운 점 (미완료 원인 등)
+            3. 마인드셋 (동기부여)
+            4. 내일 계획 반영 (구체적인 조언)
 
-위 내용을 바탕으로 아래 4가지 항목으로 정리해줘.
-1. 오늘 잘한 점
-2. 아쉬운 점 (미완료 원인 등)
-3. 마인드셋 (동기부여)
-4. 내일 계획 반영 (구체적인 조언)
-
-[규칙]
-- 각 항목의 제목과 내용은 반드시 줄바꿈으로 구분하세요.
-- 마크다운 없이 줄글로 작성하세요.`;
-
+            [규칙]
+            - 각 항목의 제목과 내용은 반드시 줄바꿈으로 구분하세요.
+            - 내용은 간결하게 개조식(- 기호 사용)으로 작성하세요.
+            - 마크다운(bold 등)은 쓰지 말고 깔끔한 텍스트로.
+            - 따뜻하고 격려하는 말투.`;
+            
             await callGemini(sysPrompt, (text) => {
+                if(!appData.dailySummaries) appData.dailySummaries = {};
                 appData.dailySummaries[dateStr] = cleanMarkdown(text);
                 hideLoading();
                 saveData();
                 renderApp();
             });
         } catch(e) {
+            alert("회고 생성 중 오류가 발생했습니다.\n" + e.message);
             console.error(e);
             hideLoading();
         }
     }
 
-    // 6. UI Interaction
-    function switchTab(tab) {
-        currentTab = tab;
-        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('tab-active'));
-        document.getElementById(`tab-${tab}`).classList.add('tab-active');
+    function completeProject(id, isComplete) {
+        const p = appData.projects.find(x => x.id === id);
+        if (p) {
+            p.completed = isComplete;
+            saveData();
+            renderApp();
+        }
+    }
+
+    function deleteProject(id) {
+        if(confirm('정말 삭제하시겠습니까?')) {
+            appData.projects = appData.projects.filter(p=>p.id!==id);
+            saveData();
+            renderApp();
+        }
+    }
+
+    function deleteTaskItem(type, key, index) {
+        if(type==='daily') appData.daily[key].splice(index,1);
+        else if(type==='weekly') appData.weekly[key].tasks.splice(index,1);
+        else appData.projects.find(p=>p.id===key).tasks.splice(index,1);
+        saveData();
         renderApp();
     }
-    
-    function changeDate(delta) {
-        const d = new Date(selectedDate);
-        d.setDate(d.getDate() + delta);
-        selectedDate = getLocalDateStr(d);
+
+    function updateTask(type, key, index, changes) {
+        if(currentTab === 'project') {
+            const scrollEl = document.getElementById('projectScrollContainer');
+            if(scrollEl) lastProjectScrollTop = scrollEl.scrollTop;
+        }
+
+        let targetArr;
+        if(type==='daily') targetArr = appData.daily[key];
+        else if(type==='weekly') targetArr = appData.weekly[key].tasks;
+        else targetArr = appData.projects.find(p=>p.id===key).tasks;
+        
+        Object.assign(targetArr[index], changes);
+        saveData();
         renderApp();
+        
+        if(currentTab === 'project' && lastProjectScrollTop > 0) {
+            setTimeout(() => {
+                const scrollEl = document.getElementById('projectScrollContainer');
+                if(scrollEl) scrollEl.scrollTop = lastProjectScrollTop;
+            }, 0);
+        }
+    }
+    
+    function updateProjectMemo(pid, val) {
+        const p = appData.projects.find(x => x.id === pid);
+        if(p) {
+            p.memo = val;
+            saveData();
+        }
     }
     
     function editDailyMessage(dateStr) {
         const tasks = appData.daily[dateStr] || [];
-        const msgTask = tasks.find(t => t.isMessage);
-        const currentMsg = msgTask ? msgTask.text : "";
+        const msgs = tasks.filter(t => t.isMessage);
+        const combinedText = msgs.map(m => m.text).join('\n');
         
-        openInputModal('나에게 한마디', currentMsg, '수정', (newText) => {
+        openInputModal('오늘의 한마디 수정', (newText) => {
             appData.daily[dateStr] = tasks.filter(t => !t.isMessage);
             if(newText.trim()) {
                 appData.daily[dateStr].unshift({ text: newText, done: false, isMessage: true });
@@ -859,7 +903,7 @@ ${summaryContext}
             saveData();
             renderApp();
         });
-        document.getElementById('inputModalField').value = combinedText; 
+        document.getElementById('inputModalField').value = combinedText;
     }
 
     // Routine Logic
@@ -906,97 +950,101 @@ ${summaryContext}
         document.getElementById('projEnd').value = '';
         selectedProjDates.clear();
         switchProjMode('range');
+        
         document.getElementById('projectInputModal').classList.remove('hidden');
     }
+
     function openProjectPlanModal(pid) {
         activeProjectId = pid;
         const p = appData.projects.find(x => x.id === pid);
-        document.getElementById('projectPlanPrompt').placeholder = `"${p.title}" 프로젝트를 달성하기 위한 구체적인 계획을 요청해보세요.\n(예: 일주일에 3번 운동하는 스케줄 짜줘)`;
-        document.getElementById('projectPlanPrompt').value = '';
+        const currentYear = new Date().getFullYear();
+        
+        let dateContext = "";
+        if (p.dates && p.dates.length > 0) {
+            dateContext = `선택된 날짜들: ${p.dates.join(', ')}`;
+        } else if (p.dateDisplay) {
+            dateContext = `기간: ${p.dateDisplay}`;
+        }
+
+        const defaultPrompt = 
+`프로젝트: ${p.title}
+목표: ${p.desc || '목표 없음'}
+${dateContext}
+(참고: 오늘은 ${currentYear}년이야. 날짜 계산 시 연도를 ${currentYear}년으로 맞춰줘.)
+
+위 일정을 고려하여 구체적인 실행 계획을 짜줘.
+[필수 형식]
+1. 날짜별 구분: 날짜 헤더는 반드시 '[Day N: YYYY-MM-DD]' 형식으로 써줘. (예: [Day 1: ${currentYear}-05-01])
+2. 할 일: 헤더 아래에 할 일을 나열해.
+3. 하위 항목: 하위 단계가 필요하면 들여쓰기(스페이스 2칸)나 '>'를 사용해줘.
+4. 팁/조언: 팁이나 조언은 '[TIP] 내용' 형식으로 써줘.
+
+작성 예시:
+[Day 1: ${currentYear}-05-01]
+- 자료 수집하기
+  - 구글 학술 검색
+  - 도서관 방문
+[TIP] 무리하지 말고 30분씩 나눠서 하세요.
+[Day 2: ${currentYear}-05-02]
+- 초안 작성
+`;
+
+        document.getElementById('projectPlanPrompt').value = p.customPrompt || defaultPrompt;
         document.getElementById('projectPlanModal').classList.remove('hidden');
     }
-    function openInputModal(title, defaultText, btnText, cb) {
-        document.getElementById('inputModalTitle').innerText = title;
-        document.getElementById('inputModalField').value = defaultText || '';
-        const btn = document.querySelector('#inputModal button:last-child');
-        btn.innerText = btnText;
-        inputCallback = cb;
-        document.getElementById('inputModal').classList.remove('hidden');
-    }
-    function confirmInput() {
-        const val = document.getElementById('inputModalField').value;
-        if(inputCallback) inputCallback(val);
-        closeModal('inputModal');
-    }
-    
-    // [수정] 수정 모달 오픈 함수
-    function openEditTimeModal(task, type, key, index) {
-        editingTask = task;
-        currentEditContext = { type, key, index }; // 저장
 
-        const timeVal = getTaskTimeVal(task);
-        if (timeVal < 9999) {
-            const h = Math.floor(timeVal / 60);
-            const m = timeVal % 60;
-            document.getElementById('startHour').value = h.toString().padStart(2,'0');
-            document.getElementById('startMin').value = m.toString().padStart(2,'0');
-        } else {
-             document.getElementById('startHour').value = '';
-             document.getElementById('startMin').value = '';
-        }
-        
-        // 시간 범위 파싱 (예: 10:00 ~ 11:00)
-        document.getElementById('endHour').value = ''; 
-        document.getElementById('endMin').value = '';
-
-        if(task.text.includes('~')) {
-            const parts = task.text.match(/(\d{1,2}:\d{2})\s*~\s*(\d{1,2}:\d{2})/);
-            if(parts) {
-                const start = parts[1].split(':');
-                const end = parts[2].split(':');
-                document.getElementById('startHour').value = start[0];
-                document.getElementById('startMin').value = start[1];
-                document.getElementById('endHour').value = end[0];
-                document.getElementById('endMin').value = end[1];
-            }
-        }
-        
-        document.getElementById('manualTaskText').value = task.text;
-        
-        // UI 설정
-        document.getElementById('taskModalTitle').innerText = '할 일 수정';
+    function openAddTaskModal(existing=null, type='daily') {
+        editingTask = existing;
+        currentTaskTypeForAdd = type;
+        const modalTitle = document.getElementById('taskModalTitle');
+        modalTitle.innerText = existing ? '할 일 수정' : '할 일 추가';
         document.getElementById('addTaskModal').classList.remove('hidden');
-
-        // [수정] 삭제 버튼 보여주기
-        const delBtn = document.getElementById('modalDeleteBtn');
-        if(delBtn) delBtn.classList.remove('hidden');
+        
+        if (existing) {
+            document.getElementById('manualTaskText').value = existing.task.text;
+            if (existing.task.specificDate) {
+                document.getElementById('weeklyTaskDate').value = existing.task.specificDate;
+            }
+            if (existing.task.manualTimeRange) {
+                const parts = existing.task.manualTimeRange.split('~');
+                if (parts[0]) {
+                    const start = parts[0].trim().split(':');
+                    document.getElementById('startHour').value = start[0];
+                    document.getElementById('startMin').value = start[1];
+                }
+                if (parts[1]) {
+                    const end = parts[1].trim().split(' ')[0].split(':');
+                    if (end.length === 2) {
+                        document.getElementById('endHour').value = end[0];
+                        document.getElementById('endMin').value = end[1];
+                    }
+                }
+            }
+        } else {
+            editingTask = null;
+            document.getElementById('manualTaskText').value = '';
+            document.getElementById('manualTaskText').focus();
+            document.getElementById('startHour').value = ''; document.getElementById('startMin').value = '';
+            document.getElementById('endHour').value = ''; document.getElementById('endMin').value = '';
+            document.getElementById('weeklyTaskDate').value = '';
+        }
 
         const dailyWrapper = document.getElementById('dailyTimeInputWrapper');
         const weeklyWrapper = document.getElementById('weeklyDateInputWrapper');
         
-        if (type === 'weekly') {
+        if (currentTaskTypeForAdd === 'weekly') {
             dailyWrapper.classList.add('hidden');
             weeklyWrapper.classList.remove('hidden');
-            if(task.date) document.getElementById('weeklyTaskDate').value = task.date;
         } else {
             dailyWrapper.classList.remove('hidden');
             weeklyWrapper.classList.add('hidden');
         }
     }
-    
-    // [수정] 모달 내 삭제 기능
-    window.deleteTaskFromModal = function() {
-        if (!currentEditContext) return;
-        if (confirm('정말 삭제하시겠습니까?')) {
-            window.deleteTaskItem(currentEditContext.type, currentEditContext.key, currentEditContext.index);
-            closeModal('addTaskModal');
-        }
-    };
 
     function confirmTaskAction() {
         const text = document.getElementById('manualTaskText').value;
         if (!text) return alert('내용을 입력해주세요.');
-
+        
         const sh = document.getElementById('startHour').value;
         const sm = document.getElementById('startMin').value;
         const eh = document.getElementById('endHour').value;
@@ -1007,31 +1055,25 @@ ${summaryContext}
         else if(sh && sm) timeStr = `${sh}:${sm} ~`;
 
         const specificDate = document.getElementById('weeklyTaskDate').value;
-        
+
         if (editingTask) {
             const changes = { text: text };
             if (currentTaskTypeForAdd === 'weekly') {
-                 changes.specificDate = specificDate;
-                 changes.manualTimeRange = null;
+                changes.specificDate = specificDate;
+                changes.manualTimeRange = null;
             } else {
-                 changes.manualTimeRange = timeStr;
-                 changes.specificDate = null;
+                changes.manualTimeRange = timeStr;
+                changes.specificDate = null;
             }
             updateTask(editingTask.type, editingTask.key, editingTask.index, changes);
         } else {
             if (currentTaskTypeForAdd === 'weekly') {
                 const wk = getWeekKey(new Date());
-                if(!appData.weekly[wk]) appData.weekly[wk] = { tasks:[] };
-                appData.weekly[wk].tasks.push({
-                    text: text,
-                    done: false,
-                    date: specificDate || null
-                });
+                if(!appData.weekly[wk]) appData.weekly[wk] = { tasks: [] };
+                appData.weekly[wk].tasks.push({ text: text, done: false, manualTimeRange: null, specificDate: specificDate, feedback: null, isMessage: false });
             } else {
                 if(!appData.daily[selectedDate]) appData.daily[selectedDate] = [];
-                let newText = text;
-                if(timeStr) newText = `${timeStr} ${text}`;
-                appData.daily[selectedDate].push({ text: newText, done: false });
+                appData.daily[selectedDate].push({ text: text, done: false, manualTimeRange: timeStr, feedback: null, isMessage: false });
             }
             saveData();
             renderApp();
@@ -1039,54 +1081,69 @@ ${summaryContext}
         closeModal('addTaskModal');
     }
 
-    function switchProjMode(mode) {
-        projMode = mode;
-        document.querySelectorAll('.modal-tab').forEach(t => t.classList.remove('active'));
-        document.getElementById(`pm-${mode}`).classList.add('active');
-        if(mode === 'range') {
-            document.getElementById('projModeRange').classList.remove('hidden');
-            document.getElementById('projModeSelect').classList.add('hidden');
-        } else {
-            document.getElementById('projModeRange').classList.add('hidden');
-            document.getElementById('projModeSelect').classList.remove('hidden');
-            renderProjCalendar();
-        }
+    function openEditTimeModal(type, key, index, task) {
+        openAddTaskModal({type, key, index, task}, type);
     }
-    
-    function renderProjCalendar() {
+
+    function openInputModal(title, cb) {
+        document.getElementById('inputModalTitle').innerText = title;
+        document.getElementById('inputModalField').value = '';
+        document.getElementById('inputModal').classList.remove('hidden');
+        document.getElementById('inputModalField').focus();
+        inputCallback = cb;
+    }
+
+    function closeInputModal() {
+        document.getElementById('inputModal').classList.add('hidden');
+        inputCallback = null;
+    }
+
+    function confirmInput() {
+        if(inputCallback) inputCallback(document.getElementById('inputModalField').value);
+        closeInputModal();
+    }
+
+    function switchProjMode(m) {
+        projMode = m;
+        document.getElementById('pm-range').classList.toggle('active', m==='range');
+        document.getElementById('pm-select').classList.toggle('active', m==='select');
+        document.getElementById('projModeRange').classList.toggle('hidden', m!=='range');
+        document.getElementById('projModeSelect').classList.toggle('hidden', m!=='select');
+        if(m==='select') renderProjCal();
+    }
+
+    function renderProjCal() {
         const y = projCalDate.getFullYear();
         const m = projCalDate.getMonth();
         document.getElementById('projCalTitle').innerText = `${y}.${m+1}`;
+        const container = document.getElementById('projCalGrid');
+        container.innerHTML = '<div>일</div><div>월</div><div>화</div><div>수</div><div>목</div><div>금</div><div>토</div>';
         
         const firstDay = new Date(y, m, 1).getDay();
         const lastDate = new Date(y, m+1, 0).getDate();
         
-        const grid = document.getElementById('projCalGrid');
-        grid.innerHTML = '';
-        
-        for(let i=0; i<firstDay; i++) {
-            grid.innerHTML += `<div></div>`;
-        }
-        for(let d=1; d<=lastDate; d++) {
-            const dateStr = `${y}-${(m+1).toString().padStart(2,'0')}-${d.toString().padStart(2,'0')}`;
-            const isSelected = selectedProjDates.has(dateStr);
+        for(let i=0; i<firstDay; i++) container.innerHTML += '<div></div>';
+        for(let i=1; i<=lastDate; i++) {
+            const dateStr = `${y}-${(m+1).toString().padStart(2,'0')}-${i.toString().padStart(2,'0')}`;
             const el = document.createElement('div');
-            el.className = `mini-cal-cell ${isSelected ? 'selected' : ''}`;
-            el.innerText = d;
+            el.className = 'mini-cal-cell';
+            if(selectedProjDates.has(dateStr)) el.classList.add('selected');
+            el.innerText = i;
             el.onclick = () => {
                 if(selectedProjDates.has(dateStr)) selectedProjDates.delete(dateStr);
                 else selectedProjDates.add(dateStr);
-                renderProjCalendar();
+                renderProjCal();
                 document.getElementById('selectedCount').innerText = selectedProjDates.size;
             };
-            grid.appendChild(el);
+            container.appendChild(el);
         }
     }
-    function moveProjCal(delta) {
-        projCalDate.setMonth(projCalDate.getMonth() + delta);
-        renderProjCalendar();
+
+    function moveProjCal(d) {
+        projCalDate.setMonth(projCalDate.getMonth() + d);
+        renderProjCal();
     }
-    
+
     function confirmCreateProject() {
         const title = document.getElementById('projTitle').value;
         const desc = document.getElementById('projDesc').value;
@@ -1097,7 +1154,7 @@ ${summaryContext}
         let dateArray = null;
         let startDate = null;
         let endDate = null;
-        
+
         if(projMode === 'range') {
             const start = document.getElementById('projStart').value;
             const end = document.getElementById('projEnd').value;
@@ -1115,7 +1172,7 @@ ${summaryContext}
             startDate = sorted[0];
             endDate = sorted[sorted.length-1];
         }
-        
+
         appData.projects.push({
             id: Date.now()+'',
             title: title,
@@ -1135,9 +1192,9 @@ ${summaryContext}
     function openGeneratorModal(mode) {
         document.getElementById('generatorModal').classList.remove('hidden');
         const txt = document.getElementById('taskPrompt');
+        
         if (mode === 'new') {
             txt.value = '';
-            // [수정] 모달 타이틀을 '일정 짓기'로 초기화 (혹시 변경되었을 경우)
         } else if (mode === 'daily') {
             txt.value = appData.dailyPrompts[selectedDate] || '';
         } else if (mode === 'weekly') {
@@ -1145,41 +1202,60 @@ ${summaryContext}
             txt.value = appData.weeklyPrompts[wk] || '';
         }
     }
-
+    
     function openWeeklyGenerator() {
         const wk = getWeekKey(currentWeekBaseDate);
-        if(!appData.weeklyPrompts[wk]) appData.weeklyPrompts[wk] = '';
-        document.getElementById('taskPrompt').value = appData.weeklyPrompts[wk];
-        openGeneratorModal('weekly');
+        const saved = appData.weeklyPrompts[wk] || '';
+        document.getElementById('taskPrompt').value = saved;
+        document.getElementById('generatorModal').classList.remove('hidden');
     }
 
-    // 8. RENDERERS
+    function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+    function addManualTask() { openAddTaskModal(null, 'daily'); }
+
+    // 8. Rendering
+    function renderHeader() {
+        const today = new Date();
+        const days = ['일요일', '월요일', '화요일', '수요일', '목요일', '금요일', '토요일'];
+        document.getElementById('headerDate').innerText = `${today.getMonth()+1}월 ${today.getDate()}일 ${days[today.getDay()]}`;
+    }
+
+    function switchTab(tab) {
+        currentTab = tab;
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('tab-active'));
+        document.getElementById(`tab-${tab}`).classList.add('tab-active');
+        renderApp();
+    }
+
     function renderApp() {
         const container = document.getElementById('appContent');
         container.innerHTML = '';
-        
-        if(currentTab === 'home') renderDaily(container);
-        else if(currentTab === 'project') renderProjects(container);
-        else if(currentTab === 'achievement') renderCalendar(container);
+        if (currentTab === 'home') renderDaily(container);
+        else if (currentTab === 'project') renderProjects(container);
+        else if (currentTab === 'achievement') renderCalendar(container);
     }
-    
-    function renderDaily(container) {
-        document.getElementById('headerDate').innerText = selectedDate;
-        
-        const nav = document.createElement('div');
-        nav.className = 'flex justify-between items-center mb-4';
-        nav.innerHTML = `
-            <button onclick="window.changeDate(-1)" class="p-2 text-[#8D6E63] hover:bg-[#EFEBE9] rounded-full">◀</button>
-            <span class="text-sm font-bold text-[#5D4037]">${selectedDate === getTodayStr() ? '오늘' : ''}</span>
-            <button onclick="window.changeDate(1)" class="p-2 text-[#8D6E63] hover:bg-[#EFEBE9] rounded-full">▶</button>
-        `;
-        container.appendChild(nav);
 
-        // Daily Content
-        const dailyData = appData.daily[selectedDate] || [];
-        const dailyMsgs = dailyData.filter(t => t.isMessage);
-        
+    function renderDaily(container) {
         const secDaily = document.createElement('section');
+        const d = new Date(selectedDate);
+        const dayNames = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+        
+        secDaily.innerHTML = `
+            <div class="flex justify-between items-end mb-4 px-1">
+                <div class="text-2xl font-hand text-[#5D4037] flex items-baseline gap-2">
+                    <span>${d.getMonth()+1}.${d.getDate()}</span>
+                    <span class="text-sm text-[#A1887F] font-sans font-bold">${dayNames[d.getDay()]}</span>
+                </div>
+                <div class="flex gap-2">
+                    <button onclick="window.openRoutineModal()" class="text-[10px] bg-white border border-[#D7CCC8] px-2 py-1 rounded-full text-[#8D6E63] hover:bg-[#EFEBE9]">루틴 등록</button>
+                    <input type="date" class="border border-[#D7CCC8] rounded px-2 py-1 text-xs bg-white" value="${selectedDate}" onchange="window.changeDate(this.value)">
+                </div>
+            </div>`;
+
+        const dailyData = appData.daily[selectedDate] || [];
+        
+        // Render Message first
+        const dailyMsgs = dailyData.filter(t => t.isMessage);
         if (dailyMsgs.length > 0) {
             const msgBox = document.createElement('div');
             msgBox.className = 'mx-6 mt-1 mb-3 p-3 bg-white/60 rounded-xl border border-[#C5E1A5] text-sm text-[#556B2F] relative z-10 font-wando leading-relaxed cursor-pointer hover:bg-white/80 transition';
@@ -1187,7 +1263,7 @@ ${summaryContext}
             msgBox.innerHTML = dailyMsgs.map(m => m.text).join('<br>');
             secDaily.appendChild(msgBox);
         }
-        
+
         const contentDaily = document.createElement('div');
         contentDaily.className = 'bg-white rounded-[24px] border border-[#EFEBE9] p-5 relative min-h-[300px] shadow-sm';
         
@@ -1204,91 +1280,90 @@ ${summaryContext}
         contentDaily.appendChild(gridBg);
 
         const realDailyTasks = dailyData.filter(t => !t.isMessage);
+        
         if (realDailyTasks.length > 0) {
             const ulDaily = document.createElement('ul');
-            // 시간순 정렬
             realDailyTasks.sort((a,b) => getTaskTimeVal(a) - getTaskTimeVal(b));
             
             realDailyTasks.forEach((t) => {
-                const originalIndex = dailyData.indexOf(t); 
+                const originalIndex = dailyData.indexOf(t);
                 ulDaily.appendChild(createTaskEl(t, 'daily', selectedDate, originalIndex));
             });
             contentDaily.appendChild(ulDaily);
         } else {
-            const empty = document.createElement('div');
-            empty.className = 'empty-state text-[#BCAAA4] text-xs';
-            empty.innerHTML = `아직 일정이 없어요.<br>우측 하단 + 버튼을 눌러 일정을 지어보세요!`;
-            contentDaily.appendChild(empty);
+            contentDaily.innerHTML += `<div class="empty-state relative z-10"><span class="text-xs text-[#8D6E63] opacity-60">오늘의 목표를 세워보세요!</span></div>`;
         }
         secDaily.appendChild(contentDaily);
-        
-        // Summary Area
-        if (realDailyTasks.length > 0) {
-            const summaryDiv = document.createElement('div');
-            summaryDiv.className = 'mt-4 p-4 bg-[#EFEBE9]/30 rounded-xl';
-            const hasSummary = !!appData.dailySummaries[selectedDate];
-            summaryDiv.innerHTML = `
-                <div class="flex justify-between items-center mb-2">
-                    <span class="text-xs font-bold text-[#8D6E63]">하루 회고</span>
-                    <button onclick="generateDailySummary('${selectedDate}')" class="text-[10px] bg-white border border-[#D7CCC8] px-2 py-1 rounded text-[#5D4037] hover:bg-[#EFEBE9]">${hasSummary ? '다시 쓰기' : '회고 하기'}</button>
-                </div>
-                <div class="text-xs text-[#5D4037] whitespace-pre-line leading-relaxed">${appData.dailySummaries[selectedDate] || '오늘 하루는 어땠나요?'}</div>
-            `;
-            secDaily.appendChild(summaryDiv);
-        }
-
         container.appendChild(secDaily);
         
-        // Weekly Preview (Bottom)
-        const weekKey = getWeekKey(selectedDate);
-        const weeklyData = appData.weekly[weekKey];
-        if(weeklyData && weeklyData.tasks.length > 0) {
-            const secWeekly = document.createElement('section');
-            secWeekly.className = 'mt-8 pt-6 border-t border-[#EFEBE9]';
-            secWeekly.innerHTML = `<h3 class="font-hand text-xl text-[#8D6E63] mb-3 px-1">이번 주 할 일</h3>`;
+        const secWeekly = document.createElement('section');
+        secWeekly.className = 'mt-8 pt-6 border-t border-dashed border-[#D7CCC8]';
+        const weekKey = getWeekKey(currentWeekBaseDate);
+        const weeklyData = appData.weekly[weekKey] || { tasks: [] };
+        
+        secWeekly.innerHTML = `
+            <div class="flex justify-between items-center mb-4 px-1">
+                <h3 class="font-hand text-xl text-[#8D6E63]">Weekly</h3>
+                <div class="flex items-center gap-2">
+                    <button onclick="window.moveWeek(-1)" class="text-[#A1887F] hover:text-[#5D4037]">◀</button>
+                    <span class="text-xs font-bold text-[#5D4037]">${getWeekRangeStr(currentWeekBaseDate)}</span>
+                    <button onclick="window.moveWeek(1)" class="text-[#A1887F] hover:text-[#5D4037]">▶</button>
+                    <button onclick="window.openWeeklyGenerator()" class="ml-1 text-[10px] text-[#8D6E63] border border-[#D7CCC8] px-2 py-1 rounded bg-white hover:bg-[#EFEBE9]">수정</button>
+                    <button onclick="window.openAddTaskModal(null, 'weekly')" class="border border-[#D7CCC8] bg-white rounded-full w-6 h-6 flex items-center justify-center text-[#8D6E63] text-sm ml-1 hover:bg-[#EFEBE9]">+</button>
+                </div>
+            </div>`;
             
-            const contentWrap = document.createElement('div');
-            contentWrap.className = 'bg-[#F1F8E9] rounded-2xl p-4 border border-[#DCEDC8]';
+        const contentWrap = document.createElement('div');
+        contentWrap.className = 'px-6 pb-5 pt-1 relative z-10 flex flex-col gap-4';
+        
+        const currentSun = getSunday(currentWeekBaseDate);
+        
+        for(let i=0; i<7; i++) {
+            const d = new Date(currentSun);
+            d.setDate(d.getDate() + i);
+            const dayStr = getLocalDateStr(d);
+            const dayTasks = weeklyData.tasks.filter(t => !t.isMessage && t.specificDate === dayStr);
             
-            // 1. Date specific
-            const dateSpecific = weeklyData.tasks.filter(t => t.date);
-            if(dateSpecific.length > 0) {
-                dateSpecific.sort((a,b) => new Date(a.date) - new Date(b.date));
+            const daySection = document.createElement('div');
+            const isToday = dayStr === getTodayStr();
+            const headerColor = i === 0 ? 'text-red-500' : 'text-[#8D6E63]';
+            const headerBg = isToday ? 'bg-[#FFE0B2]' : 'bg-white/50';
+            
+            daySection.innerHTML = `<div class="flex items-center mb-1"><span class="${headerBg} px-2 py-0.5 rounded text-xs font-bold ${headerColor} font-sans">${dayNames[i]} ${d.getMonth()+1}.${d.getDate()}</span></div>`;
+            
+            if (dayTasks.length > 0) {
                 const ul = document.createElement('ul');
-                ul.className = 'pl-2 space-y-2';
-                dateSpecific.forEach(t => {
-                   const idx = weeklyData.tasks.indexOf(t);
-                   const el = createTaskEl(t, 'weekly', weekKey, idx);
-                   el.classList.add('weekly-item');
-                   // Prepend date badge
-                   const dBadge = document.createElement('span');
-                   dBadge.className = 'text-[10px] bg-white text-[#556B2F] px-1 rounded mr-1 border border-[#C5E1A5]';
-                   dBadge.innerText = t.date.slice(5);
-                   el.querySelector('.relative').prepend(dBadge);
-                   ul.appendChild(el);
-                });
-                contentWrap.appendChild(ul);
-            }
-            // 2. Anytime
-            const anytimeTasks = weeklyData.tasks.filter(t => !t.date && !t.specificDate);
-            if (anytimeTasks.length > 0) {
-                 const anytimeSection = document.createElement('div');
-                 anytimeSection.className = 'flex flex-col mt-2 pt-3 border-t border-dashed border-[#C5E1A5]';
-                 anytimeSection.innerHTML = `<div class="text-xs text-[#8D6E63] font-bold mb-2">Anytime</div>`;
-                 const ulAny = document.createElement('ul');
-                 ulAny.className = 'pl-2 space-y-2';
-                 anytimeTasks.forEach(t => {
+                ul.className = 'pl-2 border-l-2 border-[#D7CCC8]/30 ml-2 space-y-2';
+                dayTasks.forEach(t => {
                     const originalIdx = weeklyData.tasks.indexOf(t);
                     const taskEl = createTaskEl(t, 'weekly', weekKey, originalIdx);
                     taskEl.classList.add('weekly-item');
-                    ulAny.appendChild(taskEl);
-                 });
-                 anytimeSection.appendChild(ulAny);
-                 contentWrap.appendChild(anytimeSection);
+                    ul.appendChild(taskEl);
+                });
+                daySection.appendChild(ul);
             }
-            secWeekly.appendChild(contentWrap);
-            container.appendChild(secWeekly);
+            contentWrap.appendChild(daySection);
         }
+        
+        const anytimeTasks = weeklyData.tasks.filter(t => !t.isMessage && !t.specificDate);
+        if (anytimeTasks.length > 0) {
+            const anytimeSection = document.createElement('div');
+            anytimeSection.className = 'flex flex-col mt-2 pt-3 border-t border-dashed border-[#C5E1A5]';
+            anytimeSection.innerHTML = `<div class="text-xs text-[#8D6E63] font-bold mb-2">Anytime</div>`;
+            const ulAny = document.createElement('ul');
+            ulAny.className = 'pl-2 space-y-2';
+            anytimeTasks.forEach(t => {
+                const originalIdx = weeklyData.tasks.indexOf(t);
+                const taskEl = createTaskEl(t, 'weekly', weekKey, originalIdx);
+                taskEl.classList.add('weekly-item');
+                ulAny.appendChild(taskEl);
+            });
+            anytimeSection.appendChild(ulAny);
+            contentWrap.appendChild(anytimeSection);
+        }
+
+        secWeekly.appendChild(contentWrap);
+        container.appendChild(secWeekly);
     }
 
     function renderProjects(container) {
@@ -1303,196 +1378,190 @@ ${summaryContext}
         // [FIX] Add Scroll ID
         const scrollDiv = document.createElement('div');
         scrollDiv.id = 'projectScrollContainer';
-        scrollDiv.className = 'space-y-6 max-h-[600px] overflow-y-auto pr-1';
-        // scroll event listener
-        scrollDiv.addEventListener('scroll', () => {
-             lastProjectScrollTop = scrollDiv.scrollTop;
-        });
+        scrollDiv.className = 'flex flex-col gap-4 pb-4 px-1 overflow-y-auto max-h-[70vh]';
+        
+        // [FIX] Ensure appData.projects exists
+        if (!appData.projects) appData.projects = [];
+        
+        const activeProjects = appData.projects.filter(p => !p.completed);
+        const completedProjects = appData.projects.filter(p => p.completed);
+        
+        if(activeProjects.length > 0) {
+            activeProjects.forEach(p => {
+                const card = document.createElement('div');
+                card.className = 'wood-frame p-4 bg-white border border-[#C5E1A5] relative group w-full';
+                
+                const groupedTasks = {};
+                const tips = [];
+                
+                p.tasks.forEach((t, idx) => {
+                    if (t.isTip) {
+                        tips.push({ ...t, originalIndex: idx });
+                    } else {
+                        const d = t.date || '기타';
+                        if (d === '기타 (General)' || d === '기타') return;
+                        if (!groupedTasks[d]) groupedTasks[d] = [];
+                        groupedTasks[d].push({ ...t, originalIndex: idx });
+                    }
+                });
+                
+                const sortedDates = Object.keys(groupedTasks).sort();
+                
+                const headerHtml = `
+                    <div class="absolute top-2 right-2 flex gap-1 z-10">
+                        <button class="p-1 text-[#A1887F] hover:text-[#8D6E63]" onclick="window.completeProject('${p.id}', true)">${ICONS.check}</button>
+                        <button class="p-1 text-[#D7CCC8] hover:text-[#FF7F50]" onclick="window.deleteProject('${p.id}')">${ICONS.closeX}</button>
+                    </div>
+                    <div class="mb-3">
+                        <p class="text-[10px] text-[#A1887F] font-bold tracking-wide uppercase">${p.dateDisplay}</p>
+                        <h4 class="font-bold text-lg text-[#5D4037] mt-1 pr-16 leading-tight">${p.title}</h4>
+                    </div>`;
+                
+                const contentContainer = document.createElement('div');
+                contentContainer.innerHTML = headerHtml;
+                
+                // [NEW] Tips Between Title and Plan
+                if (tips.length > 0) {
+                    const tipBox = document.createElement('div');
+                    tipBox.className = 'proj-tip-box';
+                    tipBox.innerHTML = `<span class="proj-tip-label">TIP</span>`;
+                    tips.forEach(tip => {
+                        tipBox.innerHTML += `<div>• ${tip.text} <button class="text-[#D7CCC8] hover:text-[#FF7F50]" onclick="window.deleteTaskItem('project', '${p.id}', ${tip.originalIndex})">x</button></div>`;
+                    });
+                    contentContainer.appendChild(tipBox);
+                }
 
-        const activeProjs = appData.projects.filter(p => !p.completed);
-        activeProjs.forEach(p => {
-             const card = document.createElement('div');
-             card.className = 'wood-frame p-5 relative shadow-sm';
-             
-             // Header
-             const header = document.createElement('div');
-             header.className = 'flex justify-between items-start mb-2';
-             header.innerHTML = `
-                <div>
-                    <h4 class="font-bold text-lg text-[#5D4037]">${p.title}</h4>
-                    <div class="text-xs text-[#A1887F] mt-1">${p.dateDisplay}</div>
-                </div>
-                <button onclick="if(confirm('프로젝트를 완료 처리하시겠습니까?')) window.completeProject('${p.id}', true)" class="text-[#8D6E63] hover:text-[#556B2F] text-xs border border-[#D7CCC8] px-2 py-1 rounded-full">완료하기</button>
-             `;
-             card.appendChild(header);
-             
-             if(p.desc) {
-                 const desc = document.createElement('div');
-                 desc.className = 'text-xs text-[#795548] bg-[#EFEBE9]/50 p-2 rounded-lg mb-4';
-                 desc.innerText = p.desc;
-                 card.appendChild(desc);
-             }
-             
-             // Content (Tasks)
-             const contentContainer = document.createElement('div');
-             contentContainer.className = 'bg-[#FDFCF5] rounded-xl border border-[#D7CCC8] p-3';
-             
-             const planControl = document.createElement('div');
-             planControl.className = 'flex justify-end mb-2';
-             planControl.innerHTML = `<div class="flex gap-2">
-                 <button onclick="openProjectPlanModal('${p.id}')" class="text-[10px] bg-white border border-[#D7CCC8] px-2 py-1 rounded text-[#8D6E63] hover:bg-[#EFEBE9]">계획 짜기</button>
-             </div>`;
-             contentContainer.appendChild(planControl);
-             
-             const taskListContainer = document.createElement('div');
-             taskListContainer.className = 'max-h-80 overflow-y-auto pl-1 text-sm';
-             contentContainer.appendChild(taskListContainer);
-             card.appendChild(contentContainer);
-             
-             let deadline = p.endDate;
-             if (!deadline && p.dates && p.dates.length > 0) {
-                 const sorted = [...p.dates].sort();
-                 deadline = sorted[sorted.length-1];
-             }
-             if (!deadline && p.dateDisplay && p.dateDisplay.includes('~')) {
-                 const parts = p.dateDisplay.split('~');
-                 if(parts.length===2) deadline = parts[1].trim();
-             }
-             
-             const sortedDates = [...new Set(p.tasks.filter(t=>t.date).map(t=>t.date))].sort();
-             const noDateTasks = p.tasks.filter(t=>!t.date && !t.isTip);
-             const tips = p.tasks.filter(t=>t.isTip);
+                // AI Plan Button & Divider
+                const planControl = document.createElement('div');
+                planControl.className = "border-t border-dashed border-[#C5E1A5] pt-2 mt-2 mb-2";
+                planControl.innerHTML = `
+                    <div class="flex justify-between items-center">
+                        <span class="text-xs font-bold text-[#556B2F]">Project Plan</span>
+                        <button onclick="openProjectPlanModal('${p.id}')" class="text-[10px] bg-[#F1F8E9] text-[#33691E] px-2 py-1 rounded-full border border-[#AED581] hover:bg-[#AED581] hover:text-white transition">AI 계획 짜기</button>
+                    </div>`;
+                contentContainer.appendChild(planControl);
+                
+                const taskListContainer = document.createElement('div');
+                taskListContainer.className = 'max-h-80 overflow-y-auto pl-1 text-sm';
+                contentContainer.appendChild(taskListContainer);
+                card.appendChild(contentContainer);
 
-             // Render Date Groups
-             sortedDates.forEach(date => {
-                 const displayDate = date;
-                 let dDayLabel = '';
-                 
-                 if (deadline && /\d{4}-\d{2}-\d{2}/.test(date)) {
-                     const target = new Date(deadline);
-                     target.setHours(0,0,0,0);
-                     const [y,m,d] = date.split('-').map(Number);
-                     const current = new Date(y, m-1, d);
-                     const diffTime = target - current;
-                     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                     
-                     if (diffDays > 0) dDayLabel = ` <span class="text-[#FF8A65] ml-1 text-[10px] font-normal">(D-${diffDays})</span>`;
-                     else if (diffDays === 0) dDayLabel = ` <span class="text-[#FF8A65] ml-1 text-[10px] font-normal">(D-Day)</span>`;
-                     else dDayLabel = ` <span class="text-[#FF8A65] ml-1 text-[10px] font-normal">(D+${Math.abs(diffDays)})</span>`;
-                 }
-                 
-                 const dateHeader = document.createElement('div');
-                 dateHeader.className = 'proj-date-header';
-                 dateHeader.innerHTML = displayDate + dDayLabel;
-                 taskListContainer.appendChild(dateHeader);
-                 
-                 const ul = document.createElement('ul');
-                 const tasksInDate = p.tasks.filter(t => t.date === date);
-                 tasksInDate.forEach(t => {
-                     const originalIdx = p.tasks.indexOf(t);
-                     ul.appendChild(createTaskEl(t, 'project', p.id, originalIdx, null));
-                 });
-                 taskListContainer.appendChild(ul);
-             });
-             
-             if(noDateTasks.length > 0) {
-                 const header = document.createElement('div');
-                 header.className = 'proj-msg-box mt-3';
-                 header.innerText = 'General Tasks';
-                 taskListContainer.appendChild(header);
-                 
-                 const ul = document.createElement('ul');
-                 noDateTasks.forEach(t => {
-                     const originalIdx = p.tasks.indexOf(t);
-                     ul.appendChild(createTaskEl(t, 'project', p.id, originalIdx));
-                 });
-                 taskListContainer.appendChild(ul);
-             }
-             
-             if(tips.length > 0) {
-                 const tipBox = document.createElement('div');
-                 tipBox.className = 'proj-tip-box';
-                 tipBox.innerHTML = `<span class="proj-tip-label">💡 Tips</span>`;
-                 const ul = document.createElement('ul');
-                 ul.className = 'list-disc pl-4 space-y-1';
-                 tips.forEach(t => {
-                      const li = document.createElement('li');
-                      li.innerText = t.text;
-                      ul.appendChild(li);
-                 });
-                 tipBox.appendChild(ul);
-                 taskListContainer.appendChild(tipBox);
-             }
-             
-             // Memo
-             const memoArea = document.createElement('textarea');
-             memoArea.className = 'proj-memo-area';
-             memoArea.placeholder = '메모를 남겨보세요...';
-             memoArea.rows = 2;
-             memoArea.value = p.memo || '';
-             memoArea.onblur = (e) => window.updateProjectMemo(p.id, e.target.value);
-             card.appendChild(memoArea);
-             
-             // Delete Project Button
-             const delPBtn = document.createElement('button');
-             delPBtn.className = 'absolute top-3 right-3 text-[#D7CCC8] hover:text-[#FF8A65] text-sm';
-             delPBtn.innerHTML = 'x';
-             delPBtn.onclick = (e) => {
-                 if(confirm('프로젝트를 삭제할까요?')) {
-                     appData.projects = appData.projects.filter(x => x.id !== p.id);
-                     saveData();
-                     renderApp();
-                 }
-             };
-             card.appendChild(delPBtn);
-             
-             scrollDiv.appendChild(card);
-        });
-        container.appendChild(scrollDiv);
+                let deadline = p.endDate;
+                if (!deadline && p.dates && p.dates.length > 0) {
+                     const sorted = [...p.dates].sort();
+                     deadline = sorted[sorted.length-1];
+                }
+                if (!deadline && p.dateDisplay && p.dateDisplay.includes('~')) {
+                     const parts = p.dateDisplay.split('~');
+                     if(parts.length===2) deadline = parts[1].trim();
+                }
 
-        // Completed Projects
-        const completedProjs = appData.projects.filter(p => p.completed);
-        if (completedProjs.length > 0) {
-             const secProj = document.createElement('div');
-             secProj.className = 'mt-8 border-t border-[#EFEBE9] pt-6';
-             secProj.innerHTML = `<h3 class="font-hand text-lg text-[#BCAAA4] mb-3 px-1">완료된 프로젝트</h3>`;
-             const completedSec = document.createElement('div');
-             completedSec.className = 'space-y-3 opacity-70 grayscale hover:grayscale-0 transition duration-300';
-             
-             const list = document.createElement('ul');
-             completedProjs.forEach(p => {
-                 const item = document.createElement('li');
-                 const titleRow = document.createElement('div');
-                 titleRow.className = 'flex justify-between items-center bg-white border border-[#EFEBE9] p-3 rounded-xl cursor-pointer hover:bg-[#FDFCF5]';
-                 titleRow.innerHTML = `<span class="font-bold text-[#5D4037] text-sm">${p.title}</span> <span class="text-[10px] text-[#A1887F]">완료됨</span>`;
-                 
-                 const detailDiv = document.createElement('div');
-                 detailDiv.className = 'hidden mt-2 pl-3 pr-1 py-2 border-l-2 border-[#D7CCC8]/30 ml-2 bg-white/50 rounded-r-xl text-xs space-y-2';
-                 detailDiv.innerHTML = `<button class="flex items-center gap-1 text-[#8D6E63] hover:text-[#5D4037] mb-2 text-[11px] font-bold" onclick="event.stopPropagation(); window.completeProject('${p.id}', false)">${ICONS.undo} 복구</button>`;
-                 
-                 if (p.desc) detailDiv.innerHTML += `<div class="text-[#A1887F] mb-2">${p.desc}</div>`;
-                 
-                 const taskList = document.createElement('ul');
-                 taskList.className = 'pl-2 space-y-1 mt-2 border-t border-dashed border-[#EFEBE9] pt-2';
-                 if(p.tasks.length > 0) {
-                     p.tasks.forEach(t => {
-                         if(t.isTip) {
-                             taskList.innerHTML += `<li class="text-xs text-[#FF8A65] flex items-start gap-1">Tip: ${t.text}</li>`;
-                         } else {
-                             taskList.innerHTML += `<li class="text-xs text-[#5D4037] flex items-start gap-1"><div class="w-0.5 h-3 bg-[#D7CCC8] mt-1"></div> ${t.text}</li>`;
-                         }
-                     });
-                 }
-                 detailDiv.appendChild(taskList);
-                 
-                 titleRow.onclick = () => { detailDiv.classList.toggle('hidden'); };
-                 item.append(titleRow, detailDiv);
-                 list.appendChild(item);
-             });
-             completedSec.appendChild(list);
-             secProj.appendChild(completedSec);
-             container.appendChild(secProj);
+                sortedDates.forEach(date => {
+                    const displayDate = date;
+                    
+                    let dDayLabel = '';
+                    if (deadline && /\d{4}-\d{2}-\d{2}/.test(date)) {
+                         const target = new Date(deadline); target.setHours(0,0,0,0);
+                         const [y,m,d] = date.split('-').map(Number);
+                         const current = new Date(y, m-1, d);
+                         
+                         const diffTime = target - current;
+                         const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
+                         
+                         if (diffDays > 0) dDayLabel = ` <span class="text-[#FF8A65] ml-1 text-[10px] font-normal">(D-${diffDays})</span>`;
+                         else if (diffDays === 0) dDayLabel = ` <span class="text-[#FF8A65] ml-1 text-[10px] font-normal">(D-Day)</span>`;
+                         else dDayLabel = ` <span class="text-[#FF8A65] ml-1 text-[10px] font-normal">(D+${Math.abs(diffDays)})</span>`;
+                    }
+
+                    const dateHeader = document.createElement('div');
+                    dateHeader.className = 'proj-date-header';
+                    dateHeader.innerHTML = displayDate + dDayLabel;
+                    taskListContainer.appendChild(dateHeader);
+                    
+                    const ul = document.createElement('ul');
+                    
+                    // [MODIFIED] Numbering Logic: Only increment for non-depth items
+                    let taskCounter = 1;
+                    
+                    groupedTasks[date].forEach(item => {
+                        if (item.type === 'header') {
+                            const headerDiv = document.createElement('div');
+                            headerDiv.className = 'proj-msg-box';
+                            headerDiv.innerHTML = `${item.text} <button class="text-[#D7CCC8] hover:text-[#FF7F50] float-right" onclick="window.deleteTaskItem('project', '${p.id}', ${item.originalIndex})">x</button>`;
+                            ul.appendChild(headerDiv);
+                        } else {
+                            let numberPrefix = null;
+                            // Only number top-level items (depth 0 or undefined)
+                            if (!item.depth || item.depth === 0) {
+                                numberPrefix = taskCounter++;
+                            }
+                            
+                            const taskEl = createTaskEl(item, 'project', p.id, item.originalIndex, numberPrefix);
+                            if (item.depth && item.depth > 0) {
+                                taskEl.classList.add(`task-depth-${Math.min(item.depth, 2)}`);
+                            }
+                            ul.appendChild(taskEl);
+                        }
+                    });
+                    taskListContainer.appendChild(ul);
+                });
+                
+                const memoArea = document.createElement('textarea');
+                memoArea.className = 'proj-memo-area';
+                memoArea.rows = 2;
+                memoArea.placeholder = '자유 메모...';
+                memoArea.value = p.memo || '';
+                memoArea.onchange = (e) => window.updateProjectMemo(p.id, e.target.value);
+                card.appendChild(memoArea);
+                
+                scrollDiv.appendChild(card);
+            });
+            secProj.appendChild(scrollDiv);
+        } else {
+            secProj.innerHTML += `<div class="text-center py-8 text-xs text-[#BCAAA4]">진행 중인 프로젝트가 없습니다</div>`;
         }
+
+        if(completedProjects.length > 0) {
+            const completedSec = document.createElement('div');
+            completedSec.className = 'mt-8 pt-6 border-t border-[#EFEBE9]';
+            completedSec.innerHTML = `<h3 class="font-hand text-lg text-[#A1887F] mb-3 px-1">완료된 프로젝트</h3>`;
+            const list = document.createElement('div');
+            list.className = 'space-y-2';
+            
+            completedProjects.forEach(p => {
+                const item = document.createElement('div');
+                const titleRow = document.createElement('div');
+                titleRow.className = 'flex justify-between items-center p-3 bg-white rounded-xl border border-[#EFEBE9] cursor-pointer hover:bg-[#FAF8F5] transition shadow-sm';
+                titleRow.innerHTML = `<span class="text-sm text-[#5D4037] font-bold line-through decoration-2 decoration-[#D7CCC8]/50">${p.title}</span><span class="text-xs text-[#BCAAA4]">▼</span>`;
+                
+                const detailDiv = document.createElement('div');
+                detailDiv.className = 'hidden mt-2 pl-3 pr-1 py-2 border-l-2 border-[#D7CCC8]/30 ml-2 bg-white/50 rounded-r-xl text-xs space-y-2';
+                
+                detailDiv.innerHTML = `<button class="flex items-center gap-1 text-[#8D6E63] hover:text-[#5D4037] mb-2 text-[11px] font-bold" onclick="event.stopPropagation(); window.completeProject('${p.id}', false)">${ICONS.undo} 복구</button>`;
+                if (p.desc) detailDiv.innerHTML += `<div class="text-[#A1887F] mb-2">${p.desc}</div>`;
+                
+                const taskList = document.createElement('ul');
+                taskList.className = 'pl-2 space-y-1 mt-2 border-t border-dashed border-[#EFEBE9] pt-2';
+                
+                if(p.tasks.length > 0) {
+                    p.tasks.forEach(t => {
+                         if(t.isTip) {
+                            taskList.innerHTML += `<li class="text-xs text-[#FF8A65] flex items-start gap-1">Tip: ${t.text}</li>`;
+                         } else {
+                            taskList.innerHTML += `<li class="text-xs text-[#5D4037] flex items-start gap-1"><div class="w-0.5 h-3 bg-[#D7CCC8] mt-1"></div> ${t.text}</li>`;
+                         }
+                    });
+                }
+                detailDiv.appendChild(taskList);
+                
+                titleRow.onclick = () => { detailDiv.classList.toggle('hidden'); };
+                item.append(titleRow, detailDiv);
+                list.appendChild(item);
+            });
+            completedSec.appendChild(list);
+            secProj.appendChild(completedSec);
+        }
+        container.appendChild(secProj);
         
         // [FIX] Restore Scroll
         if(lastProjectScrollTop > 0) {
@@ -1503,90 +1572,51 @@ ${summaryContext}
     function renderCalendar(container) {
         const year = calendarDate.getFullYear();
         const month = calendarDate.getMonth();
-        
         const wrapper = document.createElement('div');
-        wrapper.className = 'wood-frame p-6 min-h-[400px]';
+        wrapper.className = 'wood-frame p-5 bg-white min-h-[400px] flex flex-col';
         
-        const header = document.createElement('div');
-        header.className = 'flex justify-between items-center mb-6';
-        header.innerHTML = `
-            <button onclick="window.moveWeek(-1)" class="text-[#8D6E63] text-xl font-bold">‹</button>
-            <h3 class="font-hand text-2xl text-[#5D4037]">${year}년 ${month+1}월</h3>
-            <button onclick="window.moveWeek(1)" class="text-[#8D6E63] text-xl font-bold">›</button>
-        `;
-        wrapper.appendChild(header);
+        wrapper.innerHTML = `<div class="flex justify-between items-center mb-6"><button onclick="window.moveMonth(-1)" class="text-[#8D6E63]">◀</button><h2 class="font-hand text-2xl text-[#5D4037]">${year}.${month+1}</h2><button onclick="window.moveMonth(1)" class="text-[#8D6E63]">▶</button></div>`;
         
-        const grid = document.createElement('div');
-        grid.className = 'grid grid-cols-7 gap-2 text-center text-xs mb-6';
-        
-        const days = ['일','월','화','수','목','금','토'];
-        days.forEach(d => grid.innerHTML += `<div class="text-[#A1887F] font-bold mb-2">${d}</div>`);
+        const calGrid = document.createElement('div');
+        calGrid.className = 'grid grid-cols-7 gap-1 mb-6 text-center';
+        ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].forEach(d => calGrid.innerHTML+=`<div class="text-xs font-bold text-[#A1887F] mb-2">${d}</div>`);
         
         const firstDay = new Date(year, month, 1).getDay();
         const lastDate = new Date(year, month+1, 0).getDate();
         
-        for(let i=0; i<firstDay; i++) grid.innerHTML += `<div></div>`;
-        
-        for(let d=1; d<=lastDate; d++) {
-            const dateStr = `${year}-${(month+1).toString().padStart(2,'0')}-${d.toString().padStart(2,'0')}`;
-            const isToday = dateStr === getTodayStr();
-            const dailyData = appData.daily[dateStr] || [];
-            const doneCount = dailyData.filter(t => t.done).length;
-            const totalCount = dailyData.filter(t => !t.isMessage).length;
+        for(let i=0; i<firstDay; i++) calGrid.innerHTML += `<div></div>`;
+        for(let i=1; i<=lastDate; i++) {
+            const dateStr = `${year}-${(month+1).toString().padStart(2,'0')}-${i.toString().padStart(2,'0')}`;
+            const summary = appData.dailySummaries[dateStr];
+            const hasTask = appData.daily[dateStr] && appData.daily[dateStr].some(t=>t.done);
+            let indicator = '';
+            if(summary) indicator = '✨'; 
+            else if(hasTask) indicator = '●';
             
-            let achievementColor = 'bg-[#EFEBE9]'; 
-            let textColor = 'text-[#BCAAA4]';
-            
-            if (totalCount > 0) {
-                const ratio = doneCount / totalCount;
-                if (ratio === 1) { achievementColor = 'bg-[#A5D6A7]'; textColor = 'text-white'; }
-                else if (ratio >= 0.5) { achievementColor = 'bg-[#FFCC80]'; textColor = 'text-white'; }
-                else { achievementColor = 'bg-[#FFAB91]'; textColor = 'text-white'; }
-            } else {
-                // No task
-            }
-
             const cell = document.createElement('div');
-            cell.className = `aspect-square flex flex-col items-center justify-center rounded-xl cursor-pointer transition ${isToday ? 'border-2 border-[#8D6E63]' : ''} hover:bg-gray-50`;
-            cell.onclick = () => {
-                achievementViewDate = dateStr;
-                renderApp();
-            };
-            
-            cell.innerHTML = `
-                <div class="${achievementColor} w-6 h-6 rounded-full flex items-center justify-center mb-1 shadow-sm">
-                   <span class="${textColor} text-[10px] font-bold">${d}</span>
-                </div>
-            `;
-            grid.appendChild(cell);
+            cell.className = `h-10 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:bg-[#F1F8E9] ${achievementViewDate===dateStr ? 'bg-[#DCEDC8] border border-[#AED581]' : ''}`;
+            cell.innerHTML = `<span class="text-sm ${achievementViewDate===dateStr ? 'font-bold':''}">${i}</span><span class="text-[10px] text-[#FF8A65] h-3">${indicator}</span>`;
+            cell.onclick = () => { achievementViewDate = dateStr; renderApp(); };
+            calGrid.appendChild(cell);
         }
-        wrapper.appendChild(grid);
+        wrapper.appendChild(calGrid);
         
-        // Detail View for selected date in Achievement
-        const detailSec = document.createElement('div');
-        detailSec.className = 'mt-6 border-t border-[#EFEBE9] pt-4';
-        
-        const selectedDaily = appData.daily[achievementViewDate] || [];
-        const completedTasks = selectedDaily.filter(t => t.done);
-        
-        detailSec.innerHTML = `
-            <h4 class="font-hand text-lg text-[#5D4037] mb-2 text-center">${achievementViewDate} 달성 내역</h4>
-            <div class="text-center text-xs text-[#A1887F] mb-4">
-                완료 ${completedTasks.length} / 전체 ${selectedDaily.filter(t=>!t.isMessage).length}
-            </div>
-        `;
+        const tasks = appData.daily[achievementViewDate] || [];
+        const completedTasks = tasks.filter(t => t.done && !t.isMessage);
+        const summary = appData.dailySummaries[achievementViewDate];
         
         const fbSection = document.createElement('div');
-        fbSection.className = 'bg-[#FDFCF5] p-4 rounded-xl border border-[#D7CCC8]';
+        fbSection.className = 'mt-auto pt-4 border-t border-[#EFEBE9]';
+        let detailsHtml = `<h3 class="font-hand text-lg text-[#5D4037] mb-2 border-b border-[#EFEBE9] pb-1">${achievementViewDate}</h3>`;
         
-        let detailsHtml = '';
-        const summary = appData.dailySummaries[achievementViewDate];
         if (summary) {
-            detailsHtml += `<div class="mb-4 text-xs text-[#5D4037] bg-white p-3 rounded-lg border border-[#EFEBE9] leading-relaxed">${summary}</div>`;
-        } else if (achievementViewDate === getTodayStr()) {
-             // Show button if today
-        } else {
-             // Pass
+            // [FIX] Reduced margin/padding
+            detailsHtml += `<div class="mb-4 p-2.5 bg-[#F1F8E9] rounded-xl text-xs text-[#33691E] leading-relaxed font-wando border border-[#AED581] relative whitespace-pre-wrap" style="padding-top: 6px;">
+                                <button onclick="window.generateDailySummary('${achievementViewDate}')" class="absolute top-1 right-1 text-[#8D6E63] hover:bg-white rounded-full p-1">${ICONS.refresh}</button>
+                                <div class="font-bold mb-1">zipipo 회고 요약</div>${summary}
+                            </div>`;
+        } else if (completedTasks.length > 0) {
+            detailsHtml += `<button onclick="window.generateDailySummary('${achievementViewDate}')" class="w-full mb-4 py-2 bg-white border border-[#D7CCC8] text-[#8D6E63] rounded-xl text-xs hover:bg-[#FDFCF5] transition flex items-center justify-center gap-1"><span>zipipo 회고 정리</span></button>`;
         }
         
         detailsHtml += `<ul class="space-y-2 mb-4">`;
@@ -1598,11 +1628,9 @@ ${summaryContext}
             });
         }
         detailsHtml += `</ul>`;
-        
         fbSection.innerHTML = detailsHtml;
-        wrapper.appendChild(detailSec);
-        wrapper.appendChild(fbSection);
         
+        wrapper.appendChild(fbSection);
         container.appendChild(wrapper);
     }
 
@@ -1611,6 +1639,7 @@ ${summaryContext}
         li.className = 'timeline-container flex flex-col mb-4';
         
         const isProject = type === 'project';
+        
         if (!isProject) {
             const dot = document.createElement('div');
             dot.className = 'timeline-dot';
@@ -1619,12 +1648,11 @@ ${summaryContext}
             li.appendChild(line);
             li.appendChild(dot);
         }
-        
+
         const content = document.createElement('div');
         content.className = 'relative z-10 w-full';
-        
-        if (isProject) {
-            li.style.paddingLeft = '0';
+        if (isProject) { 
+            li.style.paddingLeft = '0'; 
             li.style.marginBottom = '0.5rem';
         }
 
@@ -1633,66 +1661,70 @@ ${summaryContext}
         let subText = '';
         
         if (isProject && numberPrefix) {
-            if (task.depth && task.depth > 0) li.classList.add(`task-depth-${task.depth}`);
+            if (task.depth && task.depth > 0) {
+                displayText = `- ${displayText}`;
+            } else {
+                displayText = `${numberPrefix}. ${displayText}`;
+            }
+        }
+        
+        if (type === 'daily') {
+            const timeMatch = displayText.match(/(\d{1,2}:\d{2})(~\d{1,2}:\d{2})?/);
+            if (task.manualTimeRange) displayTime = task.manualTimeRange.split('~')[0].trim();
+            else if (timeMatch) {
+                displayTime = timeMatch[0];
+                displayText = displayText.replace(timeMatch[0], '').trim();
+                displayText = displayText.replace(/^[:\-\s]+/, '');
+            }
+
+            const parenMatch = displayText.match(/\((.*?)\)/);
+            if (parenMatch) {
+                subText = parenMatch[1];
+                displayText = displayText.replace(parenMatch[0], '').trim();
+            }
         }
 
-        if (type === 'daily') {
-             // Time parsing logic (simplified)
-             const timeMatch = task.text.match(/^(\d{1,2}:\d{2})(\s*~\s*\d{1,2}:\d{2})?/);
-             if (timeMatch) {
-                 displayTime = timeMatch[0];
-                 displayText = task.text.replace(displayTime, '').trim();
-                 if (displayText.startsWith(':')) displayText = displayText.substring(1).trim();
-             }
-        }
-
-        if (type === 'daily') {
-            const timeSpan = document.createElement('span');
-            timeSpan.className = 'task-time-label';
-            timeSpan.innerText = displayTime || 'Anytime';
-            content.appendChild(timeSpan);
+        if (type === 'daily' && displayTime) {
+            const timeDiv = document.createElement('div');
+            timeDiv.className = 'task-time-label';
+            timeDiv.innerText = displayTime;
+            content.appendChild(timeDiv);
         }
 
         const actionGroup = document.createElement('div');
-        actionGroup.className = 'flex items-start justify-between gap-2 group';
-        
-        // Text Area with Click to Edit
-        const title = document.createElement('span');
-        title.className = `text-sm cursor-pointer flex-1 leading-tight ${task.done ? 'text-[#BCAAA4] line-through' : 'text-[#5D4037]'}`;
-        title.innerText = numberPrefix ? `${numberPrefix} ${displayText}` : displayText;
-        
-        // [수정] 수정 모달 오픈 연결
-        title.onclick = () => {
-             // openEditTimeModal
-             if(type === 'daily') window.openEditTimeModal(task, 'daily', key, index);
-             else if(type === 'weekly') window.openEditTimeModal(task, 'weekly', key, index);
-             // Projects might not have edit modal or different logic
-        };
+        actionGroup.className = 'flex items-center gap-2';
 
+        const title = document.createElement('span');
+        title.className = 'flex-1 text-sm cursor-pointer hover:text-[#8D6E63] transition leading-relaxed';
+        title.innerHTML = displayText;
+        if(task.done) title.classList.add('line-through', 'text-opacity-50', 'text-[#A1887F]');
+        title.onclick = () => window.openEditTimeModal(type, key, index, task);
+
+        // --- NEW: create checkbox first (so visual order can be adjusted via append order) ---
         const chk = document.createElement('input');
         chk.type = 'checkbox';
-        chk.className = 'custom-checkbox mt-0.5';
+        chk.className = 'custom-checkbox';
         chk.checked = task.done;
-        chk.onchange = () => {
-            const newState = chk.checked;
-            window.updateTask(type, key, index, { done: newState });
+        chk.onclick = (e) => { 
+            e.stopPropagation(); 
+            window.updateTask(type, key, index, {done: chk.checked}); 
         };
-        
+
+        // --- NEW: Feedback button placed immediately BEFORE the checkbox so it appears left of the checkbox ---
         let fbBtn = null;
-        if(type === 'daily') {
-            fbBtn = document.createElement('button');
-            fbBtn.className = `text-xs px-1 ${task.feedback ? 'text-[#FF8A65]' : 'text-[#D7CCC8] hover:text-[#8D6E63]'}`;
-            fbBtn.innerHTML = ICONS.speech;
-            fbBtn.onclick = (e) => {
-                e.stopPropagation();
-                openInputModal('피드백 남기기', task.feedback || '', '저장', (val) => window.updateTask(type, key, index, {feedback: val}));
-            };
+        if (!task.feedback) { // show feedback button whenever feedback 없음 (모든 타입에 적용)
+             fbBtn = document.createElement('button');
+             fbBtn.className = 'text-[#BCAAA4] hover:text-[#8D6E63] mx-1';
+             fbBtn.innerHTML = ICONS.speech;
+             fbBtn.onclick = (e) => {
+                 e.stopPropagation();
+                 window.openInputModal('한줄 피드백', (val) => window.updateTask(type, key, index, {feedback: val}));
+             };
         }
 
+        // Append in visual order: title (left area) then (optionally) del button, then feedback btn, then checkbox
         actionGroup.appendChild(title);
-        
-        // [수정] 삭제 버튼 생성 코드 제거 (주석 처리 또는 삭제)
-        /*
+
         const delBtn = document.createElement('button');
         delBtn.className = 'text-[#D7CCC8] hover:text-[#FF7F50] text-xs px-1';
         delBtn.innerHTML = 'x';
@@ -1703,115 +1735,106 @@ ${summaryContext}
             }
         };
         actionGroup.appendChild(delBtn);
-        */
 
+        // Append feedback btn (if exists) immediately before checkbox
         if (fbBtn) actionGroup.appendChild(fbBtn);
         actionGroup.appendChild(chk);
-        
+
         content.appendChild(actionGroup);
+
         
+
         if (type === 'daily' && subText) {
-             const subDiv = document.createElement('div');
-             subDiv.className = 'task-sub-text';
-             subDiv.innerText = subText;
-             content.appendChild(subDiv);
+            const subDiv = document.createElement('div');
+            subDiv.className = 'task-sub-text';
+            subDiv.innerText = subText;
+            content.appendChild(subDiv);
         }
-        
+
         li.appendChild(content);
 
         if(type === 'daily') {
-             // Optional: visual duration or routine tag?
+            const timerRow = document.createElement('div');
+            timerRow.className = 'flex items-center gap-2 mt-2 pl-2';
+            
+            if (task.actualStartTime && task.actualEndTime) {
+                const s = new Date(task.actualStartTime);
+                const e = new Date(task.actualEndTime);
+                const diff = Math.floor((e - s) / (1000 * 60)); 
+                const timeStr = `${formatTimeSimple(task.actualStartTime)}~${formatTimeSimple(task.actualEndTime)} (${diff}m)`;
+                
+                const displaySpan = document.createElement('span');
+                displaySpan.className = 'text-xs text-[#5D4037] font-bold bg-[#F1F8E9] px-2 py-1 rounded border border-[#C5E1A5]';
+                displaySpan.innerText = timeStr;
+                timerRow.appendChild(displaySpan);
+            } else {
+                if(!task.actualStartTime) {
+                    const btn = document.createElement('button');
+                    btn.className = 'font-hand text-sm text-[#A1887F] hover:text-[#FF8A65] border border-[#D7CCC8] px-2 py-0.5 rounded-full bg-white';
+                    btn.textContent = 'start !';
+                    btn.onclick = () => window.updateTask(type, key, index, {actualStartTime: new Date().toISOString()});
+                    timerRow.appendChild(btn);
+                } else if (!task.actualEndTime) {
+                    const btn = document.createElement('button');
+                    btn.className = 'font-hand text-sm text-white bg-[#FFAB91] hover:bg-[#FF8A65] px-2 py-0.5 rounded-full';
+                    btn.textContent = 'stop !';
+                    btn.onclick = () => window.updateTask(type, key, index, {actualEndTime: new Date().toISOString()});
+                    timerRow.appendChild(btn);
+                }
+            }
+
+            if (task.feedback) {
+                const fb = document.createElement('span');
+                fb.className = 'text-xs text-[#8D6E63] bg-[#FDFCF5] px-2 py-1 rounded border border-[#EFEBE9] ml-1';
+                fb.innerText = `"${task.feedback}"`;
+                timerRow.appendChild(fb);
+            }
+            
+            if(timerRow.hasChildNodes()) li.appendChild(timerRow);
         }
         
         return li;
     }
 
-    // 9. DATA MANIPULATION
-    window.updateTask = function(type, key, index, changes) {
-        const previousScrollY = window.scrollY;
-        let list = [];
-        if(type === 'daily') list = appData.daily[key];
-        else if(type === 'weekly') list = appData.weekly[key].tasks;
-        else if(type === 'project') {
-             const p = appData.projects.find(x => x.id === key);
-             if(p) list = p.tasks;
-        }
-
-        if(list && list[index]) {
-            // Apply changes
-            Object.keys(changes).forEach(k => {
-                 if(k === 'manualTimeRange') {
-                     // 덮어쓰기 or append?
-                     // If manualTimeRange is present, replace time part in text
-                     const oldText = list[index].text;
-                     const newTime = changes[k];
-                     const oldTimeMatch = oldText.match(/^(\d{1,2}:\d{2})(~\d{1,2}:\d{2})?/);
-                     
-                     let cleanText = oldText;
-                     if(oldTimeMatch) cleanText = oldText.replace(oldTimeMatch[0], '').trim();
-                     
-                     if(newTime) list[index].text = `${newTime} ${cleanText}`;
-                     else list[index].text = cleanText;
-                 } else if (k === 'specificDate') {
-                     list[index].date = changes[k];
-                 } else {
-                     list[index][k] = changes[k];
-                 }
-            });
-            saveData();
-            renderApp();
-            window.scrollTo(0, previousScrollY);
-        }
-    };
-
-    window.deleteTaskItem = function(type, key, index) {
-        if(type === 'daily') {
-            appData.daily[key].splice(index, 1);
-        } else if(type === 'weekly') {
-            appData.weekly[key].tasks.splice(index, 1);
-        } else if(type === 'project') {
-             const p = appData.projects.find(x => x.id === key);
-             if(p) p.tasks.splice(index, 1);
-        }
-        saveData();
-        renderApp();
-    };
-
-    window.updateProjectMemo = function(pid, val) {
-        const p = appData.projects.find(x => x.id === pid);
-        if(p) {
-            p.memo = val;
-            saveData();
-        }
-    }
-    
-    function completeProject(pid, isComplete) {
-        const p = appData.projects.find(x => x.id === pid);
-        if(p) {
-            p.completed = isComplete;
-            saveData();
+    // --- Init ---
+    setInterval(() => {
+        const now = getLocalDateStr(new Date());
+        if (now !== lastKnownToday) {
+            lastKnownToday = now;
+            selectedDate = now; 
+            currentWeekBaseDate = new Date(); 
             renderApp();
         }
-    }
-    
-    function moveWeek(delta) {
-        calendarDate.setMonth(calendarDate.getMonth() + delta);
-        renderApp();
-    }
-    
-    // Globals for external calls
-    window.changeDate = changeDate;
-    window.openGeneratorModal = openGeneratorModal;
-    window.generateSchedule = generateSchedule;
+    }, 60000); 
+
+    renderHeader();
+    initTimeSelects();
+    loadData(); 
+    renderApp();
+
+    const savedKey = localStorage.getItem(STORAGE_KEY_API);
+    if(!savedKey) toggleApiKeyInput();
+
     window.closeModal = closeModal;
-    window.switchTab = switchTab;
-    window.toggleApiKeyInput = toggleApiKeyInput;
     window.saveApiKey = saveApiKey;
-    window.confirmInput = confirmInput;
-    window.switchProjMode = switchProjMode;
-    window.moveProjCal = moveProjCal;
-    window.confirmCreateProject = confirmCreateProject;
+    window.toggleApiKeyInput = toggleApiKeyInput;
+    window.generateSchedule = generateSchedule;
+    window.openGeneratorModal = openGeneratorModal;
+    window.openWeeklyGenerator = openWeeklyGenerator;
+    window.openAddTaskModal = openAddTaskModal;
+    window.closeAddTaskModal = () => closeModal('addTaskModal');
+    window.confirmTaskAction = confirmTaskAction;
     window.openProjectModal = openProjectModal;
+    window.closeProjectModal = () => closeModal('projectInputModal');
+    window.switchProjMode = switchProjMode;
+    window.confirmCreateProject = confirmCreateProject;
+    window.moveProjCal = moveProjCal;
+    window.openInputModal = openInputModal;
+    window.closeInputModal = closeInputModal;
+    window.confirmInput = confirmInput;
+    window.switchTab = switchTab;
+    window.moveMonth = moveMonth;
+    window.generateDailySummary = generateDailySummary;
     window.openProjectPlanModal = openProjectPlanModal;
     window.closeProjectPlanModal = () => closeModal('projectPlanModal');
     window.confirmProjectPlan = confirmProjectPlan;
@@ -1819,30 +1842,48 @@ ${summaryContext}
     window.moveWeek = moveWeek;
     window.openEditTimeModal = openEditTimeModal;
     window.updateTask = updateTask;
-    window.confirmTaskAction = confirmTaskAction;
     window.deleteTaskItem = deleteTaskItem;
-    window.addManualTask = () => {
-         // Manual add task trigger
-         currentTaskTypeForAdd = 'daily';
-         document.getElementById('taskModalTitle').innerText = '할 일 추가';
-         document.getElementById('manualTaskText').value = '';
-         document.getElementById('startHour').value = '';
-         document.getElementById('startMin').value = '';
-         document.getElementById('endHour').value = '';
-         document.getElementById('endMin').value = '';
-         document.getElementById('weeklyTaskDate').value = '';
-         
-         document.getElementById('addTaskModal').classList.remove('hidden');
-         // [수정] 추가 시 삭제 버튼 숨김
-         document.getElementById('modalDeleteBtn').classList.add('hidden');
-         editingTask = null;
-         currentEditContext = null;
-    };
-    
-    // INIT
-    loadData();
-    renderApp();
+    window.deleteProject = deleteProject;
+    window.addManualTask = addManualTask;
+    window.changeDate = changeDate;
+    window.updateProjectMemo = updateProjectMemo;
+
+    // Routine Logic
+    window.openRoutineModal = openRoutineModal;
+    window.addRoutine = addRoutine;
+    window.deleteRoutine = deleteRoutine;
+
+    function openRoutineModal() {
+        document.getElementById('routineModal').classList.remove('hidden');
+        renderRoutineList();
+    }
+    function renderRoutineList() {
+        const list = document.getElementById('routineList');
+        list.innerHTML = '';
+        (appData.routines || []).forEach((r, i) => {
+            list.innerHTML += `
+                <div class="flex justify-between items-center bg-white border border-[#EFEBE9] p-2 rounded">
+                    <span class="text-sm">${r.text}</span>
+                    <button onclick="window.deleteRoutine(${i})" class="text-[#D7CCC8] hover:text-[#FF8A65]">x</button>
+                </div>`;
+        });
+    }
+    function addRoutine() {
+        const input = document.getElementById('newRoutineInput');
+        const text = input.value.trim();
+        if(text) {
+            appData.routines.push({ text: text });
+            input.value = '';
+            saveData();
+            renderRoutineList();
+        }
+    }
+    function deleteRoutine(i) {
+        appData.routines.splice(i, 1);
+        saveData();
+        renderRoutineList();
+    }
+
 </script>
 </body>
 </html>
-
