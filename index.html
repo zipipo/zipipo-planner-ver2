@@ -1,6 +1,153 @@
-background-color: var(--sage-green);
-border-color: var(--sage-green);
-}
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="zipipo">
+    <meta name="mobile-web-app-capable" content="yes">
+    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📅</text></svg>">
+    <link rel="shortcut icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📅</text></svg>">
+
+    <title>zipipo planner</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Kirang+Haerang&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* --- Theme Variables --- */
+        :root {
+            --bg-ivory: #FDFCF5;
+            --wood-frame: #A1887F;
+            --wood-text: #5D4037;
+            --sage-green: #8FBC8F;
+            --point-coral: #FF8A65;
+        }
+        
+        /* Font: S-Core Dream (Light) */
+        @font-face {
+            font-family: 'S-CoreDream';
+            src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_six@1.2/S-CoreDream-3Light.woff') format('woff');
+            font-weight: normal;
+            font-style: normal;
+        }
+        
+        body, button, input, textarea, select {
+            font-family: 'Gowun Dodum', sans-serif !important;
+            color: var(--wood-text);
+            -webkit-tap-highlight-color: transparent;
+        }
+        .font-hand { font-family: 'Kirang Haerang', cursive !important; }
+        .font-wando { font-family: 'S-CoreDream', sans-serif !important; } 
+        
+        body { background-color: var(--bg-ivory); }
+
+        /* Sticky Header */
+        .sticky-header-wrapper {
+            position: sticky;
+            top: 0;
+            z-index: 40;
+            background-color: var(--bg-ivory);
+            border-bottom: 1px solid #EFEBE9;
+            padding-top: env(safe-area-inset-top);
+        }
+
+        /* Timeline - Daily */
+        .timeline-container {
+            position: relative;
+            padding-left: 20px;
+            padding-bottom: 10px; 
+        }
+        .timeline-line {
+            position: absolute;
+            left: 7px;
+            top: 10px; 
+            bottom: -10px; 
+            width: 2px;
+            background-color: var(--wood-text);
+            opacity: 0.2;
+            border-radius: 2px;
+        }
+        .timeline-container:last-child .timeline-line { display: none; }
+        .timeline-dot {
+            position: absolute;
+            left: 4px;
+            top: 7px;
+            width: 8px;
+            height: 8px;
+            background-color: var(--wood-text);
+            border-radius: 50%;
+            z-index: 2;
+        }
+
+        /* Timeline - Weekly */
+        .weekly-item .timeline-line { display: none !important; }
+        .weekly-item .timeline-dot {
+            width: 5px;
+            height: 5px;
+            left: 6px;
+            top: 9px;
+            background-color: var(--sage-green);
+        }
+        .weekly-item.timeline-container { padding-left: 18px; }
+        
+        .empty-state {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem 0;
+            text-align: center;
+            width: 100%;
+        }
+
+        .wood-frame {
+            border: 2px solid var(--wood-frame);
+            border-radius: 16px;
+            background: white;
+        }
+
+        /* Tabs */
+        .tab-btn {
+            font-family: 'Kirang Haerang', cursive !important;
+            font-size: 1.3rem;
+            color: #D7CCC8;
+            transition: color 0.2s;
+        }
+        .tab-active {
+            color: var(--wood-text);
+            position: relative;
+        }
+        .tab-active::after {
+            content: '';
+            position: absolute;
+            bottom: 2px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 6px;
+            height: 6px;
+            background-color: var(--point-coral);
+            border-radius: 50%;
+        }
+
+        /* Checkbox */
+        .custom-checkbox {
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border: 2px solid #BCAAA4;
+            border-radius: 5px;
+            cursor: pointer;
+            position: relative;
+            background-color: #fff;
+            transition: all 0.2s;
+            flex-shrink: 0;
+        }
+        .custom-checkbox:checked {
+            background-color: var(--sage-green);
+            border-color: var(--sage-green);
+        }
         .custom-checkbox:checked::after {
             content: '✔';
             position: absolute;
@@ -10,52 +157,1552 @@ border-color: var(--sage-green);
             left: 50%;
             transform: translate(-50%, -50%);
         }
-       .custom-checkbox:checked::after {
-    	/* 체크 마크 제거: content 비우기 */
-   	    content: '';
- 	/* (선택) 여분의 스타일을 없애기 위해 크기/포지션 초기화 */
-   	    display: none;
-	}
 
-/* FAB */
-.fab-house {
-@@ -311,7 +308,7 @@ <h1 class="font-hand text-4xl text-[#5D4037] pt-1">zipipo planner</h1>
-<main id="appContent" class="p-5 flex-1 space-y-6 overflow-y-auto"></main>
-
-<div id="saveToast" class="fixed bottom-24 left-1/2 transform -translate-x-1/2 bg-[#5D4037] text-white text-xs px-4 py-2 rounded-full shadow-none opacity-0 transition-opacity duration-300 pointer-events-none z-50 bg-opacity-90 backdrop-blur-sm">
-        저장됨 ✨
-        저장됨
-</div>
-
-<div id="aiLoadingPopup" class="fixed inset-0 bg-black/10 z-[70] hidden flex items-center justify-center backdrop-blur-[1px]">
-@@ -1250,7 +1247,7 @@ <h3 id="inputModalTitle" class="font-hand text-xl text-[#8D6E63] mb-3">입력</h
-                   <span class="text-sm text-[#A1887F] font-sans font-bold">${dayNames[d.getDay()]}</span>
-               </div>
-               <div class="flex gap-2">
-                    <button onclick="window.openRoutineModal()" class="text-[10px] bg-white border border-[#D7CCC8] px-2 py-1 rounded-full text-[#8D6E63] hover:bg-[#EFEBE9]">✨ 루틴 등록하기</button>
-                    <button onclick="window.openRoutineModal()" class="text-[10px] bg-white border border-[#D7CCC8] px-2 py-1 rounded-full text-[#8D6E63] hover:bg-[#EFEBE9]">루틴 등록</button>
-                   <input type="date" class="border border-[#D7CCC8] rounded px-2 py-1 text-xs bg-white" value="${selectedDate}" onchange="window.changeDate(this.value)">
-               </div>
-           </div>`;
-@@ -1616,10 +1613,10 @@ <h4 class="font-bold text-lg text-[#5D4037] mt-1 pr-16 leading-tight">${p.title}
-// [FIX] Reduced margin/padding
-detailsHtml += `<div class="mb-4 p-2.5 bg-[#F1F8E9] rounded-xl text-xs text-[#33691E] leading-relaxed font-wando border border-[#AED581] relative whitespace-pre-wrap" style="padding-top: 6px;">
-                               <button onclick="window.generateDailySummary('${achievementViewDate}')" class="absolute top-1 right-1 text-[#8D6E63] hover:bg-white rounded-full p-1">${ICONS.refresh}</button>
-                                <div class="font-bold mb-1">✨ zipipo 회고 요약</div>${summary}
-                                <div class="font-bold mb-1">zipipo 회고 요약</div>${summary}
-                           </div>`;
-} else if (completedTasks.length > 0) {
-            detailsHtml += `<button onclick="window.generateDailySummary('${achievementViewDate}')" class="w-full mb-4 py-2 bg-white border border-[#D7CCC8] text-[#8D6E63] rounded-xl text-xs hover:bg-[#FDFCF5] transition flex items-center justify-center gap-1"><span>✨ zipipo 회고 정리</span></button>`;
-            detailsHtml += `<button onclick="window.generateDailySummary('${achievementViewDate}')" class="w-full mb-4 py-2 bg-white border border-[#D7CCC8] text-[#8D6E63] rounded-xl text-xs hover:bg-[#FDFCF5] transition flex items-center justify-center gap-1"><span>zipipo 회고 정리</span></button>`;
-}
-
-detailsHtml += `<ul class="space-y-2 mb-4">`;
-@@ -1701,23 +1698,9 @@ <h4 class="font-bold text-lg text-[#5D4037] mt-1 pr-16 leading-tight">${p.title}
-title.className = 'flex-1 text-sm cursor-pointer hover:text-[#8D6E63] transition leading-relaxed';
-title.innerHTML = displayText;
-if(task.done) title.classList.add('line-through', 'text-opacity-50', 'text-[#A1887F]');
+        /* FAB */
+        .fab-house {
+            background-color: #A5D6A7;
+            clip-path: polygon(50% 0%, 100% 35%, 100% 100%, 0% 100%, 0% 35%);
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            padding-bottom: 8px;
+        }
         
-title.onclick = () => window.openEditTimeModal(type, key, index, task);
+        /* Modals & Animations */
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .modal-content { animation: slideUp 0.3s ease-out; }
+        
+        /* Time Select & Mini Cal */
+        .time-select {
+            border: 1px solid #EFEBE9;
+            border-radius: 8px;
+            padding: 4px;
+            font-size: 0.8rem;
+            color: var(--wood-text);
+            background-color: white;
+            outline: none;
+        }
+        .mini-cal-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 4px;
+            text-align: center;
+            font-size: 0.8rem;
+        }
+        .mini-cal-cell {
+            padding: 6px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .mini-cal-cell.selected {
+            background-color: var(--sage-green);
+            color: white;
+            font-weight: bold;
+        }
+        .modal-tab {
+            padding: 8px;
+            font-size: 0.9rem;
+            color: #BCAAA4;
+            border-bottom: 2px solid transparent;
+            cursor: pointer;
+        }
+        .modal-tab.active {
+            color: var(--wood-text);
+            border-bottom: 2px solid var(--point-coral);
+            font-weight: bold;
+        }
+
+        /* Task Styles */
+        .task-time-label {
+            font-size: 0.7rem;
+            color: #BCAAA4;
+            margin-bottom: -2px;
+            display: block;
+        }
+        .task-sub-text {
+            font-size: 0.75rem;
+            color: #8D6E63;
+            margin-top: 2px;
+            display: block;
+            margin-left: 26px; 
+        }
+        
+        /* Project Specifics */
+        .proj-date-header {
+            font-size: 0.8rem;
+            font-weight: bold;
+            color: #556B2F;
+            background-color: #F1F8E9;
+            padding: 4px 10px;
+            border-radius: 8px;
+            display: inline-block;
+            margin-bottom: 6px;
+            margin-top: 12px;
+            border: 1px solid #DCEDC8;
+        }
+        .proj-tip-box {
+            background-color: #FFF8E1;
+            border: 1px solid #FFE0B2;
+            border-radius: 12px;
+            padding: 10px;
+            margin-top: 10px; 
+            margin-bottom: 12px;
+            font-size: 0.8rem;
+            color: #E65100;
+            line-height: 1.5;
+        }
+        .proj-tip-label {
+            font-weight: bold;
+            font-size: 0.7rem;
+            color: #FFB74D;
+            display: block;
+            margin-bottom: 2px;
+        }
+        .task-depth-1 { margin-left: 1rem; }
+        .task-depth-2 { margin-left: 2rem; }
+        .proj-msg-box {
+            font-size: 0.8rem;
+            color: #795548;
+            background-color: #EFEBE9;
+            padding: 6px 10px;
+            border-radius: 8px;
+            margin-bottom: 4px;
+            font-weight: bold;
+        }
+        .proj-memo-area {
+            width: 100%;
+            background-color: #FDFCF5;
+            border: 1px solid #D7CCC8;
+            border-radius: 12px;
+            padding: 10px;
+            font-size: 0.8rem;
+            color: #5D4037;
+            resize: none;
+            margin-top: 10px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .proj-memo-area:focus {
+            border-color: #8D6E63;
+        }
+    </style>
+</head>
+<body class="max-w-md mx-auto min-h-screen flex flex-col pb-28 relative bg-[#FDFCF5]">
+
+    <div class="sticky-header-wrapper">
+        <header class="px-6 pt-8 pb-2 flex justify-between items-center bg-[#FDFCF5]">
+            <div class="flex items-center gap-2">
+                <svg class="w-8 h-8 text-[#8D6E63]" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
+                </svg>
+                <h1 class="font-hand text-4xl text-[#5D4037] pt-1">zipipo planner</h1>
+            </div>
+            <div id="headerDate" class="font-hand text-lg text-[#A1887F]"></div>
+        </header>
+
+        <nav class="flex justify-around bg-[#FDFCF5] pb-2 border-b border-[#EFEBE9]">
+            <button onclick="switchTab('home')" id="tab-home" class="flex-1 py-2 tab-btn tab-active">Home</button>
+            <button onclick="switchTab('project')" id="tab-project" class="flex-1 py-2 tab-btn">Project</button>
+            <button onclick="switchTab('achievement')" id="tab-achievement" class="flex-1 py-2 tab-btn">Achievement</button>
+        </nav>
+    </div>
+
+    <main id="appContent" class="p-5 flex-1 space-y-6 overflow-y-auto"></main>
+
+    <div id="saveToast" class="fixed bottom-24 left-1/2 transform -translate-x-1/2 bg-[#5D4037] text-white text-xs px-4 py-2 rounded-full shadow-none opacity-0 transition-opacity duration-300 pointer-events-none z-50 bg-opacity-90 backdrop-blur-sm">
+        저장됨 ✨
+    </div>
+
+    <div id="aiLoadingPopup" class="fixed inset-0 bg-black/10 z-[70] hidden flex items-center justify-center backdrop-blur-[1px]">
+        <div class="bg-white px-8 py-6 rounded-3xl shadow-lg border-2 border-[#EFEBE9] w-[280px] mx-4 text-center">
+            <div class="text-[#5D4037] font-hand text-xl mb-1 whitespace-nowrap">
+                zipipo가 만들고 있어요<span id="loadingDots" class="inline-block w-6 text-left"></span>
+            </div>
+            <div class="text-[10px] text-[#A1887F]">잠시만 기다려주세요</div>
+        </div>
+    </div>
+
+    <footer id="homeFooter" class="mt-auto py-8 text-center">
+        <div class="flex justify-center gap-4 text-xs text-[#BCAAA4]">
+            <button onclick="toggleApiKeyInput()" class="hover:text-[#8D6E63] font-hand text-lg flex items-center gap-1">
+                <svg class="w-4 h-4 text-[#D7CCC8]" fill="currentColor" viewBox="0 0 24 24"><path d="M12.65 10C11.83 7.67 9.61 6 7 6c-3.31 0-6 2.69-6 6s2.69 6 6 6c2.61 0 4.83-1.67 5.65-4H17v4h4v-4h2v-4H12.65zM7 14c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z"/></svg>
+                Key Setting
+            </button>
+        </div>
+        <div id="apiKeyContainer" class="hidden mt-3 mx-8 p-4 bg-white border-2 border-[#EFEBE9] rounded-2xl">
+            <input type="password" id="apiKeyInput" placeholder="API Key를 입력해주세요" 
+                   class="w-full p-2 border-b border-[#D7CCC8] mb-3 text-sm bg-transparent focus:outline-none focus:border-[#8D6E63] text-center text-[#5D4037]">
+            <button onclick="saveApiKey()" class="w-full bg-[#D7CCC8] text-white text-sm py-2 rounded-lg font-bold hover:bg-[#BCAAA4]">저장하기</button>
+        </div>
+    </footer>
+
+    <div class="fixed bottom-8 right-6 z-30">
+        <button onclick="openGeneratorModal('new')" class="w-14 h-14 fab-house text-white hover:scale-105 transition active:scale-95 shadow-sm">
+            <span class="text-2xl font-bold font-hand">+</span>
+        </button>
+    </div>
+
+    <div id="generatorModal" class="fixed inset-0 bg-[#4E342E]/20 z-50 hidden flex items-end sm:items-center justify-center backdrop-blur-[1px]">
+        <div class="bg-[#FDFCF5] w-full max-w-md p-6 rounded-t-3xl sm:rounded-3xl shadow-none border-2 border-[#EFEBE9] m-0 sm:m-4 wood-frame modal-content">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="font-hand text-2xl text-[#8D6E63]">일정 짓기</h3>
+                <button onclick="closeModal('generatorModal')" class="text-[#BCAAA4] hover:text-[#8D6E63] text-xl">✕</button>
+            </div>
+            <textarea id="taskPrompt" rows="3" class="w-full p-4 border-2 border-[#EFEBE9] rounded-xl mb-4 resize-none focus:outline-none focus:border-[#D7CCC8] bg-white text-sm placeholder-gray-300" placeholder="예: 공부 2시간 하고 산책하기"></textarea>
+            <div class="flex gap-3 mb-3">
+                <button onclick="generateSchedule('daily')" class="flex-1 py-3 bg-[#FFAB91] text-white font-bold rounded-xl hover:bg-[#FF8A65] transition shadow-sm text-sm">Daily</button>
+                <button onclick="generateSchedule('weekly')" class="flex-1 py-3 bg-[#A5D6A7] text-white font-bold rounded-xl hover:bg-[#81C784] transition shadow-sm text-sm">Weekly</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="routineModal" class="fixed inset-0 bg-[#4E342E]/20 z-50 hidden flex items-center justify-center backdrop-blur-[1px]">
+        <div class="bg-[#FDFCF5] w-full max-w-md p-6 rounded-2xl shadow-none border-2 border-[#EFEBE9] m-4 wood-frame modal-content">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="font-hand text-xl text-[#8D6E63]">루틴 관리</h3>
+                <button onclick="closeModal('routineModal')" class="text-[#BCAAA4] hover:text-[#8D6E63] text-xl">✕</button>
+            </div>
+            <div class="flex gap-2 mb-4">
+                <input type="text" id="newRoutineInput" class="flex-1 border-b-2 border-[#D7CCC8] p-1 text-sm focus:outline-none bg-transparent" placeholder="새 루틴 (예: 🧘 스트레칭)">
+                <button onclick="addRoutine()" class="bg-[#D7CCC8] text-white px-3 py-1 rounded-lg text-xs font-bold hover:bg-[#A1887F]">+</button>
+            </div>
+            <div id="routineList" class="max-h-60 overflow-y-auto space-y-2">
+                </div>
+        </div>
+    </div>
+
+    <div id="projectPlanModal" class="fixed inset-0 bg-[#4E342E]/20 z-50 hidden flex items-center justify-center backdrop-blur-[1px]">
+        <div class="bg-[#FDFCF5] w-full max-w-md p-6 rounded-2xl shadow-none border-2 border-[#EFEBE9] m-4 wood-frame modal-content">
+            <h3 class="font-hand text-xl text-[#8D6E63] mb-2">프로젝트 계획 짜기</h3>
+            <p class="text-xs text-[#A1887F] mb-4">구체적인 실행 계획을 요청하세요.</p>
+            <textarea id="projectPlanPrompt" rows="6" class="w-full p-4 border-2 border-[#EFEBE9] rounded-xl mb-4 resize-none focus:outline-none focus:border-[#D7CCC8] bg-white text-sm text-[#5D4037] leading-relaxed"></textarea>
+            <div class="flex gap-3">
+                <button onclick="closeModal('projectPlanModal')" class="flex-1 py-3 bg-gray-100 text-[#8D6E63] rounded-xl text-xs hover:bg-gray-200">취소</button>
+                <button onclick="confirmProjectPlan()" class="flex-1 py-3 bg-[#8D6E63] text-white rounded-xl text-xs font-bold hover:bg-[#6D4C41]">계획 생성하기</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="addTaskModal" class="fixed inset-0 bg-black/20 z-[60] hidden flex items-center justify-center backdrop-blur-[1px]">
+        <div class="bg-white p-6 rounded-2xl shadow-lg w-80 wood-frame modal-content text-center">
+            <h3 id="taskModalTitle" class="font-hand text-xl text-[#8D6E63] mb-4">할 일 추가</h3>
+            <input type="text" id="manualTaskText" class="w-full border-b-2 border-[#D7CCC8] p-2 mb-4 focus:outline-none text-center text-sm" placeholder="할 일 내용">
+            <div id="dailyTimeInputWrapper" class="flex flex-col gap-3 mb-5">
+                <div class="flex items-center justify-center gap-2">
+                    <span class="text-xs text-[#A1887F] w-8">시작</span>
+                    <select id="startHour" class="time-select"></select> : <select id="startMin" class="time-select"></select>
+                </div>
+                <div class="flex items-center justify-center gap-2">
+                    <span class="text-xs text-[#A1887F] w-8">종료</span>
+                    <select id="endHour" class="time-select"></select> : <select id="endMin" class="time-select"></select>
+                </div>
+            </div>
+            <div id="weeklyDateInputWrapper" class="hidden mb-5">
+                <label class="text-xs text-[#A1887F] block mb-2">수행할 날짜 (선택)</label>
+                <input type="date" id="weeklyTaskDate" class="border border-[#EFEBE9] rounded p-2 text-sm text-[#5D4037] w-full bg-white">
+            </div>
+            <div class="flex gap-2 justify-center">
+                <button onclick="closeModal('addTaskModal')" class="px-4 py-2 bg-gray-100 rounded-lg text-xs text-gray-500 hover:bg-gray-200">취소</button>
+                <button onclick="confirmTaskAction()" class="px-4 py-2 bg-[#8D6E63] text-white rounded-lg text-xs font-bold hover:bg-[#6D4C41]">확인</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="projectInputModal" class="fixed inset-0 bg-black/20 z-[60] hidden flex items-center justify-center backdrop-blur-[1px]">
+        <div class="bg-white p-6 rounded-2xl shadow-lg w-80 wood-frame modal-content">
+            <h3 class="font-hand text-xl text-[#8D6E63] mb-4 text-center">새 프로젝트 심기</h3>
+            <label class="text-xs text-[#A1887F] mb-1 block">프로젝트 이름</label>
+            <input type="text" id="projTitle" class="w-full border-b-2 border-[#D7CCC8] p-2 mb-3 focus:outline-none text-center text-sm" placeholder="">
+            <label class="text-xs text-[#A1887F] mb-1 block">내용</label>
+            <textarea id="projDesc" class="w-full border-2 border-[#EFEBE9] rounded-xl p-2 mb-3 text-sm focus:outline-none focus:border-[#D7CCC8] resize-none" rows="2"></textarea>
+            <div class="flex border-b border-[#EFEBE9] mb-3">
+                <div onclick="switchProjMode('range')" id="pm-range" class="flex-1 text-center modal-tab active">기간 지정</div>
+                <div onclick="switchProjMode('select')" id="pm-select" class="flex-1 text-center modal-tab">날짜 선택</div>
+            </div>
+            <div id="projModeRange">
+                <div class="flex gap-2 mb-2">
+                    <div class="flex-1">
+                        <label class="text-xs text-[#A1887F] mb-1 block">시작일</label>
+                        <input type="date" id="projStart" class="w-full border border-[#EFEBE9] rounded p-1 text-xs text-[#5D4037]">
+                    </div>
+                    <div class="flex-1">
+                        <label class="text-xs text-[#A1887F] mb-1 block">종료일</label>
+                        <input type="date" id="projEnd" class="w-full border border-[#EFEBE9] rounded p-1 text-xs text-[#5D4037]">
+                    </div>
+                </div>
+            </div>
+            <div id="projModeSelect" class="hidden">
+                <div class="flex justify-between items-center mb-2 px-2">
+                    <button onclick="moveProjCal(-1)" class="text-[#8D6E63]">◀</button>
+                    <span id="projCalTitle" class="text-xs font-bold text-[#5D4037]"></span>
+                    <button onclick="moveProjCal(1)" class="text-[#8D6E63]">▶</button>
+                </div>
+                <div class="mini-cal-grid mb-1" id="projCalGrid"></div>
+                <div class="text-[10px] text-right text-[#8D6E63]"><span id="selectedCount">0</span>일 선택됨</div>
+            </div>
+            <div class="flex gap-2 justify-center mt-3">
+                <button onclick="closeModal('projectInputModal')" class="px-4 py-2 bg-gray-100 rounded-lg text-xs text-gray-500 hover:bg-gray-200">취소</button>
+                <button onclick="confirmCreateProject()" class="px-4 py-2 bg-[#556B2F] text-white rounded-lg text-xs font-bold hover:bg-[#33691E]">심기</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="inputModal" class="fixed inset-0 bg-black/20 z-[60] hidden flex items-center justify-center backdrop-blur-[1px]">
+        <div class="bg-white p-5 rounded-2xl shadow-lg w-80 wood-frame modal-content text-center">
+            <h3 id="inputModalTitle" class="font-hand text-xl text-[#8D6E63] mb-3">입력</h3>
+            <textarea id="inputModalField" rows="3" class="w-full border-2 border-[#EFEBE9] rounded-xl p-2 mb-4 focus:outline-none focus:border-[#D7CCC8] text-center resize-none bg-transparent" placeholder="내용을 입력하세요"></textarea>
+            <div class="flex gap-2 justify-center">
+                <button onclick="closeModal('inputModal')" class="px-4 py-2 bg-gray-200 rounded-lg text-xs text-gray-500">취소</button>
+                <button onclick="confirmInput()" class="px-4 py-2 bg-[#8D6E63] text-white rounded-lg text-xs font-bold">확인</button>
+            </div>
+        </div>
+    </div>
+
+<script>
+    // 1. CONSTANTS
+    const STORAGE_KEY_API = 'zipipo_v2_apikey';
+    const STORAGE_KEY_DATA = 'zipipo_v2_data'; 
+    const GEMINI_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent';
+    
+    const ICONS = {
+        check: `<svg class="w-4 h-4 text-[#8D6E63] hover:text-[#5D4037]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"></path></svg>`,
+        undo: `<svg class="w-4 h-4 text-[#8D6E63] hover:text-[#5D4037]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"></path></svg>`,
+        closeX: `<svg class="w-4 h-4 text-[#D7CCC8] hover:text-[#FF7F50]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path></svg>`,
+        speech: `<svg class="w-4 h-4 text-[#BCAAA4] hover:text-[#8D6E63] transition" fill="currentColor" viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg>`,
+        edit: `<svg class="w-3 h-3 text-[#BCAAA4] hover:text-[#8D6E63]" fill="currentColor" viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>`,
+        refresh: `<svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>`
+    };
+
+    // 2. STATE
+    let appData = { daily: {}, weekly: {}, projects: [], dailySummaries: {}, dailyPrompts: {}, weeklyPrompts: {}, routines: [] };
+    let currentTab = 'home';
+    let selectedDate = new Date().toISOString().split('T')[0];
+    let lastKnownToday = new Date().toISOString().split('T')[0]; 
+    let currentWeekBaseDate = new Date();
+    let achievementViewDate = new Date().toISOString().split('T')[0];
+    let inputCallback = null;
+    let editingTask = null;
+    let activeProjectId = null;
+    let projCalDate = new Date();
+    let selectedProjDates = new Set();
+    let projMode = 'range';
+    let currentTaskTypeForAdd = 'daily'; 
+    let loadingInterval;
+    let calendarDate = new Date();
+    
+    // To maintain scroll position in projects
+    let lastProjectScrollTop = 0;
+
+    // 3. HELPER FUNCTIONS
+    function getLocalDateStr(d) {
+        return `${d.getFullYear()}-${(d.getMonth()+1).toString().padStart(2,'0')}-${d.getDate().toString().padStart(2,'0')}`;
+    }
+    function formatTimeSimple(iso) {
+        const d = new Date(iso);
+        return `${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`;
+    }
+    function cleanMarkdown(text) {
+        if (!text) return "";
+        return text.replace(/\*\*/g, '').replace(/\*/g, '').replace(/###/g, '').replace(/##/g, '').replace(/#/g, '').replace(/-/g, '').trim();
+    }
+
+    function getTodayStr() { return getLocalDateStr(new Date()); }
+    function parseTasks(text) { return text.split('\n').map(l=>l).filter(l=>l.trim().length>0 && !l.trim().startsWith('---')); } 
+    
+    function getWeekKey(d) { 
+        const date = new Date(d);
+        const diff = date.getDate() - date.getDay(); 
+        const sunday = new Date(date.setDate(diff));
+        return getLocalDateStr(sunday);
+    }
+    
+    function getWeekRangeStr(d) { 
+        const curr = new Date(d); // base date
+        const day = curr.getDay(); // 0(Sun) ~ 6(Sat)
+        
+        // Sunday (Start)
+        const first = new Date(curr);
+        first.setDate(curr.getDate() - day);
+        
+        // Saturday (End)
+        const last = new Date(first);
+        last.setDate(first.getDate() + 6);
+        
+        return `${first.getMonth()+1}.${first.getDate()} ~ ${last.getMonth()+1}.${last.getDate()}`;
+    }
+    
+    function getSunday(d) { d = new Date(d); var day = d.getDay(); var diff = d.getDate() - day; return new Date(d.setDate(diff)); }
+    function toggleApiKeyInput() { document.getElementById('apiKeyContainer').classList.toggle('hidden'); }
+    function changeDate(v) { selectedDate = v; renderApp(); }
+    function moveWeek(d) { currentWeekBaseDate.setDate(currentWeekBaseDate.getDate() + (d * 7)); renderApp(); }
+    function moveMonth(d) { calendarDate.setMonth(calendarDate.getMonth() + d); renderApp(); }
+
+    function initTimeSelects() {
+        const hours = Array.from({length:24}, (_,i) => i.toString().padStart(2,'0'));
+        const mins = ['00', '15', '30', '45'];
+        ['startHour', 'endHour'].forEach(id => { const el = document.getElementById(id); if(el) el.innerHTML = '<option value="">--</option>' + hours.map(h => `<option value="${h}">${h}</option>`).join(''); });
+        ['startMin', 'endMin'].forEach(id => { const el = document.getElementById(id); if(el) el.innerHTML = '<option value="">--</option>' + mins.map(m => `<option value="${m}">${m}</option>`).join(''); });
+    }
+
+    function showLoading(msg) {
+        const p = document.getElementById('aiLoadingPopup');
+        p.classList.remove('hidden');
+        let cleanMsg = msg.replace('✨', '').trim();
+        p.querySelector('.font-hand').childNodes[0].nodeValue = cleanMsg;
+        let dots = 0;
+        if(loadingInterval) clearInterval(loadingInterval);
+        loadingInterval = setInterval(() => { dots = (dots+1)%4; document.getElementById('loadingDots').innerText = '.'.repeat(dots); }, 500);
+    }
+    function hideLoading() {
+        document.getElementById('aiLoadingPopup').classList.add('hidden');
+        if(loadingInterval) clearInterval(loadingInterval);
+    }
+
+    function getTaskTimeVal(t) {
+        if(t.manualTimeRange) {
+            const m = t.manualTimeRange.match(/(\d{1,2}):(\d{2})/);
+            if(m) return parseInt(m[1])*60 + parseInt(m[2]);
+        }
+        if(t.text && /^\d{1,2}:\d{2}/.test(t.text)) {
+             const m = t.text.match(/^(\d{1,2}):(\d{2})/);
+             if(m) return parseInt(m[1])*60 + parseInt(m[2]);
+        }
+        return 9999; 
+    }
+
+    // 4. DATA MANAGEMENT
+    function loadData() {
+        const json = localStorage.getItem(STORAGE_KEY_DATA);
+        if (json) {
+            try { appData = JSON.parse(json); } catch(e) { console.error(e); }
+        }
+        if (!appData.daily) appData.daily = {};
+        if (!appData.weekly) appData.weekly = {};
+        if (!appData.projects) appData.projects = [];
+        if (!appData.dailySummaries) appData.dailySummaries = {};
+        if (!appData.dailyPrompts) appData.dailyPrompts = {};
+        if (!appData.weeklyPrompts) appData.weeklyPrompts = {};
+        if (!appData.routines) appData.routines = [];
+    }
+    function saveData() {
+        localStorage.setItem(STORAGE_KEY_DATA, JSON.stringify(appData));
+        const toast = document.getElementById('saveToast');
+        if(toast) { toast.style.opacity = '1'; setTimeout(() => { toast.style.opacity = '0'; }, 2000); }
+    }
+    function saveApiKey() {
+        const key = document.getElementById('apiKeyInput').value;
+        if(key) { localStorage.setItem(STORAGE_KEY_API, key); alert('저장되었습니다'); toggleApiKeyInput(); }
+    }
+
+    // 5. API INTERACTION
+    async function callGemini(sysPrompt, cb) {
+        const key = localStorage.getItem(STORAGE_KEY_API);
+        if (!key) {
+            alert("API Key가 없습니다. 하단 Key Setting에서 키를 입력해주세요.");
+            hideLoading();
+            return;
+        }
+        try {
+            const res = await fetch(`${GEMINI_URL}?key=${key}`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ contents: [{ parts: [{ text: sysPrompt }] }] })
+            });
+            const data = await res.json();
+            if(data.candidates && data.candidates[0].content) {
+                cb(data.candidates[0].content.parts[0].text);
+            } else { 
+                console.error("Gemini Error:", data);
+                alert('오류가 발생했습니다. 잠시 후 다시 시도해주세요.\n' + (data.error ? data.error.message : 'Unknown Error')); 
+                hideLoading(); 
+            }
+        } catch(e) { 
+            alert('API 요청 실패 (네트워크 오류 등)'); 
+            console.error(e); 
+            hideLoading(); 
+        }
+    }
+
+    // 6. LOGIC
+    async function generateSchedule(type) {
+        const key = localStorage.getItem(STORAGE_KEY_API);
+        if(!key) return alert('API Key가 필요해요!');
+        const promptText = document.getElementById('taskPrompt').value;
+        if(!promptText) return alert('내용을 입력해주세요');
+        
+        showLoading("zipipo가 만들고 있어요");
+        document.getElementById('generatorModal').classList.add('hidden');
+
+        const todayStr = getTodayStr();
+        const now = new Date();
+        const currentTimeStr = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+        
+        const currSun = getSunday(currentWeekBaseDate);
+        const currSat = new Date(currSun); currSat.setDate(currSat.getDate()+6);
+        const weekRangeStr = `${getLocalDateStr(currSun)} ~ ${getLocalDateStr(currSat)}`;
+
+        let contextInfo = "";
+        
+        if (appData.routines && appData.routines.length > 0) {
+            const routineList = appData.routines.map(r => r.text).join(', ');
+            contextInfo += `\n[사용자의 고정 루틴]\n${routineList} (이 루틴들도 포함해서 적절한 시간에 배치해줘)\n`;
+        }
+        
+        if (type === 'daily') {
+             const prevDate = new Date(selectedDate);
+             prevDate.setDate(prevDate.getDate() - 1);
+             const prevDateStr = getLocalDateStr(prevDate);
+             if (appData.dailySummaries[prevDateStr]) {
+                 contextInfo += `\n[참고: 어제의 회고 및 내일 계획 반영]\n${appData.dailySummaries[prevDateStr]}\n`;
+             }
+             
+             const wkKey = getWeekKey(new Date(selectedDate));
+             if (appData.weekly[wkKey] && appData.weekly[wkKey].tasks) {
+                 const todaysWeeklyTasks = appData.weekly[wkKey].tasks.filter(t => 
+                     !t.isMessage && (t.specificDate === selectedDate || !t.specificDate)
+                 );
+                 if (todaysWeeklyTasks.length > 0) {
+                     const taskList = todaysWeeklyTasks.map(t => `- ${t.text}`).join('\n');
+                     contextInfo += `\n[참고: 이번 주 할 일 중 오늘(${selectedDate}) 챙길 항목]\n${taskList}\n`;
+                 }
+             }
+        }
+
+        let sysPrompt = "";
+        
+        if (type === 'daily') {
+             appData.dailyPrompts[selectedDate] = promptText;
+             
+             const isTargetToday = selectedDate === todayStr;
+             const timeConstraint = isTargetToday ? `2. 현재 시각(${currentTimeStr}) 이후의 일정만 계획할 것.` : `2. 하루 전체 일정을 계획할 것.`;
+             sysPrompt = `역할: 플래너 (MBTI T). 날짜: ${selectedDate}. 요청: "${promptText}". 
+             ${contextInfo}
+             [규칙] 1. 인사말 금지. ${timeConstraint} 3. 꿀팁 1~2문장. 4. 형식: 'HH:MM~HH:MM 할일'. 5. 마크다운 금지.`;
+        } else {
+             const wk = getWeekKey(currentWeekBaseDate);
+             appData.weeklyPrompts[wk] = promptText;
+
+             sysPrompt = `역할: 주간 플래너. 기간: ${weekRangeStr}. 요청: "${promptText}".
+             [규칙]
+             1. 사용자의 요청 내용을 바탕으로, 일주일 치 균형 잡힌 계획을 세워주세요.
+             2. 요청한 일정을 단순히 나열하지 말고, 관련된 추천 활동이나 하위 항목을 추가하여 풍성하게 채워주세요. (예: '운동' -> '운동', '단백질 섭취', '스트레칭')
+             3. 인사말이나 서론 없이 바로 일정만 출력하세요.
+             4. 형식: 'YYYY-MM-DD: 할일' (한 줄에 하나씩)
+             5. 위 기간(${weekRangeStr}) 내의 날짜로만 생성하세요.`;
+        }
+            
+        await callGemini(sysPrompt, (text) => {
+            const lines = parseTasks(text);
+            const newTasks = [];
+            
+            lines.forEach(line => {
+                const trimLine = line.trim();
+                if (/\d{1,2}:\d{2}/.test(trimLine)) {
+                    newTasks.push({ text: trimLine, done: false, isMessage: false });
+                } else if (/\d{4}-\d{2}-\d{2}/.test(trimLine)) {
+                    const dateMatch = trimLine.match(/(\d{4}-\d{2}-\d{2})[:\s]*(.*)/);
+                    if(dateMatch) newTasks.push({ text: dateMatch[2], done: false, isMessage: false, specificDate: dateMatch[1] });
+                    else newTasks.push({ text: trimLine, done: false, isMessage: false });
+                } else if (trimLine.length > 5 && !trimLine.includes('|')) {
+                    newTasks.push({ text: trimLine, done: false, isMessage: true });
+                }
+            });
+
+            if (type === 'daily') {
+                appData.daily[selectedDate] = [];
+                appData.daily[selectedDate].push(...newTasks);
+            } else {
+                const wk = getWeekKey(currentWeekBaseDate);
+                if(!appData.weekly[wk]) appData.weekly[wk] = { tasks: [] };
+                appData.weekly[wk].tasks.push(...newTasks);
+            }
+            
+            document.getElementById('taskPrompt').value = '';
+            
+            hideLoading();
+            saveData();
+            renderApp();
+        });
+    }
+
+    async function confirmProjectPlan() {
+        const pid = activeProjectId;
+        const prompt = document.getElementById('projectPlanPrompt').value;
+        if(!prompt) return;
+        closeModal('projectPlanModal');
+        showLoading("프로젝트 계획 중");
+        
+        await callGemini(prompt, (text) => {
+            const lines = parseTasks(text);
+            const newTasks = [];
+            let currentDateContext = null;
+
+            lines.forEach(line => {
+                const clean = line.replace(/\*\*/g, '').replace(/\|/g, '').trim();
+                if (clean.length === 0) return;
+
+                if (/^#{1,3}/.test(clean) || /^(Phase|Step|Stage)\s+\d+/.test(clean)) {
+                    newTasks.push({ text: clean.replace(/#/g, '').trim(), done: false, type: 'header', date: currentDateContext });
+                    return;
+                }
+
+                const indentMatch = line.match(/^(\s+)/);
+                const depth = indentMatch ? Math.floor(indentMatch[1].length / 2) : 0; 
+
+                const dateHeaderMatch = clean.match(/\[.*(\d{4}-\d{2}-\d{2}).*\]/);
+                if (dateHeaderMatch) {
+                    currentDateContext = dateHeaderMatch[1];
+                    return; 
+                }
+                
+                if (clean.toUpperCase().includes('[TIP]') || clean.toUpperCase().includes('기타 팁')) {
+                    const tipText = clean.replace(/\[.*?\]/g, '').replace('기타 팁', '').replace(':', '').trim();
+                    if(tipText) newTasks.push({ text: tipText, done: false, isTip: true });
+                    return;
+                }
+
+                const datePrefixMatch = clean.match(/^(\d{4}-\d{2}-\d{2})[:\s]+(.*)/);
+                let taskText = clean;
+                let taskDate = currentDateContext;
+
+                if (datePrefixMatch) {
+                     taskDate = datePrefixMatch[1];
+                     taskText = datePrefixMatch[2];
+                }
+                
+                taskText = taskText.replace(/^[-*•]\s*/, '');
+                
+                if(!taskDate && taskText.length > 50 && !taskText.includes('-')) {
+                    return;
+                }
+
+                newTasks.push({ text: taskText, done: false, date: taskDate, depth: depth });
+            });
+
+            const p = appData.projects.find(x => x.id === pid);
+            if(p.tasks.length > 0 && confirm('덮어씌울까요?')) p.tasks = newTasks;
+            else if(p.tasks.length === 0) p.tasks = newTasks;
+            else p.tasks.push(...newTasks);
+            
+            hideLoading();
+            saveData();
+            renderApp();
+        });
+    }
+
+    async function generateDailySummary(dateStr) {
+        const key = localStorage.getItem(STORAGE_KEY_API);
+        if(!key) return alert('API Key가 필요해요!');
+        
+        try {
+            const tasks = appData.daily[dateStr] || [];
+            let summaryContext = "";
+            tasks.forEach(t => {
+                if (t.isMessage) return;
+                const status = t.done ? "완료" : "미완료";
+                const fb = t.feedback ? `(피드백: ${t.feedback})` : "";
+                summaryContext += `- ${t.text} [${status}] ${fb}\n`;
+            });
+            
+            showLoading("zipipo가 회고 중");
+            
+            const sysPrompt = `날짜: ${dateStr}.
+            [오늘의 활동 내역]
+            ${summaryContext}
+            
+            위 내용을 바탕으로 아래 4가지 항목으로 정리해줘.
+            1. 오늘 잘한 점
+            2. 아쉬운 점 (미완료 원인 등)
+            3. 마인드셋 (동기부여)
+            4. 내일 계획 반영 (구체적인 조언)
+
+            [규칙]
+            - 각 항목의 제목과 내용은 반드시 줄바꿈으로 구분하세요.
+            - 내용은 간결하게 개조식(- 기호 사용)으로 작성하세요.
+            - 마크다운(bold 등)은 쓰지 말고 깔끔한 텍스트로.
+            - 따뜻하고 격려하는 말투.`;
+            
+            await callGemini(sysPrompt, (text) => {
+                if(!appData.dailySummaries) appData.dailySummaries = {};
+                appData.dailySummaries[dateStr] = cleanMarkdown(text);
+                hideLoading();
+                saveData();
+                renderApp();
+            });
+        } catch(e) {
+            alert("회고 생성 중 오류가 발생했습니다.\n" + e.message);
+            console.error(e);
+            hideLoading();
+        }
+    }
+
+    function completeProject(id, isComplete) {
+        const p = appData.projects.find(x => x.id === id);
+        if (p) {
+            p.completed = isComplete;
+            saveData();
+            renderApp();
+        }
+    }
+
+    function deleteProject(id) {
+        if(confirm('정말 삭제하시겠습니까?')) {
+            appData.projects = appData.projects.filter(p=>p.id!==id);
+            saveData();
+            renderApp();
+        }
+    }
+
+    function deleteTaskItem(type, key, index) {
+        if(type==='daily') appData.daily[key].splice(index,1);
+        else if(type==='weekly') appData.weekly[key].tasks.splice(index,1);
+        else appData.projects.find(p=>p.id===key).tasks.splice(index,1);
+        saveData();
+        renderApp();
+    }
+
+    function updateTask(type, key, index, changes) {
+        if(currentTab === 'project') {
+            const scrollEl = document.getElementById('projectScrollContainer');
+            if(scrollEl) lastProjectScrollTop = scrollEl.scrollTop;
+        }
+
+        let targetArr;
+        if(type==='daily') targetArr = appData.daily[key];
+        else if(type==='weekly') targetArr = appData.weekly[key].tasks;
+        else targetArr = appData.projects.find(p=>p.id===key).tasks;
+        
+        Object.assign(targetArr[index], changes);
+        saveData();
+        renderApp();
+        
+        if(currentTab === 'project' && lastProjectScrollTop > 0) {
+            setTimeout(() => {
+                const scrollEl = document.getElementById('projectScrollContainer');
+                if(scrollEl) scrollEl.scrollTop = lastProjectScrollTop;
+            }, 0);
+        }
+    }
+    
+    function updateProjectMemo(pid, val) {
+        const p = appData.projects.find(x => x.id === pid);
+        if(p) {
+            p.memo = val;
+            saveData();
+        }
+    }
+    
+    function editDailyMessage(dateStr) {
+        const tasks = appData.daily[dateStr] || [];
+        const msgs = tasks.filter(t => t.isMessage);
+        const combinedText = msgs.map(m => m.text).join('\n');
+        
+        openInputModal('오늘의 한마디 수정', (newText) => {
+            appData.daily[dateStr] = tasks.filter(t => !t.isMessage);
+            if(newText.trim()) {
+                appData.daily[dateStr].unshift({ text: newText, done: false, isMessage: true });
+            }
+            saveData();
+            renderApp();
+        });
+        document.getElementById('inputModalField').value = combinedText;
+    }
+
+    // Routine Logic
+    window.openRoutineModal = openRoutineModal;
+    window.addRoutine = addRoutine;
+    window.deleteRoutine = deleteRoutine;
+
+    function openRoutineModal() {
+        document.getElementById('routineModal').classList.remove('hidden');
+        renderRoutineList();
+    }
+    function renderRoutineList() {
+        const list = document.getElementById('routineList');
+        list.innerHTML = '';
+        (appData.routines || []).forEach((r, i) => {
+            list.innerHTML += `
+                <div class="flex justify-between items-center bg-white border border-[#EFEBE9] p-2 rounded">
+                    <span class="text-sm">${r.text}</span>
+                    <button onclick="window.deleteRoutine(${i})" class="text-[#D7CCC8] hover:text-[#FF8A65]">x</button>
+                </div>`;
+        });
+    }
+    function addRoutine() {
+        const input = document.getElementById('newRoutineInput');
+        const text = input.value.trim();
+        if(text) {
+            appData.routines.push({ text: text });
+            input.value = '';
+            saveData();
+            renderRoutineList();
+        }
+    }
+    function deleteRoutine(i) {
+        appData.routines.splice(i, 1);
+        saveData();
+        renderRoutineList();
+    }
+
+    // 7. Modals & Interaction
+    function openProjectModal() {
+        document.getElementById('projTitle').value = '';
+        document.getElementById('projDesc').value = '';
+        document.getElementById('projStart').value = '';
+        document.getElementById('projEnd').value = '';
+        selectedProjDates.clear();
+        switchProjMode('range');
+        
+        document.getElementById('projectInputModal').classList.remove('hidden');
+    }
+
+    function openProjectPlanModal(pid) {
+        activeProjectId = pid;
+        const p = appData.projects.find(x => x.id === pid);
+        const currentYear = new Date().getFullYear();
+        
+        let dateContext = "";
+        if (p.dates && p.dates.length > 0) {
+            dateContext = `선택된 날짜들: ${p.dates.join(', ')}`;
+        } else if (p.dateDisplay) {
+            dateContext = `기간: ${p.dateDisplay}`;
+        }
+
+        const defaultPrompt = 
+`프로젝트: ${p.title}
+목표: ${p.desc || '목표 없음'}
+${dateContext}
+(참고: 오늘은 ${currentYear}년이야. 날짜 계산 시 연도를 ${currentYear}년으로 맞춰줘.)
+
+위 일정을 고려하여 구체적인 실행 계획을 짜줘.
+[필수 형식]
+1. 날짜별 구분: 날짜 헤더는 반드시 '[Day N: YYYY-MM-DD]' 형식으로 써줘. (예: [Day 1: ${currentYear}-05-01])
+2. 할 일: 헤더 아래에 할 일을 나열해.
+3. 하위 항목: 하위 단계가 필요하면 들여쓰기(스페이스 2칸)나 '>'를 사용해줘.
+4. 팁/조언: 팁이나 조언은 '[TIP] 내용' 형식으로 써줘.
+
+작성 예시:
+[Day 1: ${currentYear}-05-01]
+- 자료 수집하기
+  - 구글 학술 검색
+  - 도서관 방문
+[TIP] 무리하지 말고 30분씩 나눠서 하세요.
+[Day 2: ${currentYear}-05-02]
+- 초안 작성
+`;
+
+        document.getElementById('projectPlanPrompt').value = p.customPrompt || defaultPrompt;
+        document.getElementById('projectPlanModal').classList.remove('hidden');
+    }
+
+    function openAddTaskModal(existing=null, type='daily') {
+        editingTask = existing;
+        currentTaskTypeForAdd = type;
+        const modalTitle = document.getElementById('taskModalTitle');
+        modalTitle.innerText = existing ? '할 일 수정' : '할 일 추가';
+        document.getElementById('addTaskModal').classList.remove('hidden');
+        
+        if (existing) {
+            document.getElementById('manualTaskText').value = existing.task.text;
+            if (existing.task.specificDate) {
+                document.getElementById('weeklyTaskDate').value = existing.task.specificDate;
+            }
+            if (existing.task.manualTimeRange) {
+                const parts = existing.task.manualTimeRange.split('~');
+                if (parts[0]) {
+                    const start = parts[0].trim().split(':');
+                    document.getElementById('startHour').value = start[0];
+                    document.getElementById('startMin').value = start[1];
+                }
+                if (parts[1]) {
+                    const end = parts[1].trim().split(' ')[0].split(':');
+                    if (end.length === 2) {
+                        document.getElementById('endHour').value = end[0];
+                        document.getElementById('endMin').value = end[1];
+                    }
+                }
+            }
+        } else {
+            editingTask = null;
+            document.getElementById('manualTaskText').value = '';
+            document.getElementById('manualTaskText').focus();
+            document.getElementById('startHour').value = ''; document.getElementById('startMin').value = '';
+            document.getElementById('endHour').value = ''; document.getElementById('endMin').value = '';
+            document.getElementById('weeklyTaskDate').value = '';
+        }
+
+        const dailyWrapper = document.getElementById('dailyTimeInputWrapper');
+        const weeklyWrapper = document.getElementById('weeklyDateInputWrapper');
+        
+        if (currentTaskTypeForAdd === 'weekly') {
+            dailyWrapper.classList.add('hidden');
+            weeklyWrapper.classList.remove('hidden');
+        } else {
+            dailyWrapper.classList.remove('hidden');
+            weeklyWrapper.classList.add('hidden');
+        }
+    }
+
+    function confirmTaskAction() {
+        const text = document.getElementById('manualTaskText').value;
+        if (!text) return alert('내용을 입력해주세요.');
+        
+        const sh = document.getElementById('startHour').value;
+        const sm = document.getElementById('startMin').value;
+        const eh = document.getElementById('endHour').value;
+        const em = document.getElementById('endMin').value;
+        
+        let timeStr = null;
+        if(sh && sm && eh && em) timeStr = `${sh}:${sm} ~ ${eh}:${em}`;
+        else if(sh && sm) timeStr = `${sh}:${sm} ~`;
+
+        const specificDate = document.getElementById('weeklyTaskDate').value;
+
+        if (editingTask) {
+            const changes = { text: text };
+            if (currentTaskTypeForAdd === 'weekly') {
+                changes.specificDate = specificDate;
+                changes.manualTimeRange = null;
+            } else {
+                changes.manualTimeRange = timeStr;
+                changes.specificDate = null;
+            }
+            updateTask(editingTask.type, editingTask.key, editingTask.index, changes);
+        } else {
+            if (currentTaskTypeForAdd === 'weekly') {
+                const wk = getWeekKey(new Date());
+                if(!appData.weekly[wk]) appData.weekly[wk] = { tasks: [] };
+                appData.weekly[wk].tasks.push({ text: text, done: false, manualTimeRange: null, specificDate: specificDate, feedback: null, isMessage: false });
+            } else {
+                if(!appData.daily[selectedDate]) appData.daily[selectedDate] = [];
+                appData.daily[selectedDate].push({ text: text, done: false, manualTimeRange: timeStr, feedback: null, isMessage: false });
+            }
+            saveData();
+            renderApp();
+        }
+        closeModal('addTaskModal');
+    }
+
+    function openEditTimeModal(type, key, index, task) {
+        openAddTaskModal({type, key, index, task}, type);
+    }
+
+    function openInputModal(title, cb) {
+        document.getElementById('inputModalTitle').innerText = title;
+        document.getElementById('inputModalField').value = '';
+        document.getElementById('inputModal').classList.remove('hidden');
+        document.getElementById('inputModalField').focus();
+        inputCallback = cb;
+    }
+
+    function closeInputModal() {
+        document.getElementById('inputModal').classList.add('hidden');
+        inputCallback = null;
+    }
+
+    function confirmInput() {
+        if(inputCallback) inputCallback(document.getElementById('inputModalField').value);
+        closeInputModal();
+    }
+
+    function switchProjMode(m) {
+        projMode = m;
+        document.getElementById('pm-range').classList.toggle('active', m==='range');
+        document.getElementById('pm-select').classList.toggle('active', m==='select');
+        document.getElementById('projModeRange').classList.toggle('hidden', m!=='range');
+        document.getElementById('projModeSelect').classList.toggle('hidden', m!=='select');
+        if(m==='select') renderProjCal();
+    }
+
+    function renderProjCal() {
+        const y = projCalDate.getFullYear();
+        const m = projCalDate.getMonth();
+        document.getElementById('projCalTitle').innerText = `${y}.${m+1}`;
+        const container = document.getElementById('projCalGrid');
+        container.innerHTML = '<div>일</div><div>월</div><div>화</div><div>수</div><div>목</div><div>금</div><div>토</div>';
+        
+        const firstDay = new Date(y, m, 1).getDay();
+        const lastDate = new Date(y, m+1, 0).getDate();
+        
+        for(let i=0; i<firstDay; i++) container.innerHTML += '<div></div>';
+        for(let i=1; i<=lastDate; i++) {
+            const dateStr = `${y}-${(m+1).toString().padStart(2,'0')}-${i.toString().padStart(2,'0')}`;
+            const el = document.createElement('div');
+            el.className = 'mini-cal-cell';
+            if(selectedProjDates.has(dateStr)) el.classList.add('selected');
+            el.innerText = i;
+            el.onclick = () => {
+                if(selectedProjDates.has(dateStr)) selectedProjDates.delete(dateStr);
+                else selectedProjDates.add(dateStr);
+                renderProjCal();
+                document.getElementById('selectedCount').innerText = selectedProjDates.size;
+            };
+            container.appendChild(el);
+        }
+    }
+
+    function moveProjCal(d) {
+        projCalDate.setMonth(projCalDate.getMonth() + d);
+        renderProjCal();
+    }
+
+    function confirmCreateProject() {
+        const title = document.getElementById('projTitle').value;
+        const desc = document.getElementById('projDesc').value;
+        if(!title) return alert('프로젝트 이름을 입력해주세요');
+        
+        let dateDisplay = '';
+        let type = '';
+        let dateArray = null;
+        let startDate = null;
+        let endDate = null;
+
+        if(projMode === 'range') {
+            const start = document.getElementById('projStart').value;
+            const end = document.getElementById('projEnd').value;
+            if(!start || !end) return alert('기간을 설정해주세요');
+            dateDisplay = `${start} ~ ${end}`;
+            type = 'range';
+            startDate = start;
+            endDate = end;
+        } else {
+            if(selectedProjDates.size === 0) return alert('날짜를 선택해주세요');
+            const sorted = Array.from(selectedProjDates).sort();
+            dateDisplay = `총 ${selectedProjDates.size}일 (${sorted[0]}...)`;
+            type = 'select';
+            dateArray = sorted;
+            startDate = sorted[0];
+            endDate = sorted[sorted.length-1];
+        }
+
+        appData.projects.push({
+            id: Date.now()+'',
+            title: title,
+            desc: desc,
+            dateDisplay: dateDisplay,
+            dates: type === 'select' ? dateArray : null,
+            startDate: startDate,
+            endDate: endDate,
+            tasks:[],
+            completed: false
+        });
+        saveData();
+        renderApp();
+        closeModal('projectInputModal');
+    }
+
+    function openGeneratorModal(mode) {
+        document.getElementById('generatorModal').classList.remove('hidden');
+        const txt = document.getElementById('taskPrompt');
+        
+        if (mode === 'new') {
+            txt.value = '';
+        } else if (mode === 'daily') {
+            txt.value = appData.dailyPrompts[selectedDate] || '';
+        } else if (mode === 'weekly') {
+            const wk = getWeekKey(currentWeekBaseDate);
+            txt.value = appData.weeklyPrompts[wk] || '';
+        }
+    }
+    
+    function openWeeklyGenerator() {
+        const wk = getWeekKey(currentWeekBaseDate);
+        const saved = appData.weeklyPrompts[wk] || '';
+        document.getElementById('taskPrompt').value = saved;
+        document.getElementById('generatorModal').classList.remove('hidden');
+    }
+
+    function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+    function addManualTask() { openAddTaskModal(null, 'daily'); }
+
+    // 8. Rendering
+    function renderHeader() {
+        const today = new Date();
+        const days = ['일요일', '월요일', '화요일', '수요일', '목요일', '금요일', '토요일'];
+        document.getElementById('headerDate').innerText = `${today.getMonth()+1}월 ${today.getDate()}일 ${days[today.getDay()]}`;
+    }
+
+    function switchTab(tab) {
+        currentTab = tab;
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('tab-active'));
+        document.getElementById(`tab-${tab}`).classList.add('tab-active');
+        renderApp();
+    }
+
+    function renderApp() {
+        const container = document.getElementById('appContent');
+        container.innerHTML = '';
+        if (currentTab === 'home') renderDaily(container);
+        else if (currentTab === 'project') renderProjects(container);
+        else if (currentTab === 'achievement') renderCalendar(container);
+    }
+
+    function renderDaily(container) {
+        const secDaily = document.createElement('section');
+        const d = new Date(selectedDate);
+        const dayNames = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+        
+        secDaily.innerHTML = `
+            <div class="flex justify-between items-end mb-4 px-1">
+                <div class="text-2xl font-hand text-[#5D4037] flex items-baseline gap-2">
+                    <span>${d.getMonth()+1}.${d.getDate()}</span>
+                    <span class="text-sm text-[#A1887F] font-sans font-bold">${dayNames[d.getDay()]}</span>
+                </div>
+                <div class="flex gap-2">
+                    <button onclick="window.openRoutineModal()" class="text-[10px] bg-white border border-[#D7CCC8] px-2 py-1 rounded-full text-[#8D6E63] hover:bg-[#EFEBE9]">✨ 루틴 등록하기</button>
+                    <input type="date" class="border border-[#D7CCC8] rounded px-2 py-1 text-xs bg-white" value="${selectedDate}" onchange="window.changeDate(this.value)">
+                </div>
+            </div>`;
+
+        const dailyData = appData.daily[selectedDate] || [];
+        
+        // Render Message first
+        const dailyMsgs = dailyData.filter(t => t.isMessage);
+        if (dailyMsgs.length > 0) {
+            const msgBox = document.createElement('div');
+            msgBox.className = 'mx-6 mt-1 mb-3 p-3 bg-white/60 rounded-xl border border-[#C5E1A5] text-sm text-[#556B2F] relative z-10 font-wando leading-relaxed cursor-pointer hover:bg-white/80 transition';
+            msgBox.onclick = () => editDailyMessage(selectedDate);
+            msgBox.innerHTML = dailyMsgs.map(m => m.text).join('<br>');
+            secDaily.appendChild(msgBox);
+        }
+
+        const contentDaily = document.createElement('div');
+        contentDaily.className = 'bg-white rounded-[24px] border border-[#EFEBE9] p-5 relative min-h-[300px] shadow-sm';
+        
+        const promptBtn = document.createElement('button');
+        promptBtn.className = 'absolute top-3 right-3 text-[10px] text-[#A1887F] bg-[#FDFCF5] border border-[#D7CCC8] px-2 py-1 rounded-full hover:bg-[#EFEBE9] z-20 flex items-center gap-1';
+        promptBtn.innerHTML = `수정`;
+        promptBtn.onclick = () => openGeneratorModal('daily');
+        contentDaily.appendChild(promptBtn);
+
+        const gridBg = document.createElement('div');
+        gridBg.className = 'absolute inset-0 pointer-events-none opacity-30';
+        gridBg.style.backgroundImage = 'linear-gradient(#EFEBE9 1px, transparent 1px)';
+        gridBg.style.backgroundSize = '100% 24px';
+        contentDaily.appendChild(gridBg);
+
+        const realDailyTasks = dailyData.filter(t => !t.isMessage);
+        
+        if (realDailyTasks.length > 0) {
+            const ulDaily = document.createElement('ul');
+            realDailyTasks.sort((a,b) => getTaskTimeVal(a) - getTaskTimeVal(b));
+            
+            realDailyTasks.forEach((t) => {
+                const originalIndex = dailyData.indexOf(t);
+                ulDaily.appendChild(createTaskEl(t, 'daily', selectedDate, originalIndex));
+            });
+            contentDaily.appendChild(ulDaily);
+        } else {
+            contentDaily.innerHTML += `<div class="empty-state relative z-10"><span class="text-xs text-[#8D6E63] opacity-60">오늘의 목표를 세워보세요!</span></div>`;
+        }
+        secDaily.appendChild(contentDaily);
+        container.appendChild(secDaily);
+        
+        const secWeekly = document.createElement('section');
+        secWeekly.className = 'mt-8 pt-6 border-t border-dashed border-[#D7CCC8]';
+        const weekKey = getWeekKey(currentWeekBaseDate);
+        const weeklyData = appData.weekly[weekKey] || { tasks: [] };
+        
+        secWeekly.innerHTML = `
+            <div class="flex justify-between items-center mb-4 px-1">
+                <h3 class="font-hand text-xl text-[#8D6E63]">Weekly</h3>
+                <div class="flex items-center gap-2">
+                    <button onclick="window.moveWeek(-1)" class="text-[#A1887F] hover:text-[#5D4037]">◀</button>
+                    <span class="text-xs font-bold text-[#5D4037]">${getWeekRangeStr(currentWeekBaseDate)}</span>
+                    <button onclick="window.moveWeek(1)" class="text-[#A1887F] hover:text-[#5D4037]">▶</button>
+                    <button onclick="window.openWeeklyGenerator()" class="ml-1 text-[10px] text-[#8D6E63] border border-[#D7CCC8] px-2 py-1 rounded bg-white hover:bg-[#EFEBE9]">수정</button>
+                    <button onclick="window.openAddTaskModal(null, 'weekly')" class="border border-[#D7CCC8] bg-white rounded-full w-6 h-6 flex items-center justify-center text-[#8D6E63] text-sm ml-1 hover:bg-[#EFEBE9]">+</button>
+                </div>
+            </div>`;
+            
+        const contentWrap = document.createElement('div');
+        contentWrap.className = 'px-6 pb-5 pt-1 relative z-10 flex flex-col gap-4';
+        
+        const currentSun = getSunday(currentWeekBaseDate);
+        
+        for(let i=0; i<7; i++) {
+            const d = new Date(currentSun);
+            d.setDate(d.getDate() + i);
+            const dayStr = getLocalDateStr(d);
+            const dayTasks = weeklyData.tasks.filter(t => !t.isMessage && t.specificDate === dayStr);
+            
+            const daySection = document.createElement('div');
+            const isToday = dayStr === getTodayStr();
+            const headerColor = i === 0 ? 'text-red-500' : 'text-[#8D6E63]';
+            const headerBg = isToday ? 'bg-[#FFE0B2]' : 'bg-white/50';
+            
+            daySection.innerHTML = `<div class="flex items-center mb-1"><span class="${headerBg} px-2 py-0.5 rounded text-xs font-bold ${headerColor} font-sans">${dayNames[i]} ${d.getMonth()+1}.${d.getDate()}</span></div>`;
+            
+            if (dayTasks.length > 0) {
+                const ul = document.createElement('ul');
+                ul.className = 'pl-2 border-l-2 border-[#D7CCC8]/30 ml-2 space-y-2';
+                dayTasks.forEach(t => {
+                    const originalIdx = weeklyData.tasks.indexOf(t);
+                    const taskEl = createTaskEl(t, 'weekly', weekKey, originalIdx);
+                    taskEl.classList.add('weekly-item');
+                    ul.appendChild(taskEl);
+                });
+                daySection.appendChild(ul);
+            }
+            contentWrap.appendChild(daySection);
+        }
+        
+        const anytimeTasks = weeklyData.tasks.filter(t => !t.isMessage && !t.specificDate);
+        if (anytimeTasks.length > 0) {
+            const anytimeSection = document.createElement('div');
+            anytimeSection.className = 'flex flex-col mt-2 pt-3 border-t border-dashed border-[#C5E1A5]';
+            anytimeSection.innerHTML = `<div class="text-xs text-[#8D6E63] font-bold mb-2">Anytime</div>`;
+            const ulAny = document.createElement('ul');
+            ulAny.className = 'pl-2 space-y-2';
+            anytimeTasks.forEach(t => {
+                const originalIdx = weeklyData.tasks.indexOf(t);
+                const taskEl = createTaskEl(t, 'weekly', weekKey, originalIdx);
+                taskEl.classList.add('weekly-item');
+                ulAny.appendChild(taskEl);
+            });
+            anytimeSection.appendChild(ulAny);
+            contentWrap.appendChild(anytimeSection);
+        }
+
+        secWeekly.appendChild(contentWrap);
+        container.appendChild(secWeekly);
+    }
+
+    function renderProjects(container) {
+        const secProj = document.createElement('section');
+        secProj.innerHTML = `<h3 class="font-hand text-xl text-[#556B2F] mb-3 px-1 flex items-center gap-1">도전중인 프로젝트</h3>`;
+        
+        const addBtnContainer = document.createElement('div');
+        addBtnContainer.className = 'mb-6';
+        addBtnContainer.innerHTML = `<button onclick="window.openProjectModal()" class="w-full py-4 border-2 border-dashed border-[#A1887F] text-[#8D6E63] font-hand text-xl rounded-2xl hover:bg-[#FDFCF5] active:bg-[#D7CCC8] active:text-white transition bg-white shadow-none flex items-center justify-center gap-2"><span class="text-2xl">+</span> 새로운 프로젝트 심기</button>`;
+        container.appendChild(addBtnContainer);
+        
+        // [FIX] Add Scroll ID
+        const scrollDiv = document.createElement('div');
+        scrollDiv.id = 'projectScrollContainer';
+        scrollDiv.className = 'flex flex-col gap-4 pb-4 px-1 overflow-y-auto max-h-[70vh]';
+        
+        // [FIX] Ensure appData.projects exists
+        if (!appData.projects) appData.projects = [];
+        
+        const activeProjects = appData.projects.filter(p => !p.completed);
+        const completedProjects = appData.projects.filter(p => p.completed);
+        
+        if(activeProjects.length > 0) {
+            activeProjects.forEach(p => {
+                const card = document.createElement('div');
+                card.className = 'wood-frame p-4 bg-white border border-[#C5E1A5] relative group w-full';
+                
+                const groupedTasks = {};
+                const tips = [];
+                
+                p.tasks.forEach((t, idx) => {
+                    if (t.isTip) {
+                        tips.push({ ...t, originalIndex: idx });
+                    } else {
+                        const d = t.date || '기타';
+                        if (d === '기타 (General)' || d === '기타') return;
+                        if (!groupedTasks[d]) groupedTasks[d] = [];
+                        groupedTasks[d].push({ ...t, originalIndex: idx });
+                    }
+                });
+                
+                const sortedDates = Object.keys(groupedTasks).sort();
+                
+                const headerHtml = `
+                    <div class="absolute top-2 right-2 flex gap-1 z-10">
+                        <button class="p-1 text-[#A1887F] hover:text-[#8D6E63]" onclick="window.completeProject('${p.id}', true)">${ICONS.check}</button>
+                        <button class="p-1 text-[#D7CCC8] hover:text-[#FF7F50]" onclick="window.deleteProject('${p.id}')">${ICONS.closeX}</button>
+                    </div>
+                    <div class="mb-3">
+                        <p class="text-[10px] text-[#A1887F] font-bold tracking-wide uppercase">${p.dateDisplay}</p>
+                        <h4 class="font-bold text-lg text-[#5D4037] mt-1 pr-16 leading-tight">${p.title}</h4>
+                    </div>`;
+                
+                const contentContainer = document.createElement('div');
+                contentContainer.innerHTML = headerHtml;
+                
+                // [NEW] Tips Between Title and Plan
+                if (tips.length > 0) {
+                    const tipBox = document.createElement('div');
+                    tipBox.className = 'proj-tip-box';
+                    tipBox.innerHTML = `<span class="proj-tip-label">TIP</span>`;
+                    tips.forEach(tip => {
+                        tipBox.innerHTML += `<div>• ${tip.text} <button class="text-[#D7CCC8] hover:text-[#FF7F50]" onclick="window.deleteTaskItem('project', '${p.id}', ${tip.originalIndex})">x</button></div>`;
+                    });
+                    contentContainer.appendChild(tipBox);
+                }
+
+                // AI Plan Button & Divider
+                const planControl = document.createElement('div');
+                planControl.className = "border-t border-dashed border-[#C5E1A5] pt-2 mt-2 mb-2";
+                planControl.innerHTML = `
+                    <div class="flex justify-between items-center">
+                        <span class="text-xs font-bold text-[#556B2F]">Project Plan</span>
+                        <button onclick="openProjectPlanModal('${p.id}')" class="text-[10px] bg-[#F1F8E9] text-[#33691E] px-2 py-1 rounded-full border border-[#AED581] hover:bg-[#AED581] hover:text-white transition">AI 계획 짜기</button>
+                    </div>`;
+                contentContainer.appendChild(planControl);
+                
+                const taskListContainer = document.createElement('div');
+                taskListContainer.className = 'max-h-80 overflow-y-auto pl-1 text-sm';
+                contentContainer.appendChild(taskListContainer);
+                card.appendChild(contentContainer);
+
+                let deadline = p.endDate;
+                if (!deadline && p.dates && p.dates.length > 0) {
+                     const sorted = [...p.dates].sort();
+                     deadline = sorted[sorted.length-1];
+                }
+                if (!deadline && p.dateDisplay && p.dateDisplay.includes('~')) {
+                     const parts = p.dateDisplay.split('~');
+                     if(parts.length===2) deadline = parts[1].trim();
+                }
+
+                sortedDates.forEach(date => {
+                    const displayDate = date;
+                    
+                    let dDayLabel = '';
+                    if (deadline && /\d{4}-\d{2}-\d{2}/.test(date)) {
+                         const target = new Date(deadline); target.setHours(0,0,0,0);
+                         const [y,m,d] = date.split('-').map(Number);
+                         const current = new Date(y, m-1, d);
+                         
+                         const diffTime = target - current;
+                         const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
+                         
+                         if (diffDays > 0) dDayLabel = ` <span class="text-[#FF8A65] ml-1 text-[10px] font-normal">(D-${diffDays})</span>`;
+                         else if (diffDays === 0) dDayLabel = ` <span class="text-[#FF8A65] ml-1 text-[10px] font-normal">(D-Day)</span>`;
+                         else dDayLabel = ` <span class="text-[#FF8A65] ml-1 text-[10px] font-normal">(D+${Math.abs(diffDays)})</span>`;
+                    }
+
+                    const dateHeader = document.createElement('div');
+                    dateHeader.className = 'proj-date-header';
+                    dateHeader.innerHTML = displayDate + dDayLabel;
+                    taskListContainer.appendChild(dateHeader);
+                    
+                    const ul = document.createElement('ul');
+                    
+                    // [MODIFIED] Numbering Logic: Only increment for non-depth items
+                    let taskCounter = 1;
+                    
+                    groupedTasks[date].forEach(item => {
+                        if (item.type === 'header') {
+                            const headerDiv = document.createElement('div');
+                            headerDiv.className = 'proj-msg-box';
+                            headerDiv.innerHTML = `${item.text} <button class="text-[#D7CCC8] hover:text-[#FF7F50] float-right" onclick="window.deleteTaskItem('project', '${p.id}', ${item.originalIndex})">x</button>`;
+                            ul.appendChild(headerDiv);
+                        } else {
+                            let numberPrefix = null;
+                            // Only number top-level items (depth 0 or undefined)
+                            if (!item.depth || item.depth === 0) {
+                                numberPrefix = taskCounter++;
+                            }
+                            
+                            const taskEl = createTaskEl(item, 'project', p.id, item.originalIndex, numberPrefix);
+                            if (item.depth && item.depth > 0) {
+                                taskEl.classList.add(`task-depth-${Math.min(item.depth, 2)}`);
+                            }
+                            ul.appendChild(taskEl);
+                        }
+                    });
+                    taskListContainer.appendChild(ul);
+                });
+                
+                const memoArea = document.createElement('textarea');
+                memoArea.className = 'proj-memo-area';
+                memoArea.rows = 2;
+                memoArea.placeholder = '자유 메모...';
+                memoArea.value = p.memo || '';
+                memoArea.onchange = (e) => window.updateProjectMemo(p.id, e.target.value);
+                card.appendChild(memoArea);
+                
+                scrollDiv.appendChild(card);
+            });
+            secProj.appendChild(scrollDiv);
+        } else {
+            secProj.innerHTML += `<div class="text-center py-8 text-xs text-[#BCAAA4]">진행 중인 프로젝트가 없습니다</div>`;
+        }
+
+        if(completedProjects.length > 0) {
+            const completedSec = document.createElement('div');
+            completedSec.className = 'mt-8 pt-6 border-t border-[#EFEBE9]';
+            completedSec.innerHTML = `<h3 class="font-hand text-lg text-[#A1887F] mb-3 px-1">완료된 프로젝트</h3>`;
+            const list = document.createElement('div');
+            list.className = 'space-y-2';
+            
+            completedProjects.forEach(p => {
+                const item = document.createElement('div');
+                const titleRow = document.createElement('div');
+                titleRow.className = 'flex justify-between items-center p-3 bg-white rounded-xl border border-[#EFEBE9] cursor-pointer hover:bg-[#FAF8F5] transition shadow-sm';
+                titleRow.innerHTML = `<span class="text-sm text-[#5D4037] font-bold line-through decoration-2 decoration-[#D7CCC8]/50">${p.title}</span><span class="text-xs text-[#BCAAA4]">▼</span>`;
+                
+                const detailDiv = document.createElement('div');
+                detailDiv.className = 'hidden mt-2 pl-3 pr-1 py-2 border-l-2 border-[#D7CCC8]/30 ml-2 bg-white/50 rounded-r-xl text-xs space-y-2';
+                
+                detailDiv.innerHTML = `<button class="flex items-center gap-1 text-[#8D6E63] hover:text-[#5D4037] mb-2 text-[11px] font-bold" onclick="event.stopPropagation(); window.completeProject('${p.id}', false)">${ICONS.undo} 복구</button>`;
+                if (p.desc) detailDiv.innerHTML += `<div class="text-[#A1887F] mb-2">${p.desc}</div>`;
+                
+                const taskList = document.createElement('ul');
+                taskList.className = 'pl-2 space-y-1 mt-2 border-t border-dashed border-[#EFEBE9] pt-2';
+                
+                if(p.tasks.length > 0) {
+                    p.tasks.forEach(t => {
+                         if(t.isTip) {
+                            taskList.innerHTML += `<li class="text-xs text-[#FF8A65] flex items-start gap-1">Tip: ${t.text}</li>`;
+                         } else {
+                            taskList.innerHTML += `<li class="text-xs text-[#5D4037] flex items-start gap-1"><div class="w-0.5 h-3 bg-[#D7CCC8] mt-1"></div> ${t.text}</li>`;
+                         }
+                    });
+                }
+                detailDiv.appendChild(taskList);
+                
+                titleRow.onclick = () => { detailDiv.classList.toggle('hidden'); };
+                item.append(titleRow, detailDiv);
+                list.appendChild(item);
+            });
+            completedSec.appendChild(list);
+            secProj.appendChild(completedSec);
+        }
+        container.appendChild(secProj);
+        
+        // [FIX] Restore Scroll
+        if(lastProjectScrollTop > 0) {
+            scrollDiv.scrollTop = lastProjectScrollTop;
+        }
+    }
+
+    function renderCalendar(container) {
+        const year = calendarDate.getFullYear();
+        const month = calendarDate.getMonth();
+        const wrapper = document.createElement('div');
+        wrapper.className = 'wood-frame p-5 bg-white min-h-[400px] flex flex-col';
+        
+        wrapper.innerHTML = `<div class="flex justify-between items-center mb-6"><button onclick="window.moveMonth(-1)" class="text-[#8D6E63]">◀</button><h2 class="font-hand text-2xl text-[#5D4037]">${year}.${month+1}</h2><button onclick="window.moveMonth(1)" class="text-[#8D6E63]">▶</button></div>`;
+        
+        const calGrid = document.createElement('div');
+        calGrid.className = 'grid grid-cols-7 gap-1 mb-6 text-center';
+        ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].forEach(d => calGrid.innerHTML+=`<div class="text-xs font-bold text-[#A1887F] mb-2">${d}</div>`);
+        
+        const firstDay = new Date(year, month, 1).getDay();
+        const lastDate = new Date(year, month+1, 0).getDate();
+        
+        for(let i=0; i<firstDay; i++) calGrid.innerHTML += `<div></div>`;
+        for(let i=1; i<=lastDate; i++) {
+            const dateStr = `${year}-${(month+1).toString().padStart(2,'0')}-${i.toString().padStart(2,'0')}`;
+            const summary = appData.dailySummaries[dateStr];
+            const hasTask = appData.daily[dateStr] && appData.daily[dateStr].some(t=>t.done);
+            let indicator = '';
+            if(summary) indicator = '✨'; 
+            else if(hasTask) indicator = '●';
+            
+            const cell = document.createElement('div');
+            cell.className = `h-10 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:bg-[#F1F8E9] ${achievementViewDate===dateStr ? 'bg-[#DCEDC8] border border-[#AED581]' : ''}`;
+            cell.innerHTML = `<span class="text-sm ${achievementViewDate===dateStr ? 'font-bold':''}">${i}</span><span class="text-[10px] text-[#FF8A65] h-3">${indicator}</span>`;
+            cell.onclick = () => { achievementViewDate = dateStr; renderApp(); };
+            calGrid.appendChild(cell);
+        }
+        wrapper.appendChild(calGrid);
+        
+        const tasks = appData.daily[achievementViewDate] || [];
+        const completedTasks = tasks.filter(t => t.done && !t.isMessage);
+        const summary = appData.dailySummaries[achievementViewDate];
+        
+        const fbSection = document.createElement('div');
+        fbSection.className = 'mt-auto pt-4 border-t border-[#EFEBE9]';
+        let detailsHtml = `<h3 class="font-hand text-lg text-[#5D4037] mb-2 border-b border-[#EFEBE9] pb-1">${achievementViewDate}</h3>`;
+        
+        if (summary) {
+            // [FIX] Reduced margin/padding
+            detailsHtml += `<div class="mb-4 p-2.5 bg-[#F1F8E9] rounded-xl text-xs text-[#33691E] leading-relaxed font-wando border border-[#AED581] relative whitespace-pre-wrap" style="padding-top: 6px;">
+                                <button onclick="window.generateDailySummary('${achievementViewDate}')" class="absolute top-1 right-1 text-[#8D6E63] hover:bg-white rounded-full p-1">${ICONS.refresh}</button>
+                                <div class="font-bold mb-1">✨ zipipo 회고 요약</div>${summary}
+                            </div>`;
+        } else if (completedTasks.length > 0) {
+            detailsHtml += `<button onclick="window.generateDailySummary('${achievementViewDate}')" class="w-full mb-4 py-2 bg-white border border-[#D7CCC8] text-[#8D6E63] rounded-xl text-xs hover:bg-[#FDFCF5] transition flex items-center justify-center gap-1"><span>✨ zipipo 회고 정리</span></button>`;
+        }
+        
+        detailsHtml += `<ul class="space-y-2 mb-4">`;
+        if(completedTasks.length === 0) detailsHtml += `<li class="text-xs text-[#BCAAA4] italic text-center">완료된 일정이 없어요.</li>`;
+        else {
+            completedTasks.forEach(t => {
+                let cleanText = t.text.replace(/(\d{1,2}:\d{2})?(~)?(\d{1,2}:\d{2})?(\s*\(.*?m\))?/, '').trim();
+                detailsHtml += `<li class="text-xs flex gap-2 items-start text-[#5D4037]"><span class="w-1.5 h-1.5 rounded-full bg-[#A1887F] mt-1.5"></span> ${cleanText}</li>`;
+            });
+        }
+        detailsHtml += `</ul>`;
+        fbSection.innerHTML = detailsHtml;
+        
+        wrapper.appendChild(fbSection);
+        container.appendChild(wrapper);
+    }
+
+    function createTaskEl(task, type, key, index, numberPrefix = null) {
+        const li = document.createElement('li');
+        li.className = 'timeline-container flex flex-col mb-4';
+        
+        const isProject = type === 'project';
+        
+        if (!isProject) {
+            const dot = document.createElement('div');
+            dot.className = 'timeline-dot';
+            const line = document.createElement('div');
+            line.className = 'timeline-line';
+            li.appendChild(line);
+            li.appendChild(dot);
+        }
+
+        const content = document.createElement('div');
+        content.className = 'relative z-10 w-full';
+        if (isProject) { 
+            li.style.paddingLeft = '0'; 
+            li.style.marginBottom = '0.5rem';
+        }
+
+        let displayTime = '';
+        let displayText = task.text;
+        let subText = '';
+        
+        if (isProject && numberPrefix) {
+            if (task.depth && task.depth > 0) {
+                displayText = `- ${displayText}`;
+            } else {
+                displayText = `${numberPrefix}. ${displayText}`;
+            }
+        }
+        
+        if (type === 'daily') {
+            const timeMatch = displayText.match(/(\d{1,2}:\d{2})(~\d{1,2}:\d{2})?/);
+            if (task.manualTimeRange) displayTime = task.manualTimeRange.split('~')[0].trim();
+            else if (timeMatch) {
+                displayTime = timeMatch[0];
+                displayText = displayText.replace(timeMatch[0], '').trim();
+                displayText = displayText.replace(/^[:\-\s]+/, '');
+            }
+
+            const parenMatch = displayText.match(/\((.*?)\)/);
+            if (parenMatch) {
+                subText = parenMatch[1];
+                displayText = displayText.replace(parenMatch[0], '').trim();
+            }
+        }
+
+        if (type === 'daily' && displayTime) {
+            const timeDiv = document.createElement('div');
+            timeDiv.className = 'task-time-label';
+            timeDiv.innerText = displayTime;
+            content.appendChild(timeDiv);
+        }
+
+        const actionGroup = document.createElement('div');
+        actionGroup.className = 'flex items-center gap-2';
+
+        const title = document.createElement('span');
+        title.className = 'flex-1 text-sm cursor-pointer hover:text-[#8D6E63] transition leading-relaxed';
+        title.innerHTML = displayText;
+        if(task.done) title.classList.add('line-through', 'text-opacity-50', 'text-[#A1887F]');
+        
+        title.onclick = () => window.openEditTimeModal(type, key, index, task);
         
         // [MODIFIED] Feedback Button MOVED before title
         if (type === 'daily' && !task.feedback) {
@@ -71,45 +1718,169 @@ title.onclick = () => window.openEditTimeModal(type, key, index, task);
 
         actionGroup.appendChild(title);
 
-        // --- NEW: create checkbox first (so visual order can be adjusted via append order) ---
-const chk = document.createElement('input');
-chk.type = 'checkbox';
-chk.className = 'custom-checkbox';
-@@ -1726,7 +1709,21 @@ <h4 class="font-bold text-lg text-[#5D4037] mt-1 pr-16 leading-tight">${p.title}
-e.stopPropagation(); 
-window.updateTask(type, key, index, {done: chk.checked}); 
-};
+        const chk = document.createElement('input');
+        chk.type = 'checkbox';
+        chk.className = 'custom-checkbox';
+        chk.checked = task.done;
+        chk.onclick = (e) => { 
+            e.stopPropagation(); 
+            window.updateTask(type, key, index, {done: chk.checked}); 
+        };
         actionGroup.appendChild(chk);
 
-        // --- NEW: Feedback button placed immediately BEFORE the checkbox so it appears left of the checkbox ---
-        let fbBtn = null;
-        if (!task.feedback) { // show feedback button whenever feedback 없음 (모든 타입에 적용)
-             fbBtn = document.createElement('button');
-             fbBtn.className = 'text-[#BCAAA4] hover:text-[#8D6E63] mx-1';
-             fbBtn.innerHTML = ICONS.speech;
-             fbBtn.onclick = (e) => {
-                 e.stopPropagation();
-                 window.openInputModal('한줄 피드백', (val) => window.updateTask(type, key, index, {feedback: val}));
-             };
+        const delBtn = document.createElement('button');
+        delBtn.className = 'text-[#D7CCC8] hover:text-[#FF7F50] text-xs px-1';
+        delBtn.innerHTML = 'x';
+        delBtn.onclick = (e) => {
+            e.stopPropagation();
+            if(confirm('삭제하시겠습니까?')) {
+                window.deleteTaskItem(type, key, index);
+            }
+        };
+        actionGroup.appendChild(delBtn);
+
+        content.appendChild(actionGroup);
+
+        if (type === 'daily' && subText) {
+            const subDiv = document.createElement('div');
+            subDiv.className = 'task-sub-text';
+            subDiv.innerText = subText;
+            content.appendChild(subDiv);
         }
 
-        // Append in visual order: title (left area) then (optionally) del button, then feedback btn, then checkbox
-        actionGroup.appendChild(title);
+        li.appendChild(content);
 
-const delBtn = document.createElement('button');
-delBtn.className = 'text-[#D7CCC8] hover:text-[#FF7F50] text-xs px-1';
-@@ -1739,8 +1736,14 @@ <h4 class="font-bold text-lg text-[#5D4037] mt-1 pr-16 leading-tight">${p.title}
-};
-actionGroup.appendChild(delBtn);
+        if(type === 'daily') {
+            const timerRow = document.createElement('div');
+            timerRow.className = 'flex items-center gap-2 mt-2 pl-2';
+            
+            if (task.actualStartTime && task.actualEndTime) {
+                const s = new Date(task.actualStartTime);
+                const e = new Date(task.actualEndTime);
+                const diff = Math.floor((e - s) / (1000 * 60)); 
+                const timeStr = `${formatTimeSimple(task.actualStartTime)}~${formatTimeSimple(task.actualEndTime)} (${diff}m)`;
+                
+                const displaySpan = document.createElement('span');
+                displaySpan.className = 'text-xs text-[#5D4037] font-bold bg-[#F1F8E9] px-2 py-1 rounded border border-[#C5E1A5]';
+                displaySpan.innerText = timeStr;
+                timerRow.appendChild(displaySpan);
+            } else {
+                if(!task.actualStartTime) {
+                    const btn = document.createElement('button');
+                    btn.className = 'font-hand text-sm text-[#A1887F] hover:text-[#FF8A65] border border-[#D7CCC8] px-2 py-0.5 rounded-full bg-white';
+                    btn.textContent = 'start !';
+                    btn.onclick = () => window.updateTask(type, key, index, {actualStartTime: new Date().toISOString()});
+                    timerRow.appendChild(btn);
+                } else if (!task.actualEndTime) {
+                    const btn = document.createElement('button');
+                    btn.className = 'font-hand text-sm text-white bg-[#FFAB91] hover:bg-[#FF8A65] px-2 py-0.5 rounded-full';
+                    btn.textContent = 'stop !';
+                    btn.onclick = () => window.updateTask(type, key, index, {actualEndTime: new Date().toISOString()});
+                    timerRow.appendChild(btn);
+                }
+            }
 
-        // Append feedback btn (if exists) immediately before checkbox
-        if (fbBtn) actionGroup.appendChild(fbBtn);
-        actionGroup.appendChild(chk);
-
-content.appendChild(actionGroup);
-
+            if (task.feedback) {
+                const fb = document.createElement('span');
+                fb.className = 'text-xs text-[#8D6E63] bg-[#FDFCF5] px-2 py-1 rounded border border-[#EFEBE9] ml-1';
+                fb.innerText = `"${task.feedback}"`;
+                timerRow.appendChild(fb);
+            }
+            
+            if(timerRow.hasChildNodes()) li.appendChild(timerRow);
+        }
         
+        return li;
+    }
 
-if (type === 'daily' && subText) {
-const subDiv = document.createElement('div');
-subDiv.className = 'task-sub-text';
+    // --- Init ---
+    setInterval(() => {
+        const now = getLocalDateStr(new Date());
+        if (now !== lastKnownToday) {
+            lastKnownToday = now;
+            selectedDate = now; 
+            currentWeekBaseDate = new Date(); 
+            renderApp();
+        }
+    }, 60000); 
+
+    renderHeader();
+    initTimeSelects();
+    loadData(); 
+    renderApp();
+
+    const savedKey = localStorage.getItem(STORAGE_KEY_API);
+    if(!savedKey) toggleApiKeyInput();
+
+    window.closeModal = closeModal;
+    window.saveApiKey = saveApiKey;
+    window.toggleApiKeyInput = toggleApiKeyInput;
+    window.generateSchedule = generateSchedule;
+    window.openGeneratorModal = openGeneratorModal;
+    window.openWeeklyGenerator = openWeeklyGenerator;
+    window.openAddTaskModal = openAddTaskModal;
+    window.closeAddTaskModal = () => closeModal('addTaskModal');
+    window.confirmTaskAction = confirmTaskAction;
+    window.openProjectModal = openProjectModal;
+    window.closeProjectModal = () => closeModal('projectInputModal');
+    window.switchProjMode = switchProjMode;
+    window.confirmCreateProject = confirmCreateProject;
+    window.moveProjCal = moveProjCal;
+    window.openInputModal = openInputModal;
+    window.closeInputModal = closeInputModal;
+    window.confirmInput = confirmInput;
+    window.switchTab = switchTab;
+    window.moveMonth = moveMonth;
+    window.generateDailySummary = generateDailySummary;
+    window.openProjectPlanModal = openProjectPlanModal;
+    window.closeProjectPlanModal = () => closeModal('projectPlanModal');
+    window.confirmProjectPlan = confirmProjectPlan;
+    window.completeProject = completeProject;
+    window.moveWeek = moveWeek;
+    window.openEditTimeModal = openEditTimeModal;
+    window.updateTask = updateTask;
+    window.deleteTaskItem = deleteTaskItem;
+    window.deleteProject = deleteProject;
+    window.addManualTask = addManualTask;
+    window.changeDate = changeDate;
+    window.updateProjectMemo = updateProjectMemo;
+
+    // Routine Logic
+    window.openRoutineModal = openRoutineModal;
+    window.addRoutine = addRoutine;
+    window.deleteRoutine = deleteRoutine;
+
+    function openRoutineModal() {
+        document.getElementById('routineModal').classList.remove('hidden');
+        renderRoutineList();
+    }
+    function renderRoutineList() {
+        const list = document.getElementById('routineList');
+        list.innerHTML = '';
+        (appData.routines || []).forEach((r, i) => {
+            list.innerHTML += `
+                <div class="flex justify-between items-center bg-white border border-[#EFEBE9] p-2 rounded">
+                    <span class="text-sm">${r.text}</span>
+                    <button onclick="window.deleteRoutine(${i})" class="text-[#D7CCC8] hover:text-[#FF8A65]">x</button>
+                </div>`;
+        });
+    }
+    function addRoutine() {
+        const input = document.getElementById('newRoutineInput');
+        const text = input.value.trim();
+        if(text) {
+            appData.routines.push({ text: text });
+            input.value = '';
+            saveData();
+            renderRoutineList();
+        }
+    }
+    function deleteRoutine(i) {
+        appData.routines.splice(i, 1);
+        saveData();
+        renderRoutineList();
+    }
+
+</script>
+</body>
+</html>
