@@ -1728,6 +1728,7 @@ ${summaryContext}
 
     // 9. DATA MANIPULATION
     window.updateTask = function(type, key, index, changes) {
+        const previousScrollY = window.scrollY;
         let list = [];
         if(type === 'daily') list = appData.daily[key];
         else if(type === 'weekly') list = appData.weekly[key].tasks;
@@ -1759,6 +1760,7 @@ ${summaryContext}
             });
             saveData();
             renderApp();
+            window.scrollTo(0, previousScrollY);
         }
     };
 
@@ -1843,3 +1845,4 @@ ${summaryContext}
 </script>
 </body>
 </html>
+
