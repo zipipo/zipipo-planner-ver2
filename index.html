@@ -8,8 +8,8 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="zipipo">
     <meta name="mobile-web-app-capable" content="yes">
-    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📅</text></svg>">
-    <link rel="shortcut icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📅</text></svg>">
+    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏠</text></svg>">
+    <link rel="shortcut icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏠</text></svg>">
 
     <title>zipipo planner</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -677,7 +677,7 @@
              const timeConstraint = isTargetToday ? `2. 현재 시각(${currentTimeStr}) 이후의 일정만 계획할 것.` : `2. 하루 전체 일정을 계획할 것.`;
              sysPrompt = `역할: 플래너 (MBTI T). 날짜: ${selectedDate}. 요청: "${promptText}". 
              ${contextInfo}
-             [규칙] 1. 인사말 금지. ${timeConstraint} 3. 꿀팁 1~2문장. 4. 형식: 'HH:MM~HH:MM 할일'. 5. 마크다운 금지.`;
+             [규칙] 1. 인사말 금지. ${timeConstraint} 3. 꿀팁 3~4문장. 4. 형식: 'HH:MM~HH:MM 할일'. 5. 마크다운 금지.`;
         } else {
              const wk = getWeekKey(currentWeekBaseDate);
              appData.weeklyPrompts[wk] = promptText;
@@ -852,7 +852,7 @@
             - 각 항목의 제목(예: 오늘 잘한 점)은 반드시 <b> 태그를 사용하여 굵게</b> 표시해줘 (예: <b>1. 오늘 잘한 점</b>).
             - 내용은 간결하게 개조식(- 기호 사용)으로 작성하세요.
             - 제목 외에는 마크다운을 쓰지 말고 깔끔한 텍스트로 작성해.
-            - 엄격하고 마인드셋을 제대로 시켜줄 수 있는 말투.`;
+            - 사용자에게 동기부여를 제대로 시켜줄 수 있는 말투. 엄격하고도 따뜻한 말투`;
 
             await callGemini(sysPrompt, (text) => {
                 if(!appData.dailySummaries) appData.dailySummaries = {};
@@ -1624,7 +1624,8 @@ ${dateContext}
         }
     }
 
-function renderCalendar(container) {
+
+	function renderCalendar(container) {
         const year = calendarDate.getFullYear();
         const month = calendarDate.getMonth();
         const wrapper = document.createElement('div');
@@ -1644,7 +1645,7 @@ function renderCalendar(container) {
             const summary = appData.dailySummaries[dateStr];
             const hasTask = appData.daily[dateStr] && appData.daily[dateStr].some(t=>t.done);
             let indicator = '';
-            // 사용자 설정 아이콘 유지
+            // 사용자 설정 아이콘
             if(summary) indicator = '—̳͟͞͞♡';
             else if(hasTask) indicator = '●';
             
@@ -1667,11 +1668,14 @@ function renderCalendar(container) {
         let detailsHtml = `<h3 class="font-hand text-lg text-[#5D4037] mb-2 border-b border-[#EFEBE9] pb-1">${achievementViewDate}</h3>`;
         
         if (summary) {
-            // [수정됨] whitespace-pre-wrap을 내용 div에만 적용하여 제목 정렬 문제 해결
+            // [수정 포인트] 
+            // 1. 부모 div에서는 whitespace-pre-wrap 제거 (레이아웃 깨짐 방지)
+            // 2. 제목 div는 text-center 적용
+            // 3. 내용 div에만 whitespace-pre-wrap 적용하여 줄바꿈 유지
             detailsHtml += `<div class="mb-4 p-4 bg-[#F1F8E9] rounded-xl text-xs text-[#33691E] leading-relaxed font-wando border border-[#AED581] relative">
                                 <button onclick="window.generateDailySummary('${achievementViewDate}')" class="absolute top-2 right-2 text-[#8D6E63] hover:bg-white rounded-full p-1">${ICONS.refresh}</button>
-                                <div class="font-bold mb-3 text-center text-base text-[#556B2F] block w-full">~ 오늘의 zipipo 회고 ~</div>
-                                <div class="whitespace-pre-wrap">${summary}</div>
+                                <div class="font-bold mb-3 text-center text-base text-[#556B2F] w-full block">~ 오늘의 zipipo 회고 ~</div>
+                                <div class="whitespace-pre-wrap text-left">${summary}</div>
                             </div>`;
         } else if (completedTasks.length > 0) {
             detailsHtml += `<button onclick="window.generateDailySummary('${achievementViewDate}')" class="w-full mb-4 py-2 bg-white border border-[#D7CCC8] text-[#8D6E63] rounded-xl text-xs hover:bg-[#FDFCF5] transition flex items-center justify-center gap-1"><span>zipipo 회고 정리</span></button>`;
@@ -1691,6 +1695,7 @@ function renderCalendar(container) {
         wrapper.appendChild(fbSection);
         container.appendChild(wrapper);
     }
+	
     function createTaskEl(task, type, key, index, numberPrefix = null) {
         const li = document.createElement('li');
         li.className = 'timeline-container flex flex-col mb-4';
@@ -1946,6 +1951,7 @@ function renderCalendar(container) {
 </script>
 </body>
 </html>
+
 
 
 
