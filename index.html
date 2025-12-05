@@ -400,6 +400,8 @@
                 <input type="date" id="weeklyTaskDate" class="border border-[#EFEBE9] rounded p-2 text-sm text-[#5D4037] w-full bg-white">
             </div>
             <div class="flex gap-2 justify-center">
+                <button id="btnDeleteTask" onclick="deleteTaskFromModal()" class="hidden px-4 py-2 bg-[#FFAB91] text-white rounded-lg text-xs font-bold hover:bg-[#FF8A65]">삭제</button>
+                
                 <button onclick="closeModal('addTaskModal')" class="px-4 py-2 bg-gray-100 rounded-lg text-xs text-gray-500 hover:bg-gray-200">취소</button>
                 <button onclick="confirmTaskAction()" class="px-4 py-2 bg-[#8D6E63] text-white rounded-lg text-xs font-bold hover:bg-[#6D4C41]">확인</button>
             </div>
@@ -778,10 +780,24 @@
             });
 
             const p = appData.projects.find(x => x.id === pid);
-            if(p.tasks.length > 0 && confirm('덮어씌울까요?')) p.tasks = newTasks;
-            else if(p.tasks.length === 0) p.tasks = newTasks;
-            else p.tasks.push(...newTasks);
             
+            // [수정됨] 완료된 항목은 유지하고 나머지만 교체하는 로직
+            const completedTasks = p.tasks ? p.tasks.filter(t => t.done) : [];
+            
+            if (completedTasks.length > 0) {
+                // 완료된 항목이 있으면, 그것들은 유지하고 뒤에 새 일정을 붙임
+                p.tasks = [...completedTasks, ...newTasks];
+            } else {
+                // 완료된 항목이 없으면 기존 로직대로 덮어씌울지 물어봄
+                if(p.tasks.length > 0 && confirm('기존 일정을 덮어씌울까요? (취소 시 뒤에 추가됩니다)')) {
+                    p.tasks = newTasks;
+                } else if(p.tasks.length === 0) {
+                    p.tasks = newTasks;
+                } else {
+                    p.tasks.push(...newTasks);
+                }
+            }
+
             hideLoading();
             saveData();
             renderApp();
@@ -1039,6 +1055,16 @@ ${dateContext}
             dailyWrapper.classList.remove('hidden');
             weeklyWrapper.classList.add('hidden');
         }
+
+        // [추가] 수정 모드일 때만 삭제 버튼 보이기
+        const btnDelete = document.getElementById('btnDeleteTask');
+        if(btnDelete) {
+            if(editingTask) {
+                btnDelete.classList.remove('hidden');
+            } else {
+                btnDelete.classList.add('hidden');
+            }
+        }
     }
 
     function confirmTaskAction() {
@@ -1080,6 +1106,16 @@ ${dateContext}
         }
         closeModal('addTaskModal');
     }
+	// [추가] 팝업에서 삭제 버튼 클릭 시 실행될 함수
+    window.deleteTaskFromModal = function() {
+        if (!editingTask) return;
+        
+        if (confirm('정말 삭제하시겠습니까?')) {
+            // 기존 삭제 함수 호출
+            window.deleteTaskItem(editingTask.type, editingTask.key, editingTask.index);
+            closeModal('addTaskModal');
+        }
+    };
 
     function openEditTimeModal(type, key, index, task) {
         openAddTaskModal({type, key, index, task}, type);
@@ -1724,8 +1760,9 @@ ${dateContext}
 
         // Append in visual order: title (left area) then (optionally) del button, then feedback btn, then checkbox
         actionGroup.appendChild(title);
-
-        const delBtn = document.createElement('button');
+        
+        // [수정됨] 리스트에서 바로 삭제하는 버튼 제거
+        /* const delBtn = document.createElement('button');
         delBtn.className = 'text-[#D7CCC8] hover:text-[#FF7F50] text-xs px-1';
         delBtn.innerHTML = 'x';
         delBtn.onclick = (e) => {
@@ -1734,7 +1771,8 @@ ${dateContext}
                 window.deleteTaskItem(type, key, index);
             }
         };
-        actionGroup.appendChild(delBtn);
+        actionGroup.appendChild(delBtn); 
+        */
 
         // Append feedback btn (if exists) immediately before checkbox
         if (fbBtn) actionGroup.appendChild(fbBtn);
@@ -1887,3 +1925,4 @@ ${dateContext}
 </script>
 </body>
 </html>
+
