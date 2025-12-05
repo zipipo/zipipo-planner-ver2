@@ -811,34 +811,53 @@
         try {
             const tasks = appData.daily[dateStr] || [];
             let summaryContext = "";
+            
+            // [수정됨] 시간 정보(계획/실제) 포함하여 컨텍스트 구성
             tasks.forEach(t => {
                 if (t.isMessage) return;
                 const status = t.done ? "완료" : "미완료";
-                const fb = t.feedback ? `(피드백: ${t.feedback})` : "";
-                summaryContext += `- ${t.text} [${status}] ${fb}\n`;
+                
+                let timeInfo = "";
+                // 계획된 시간
+                if (t.manualTimeRange) {
+                    timeInfo += ` (계획: ${t.manualTimeRange})`;
+                }
+                // 실제 수행 시간 및 소요 시간 계산
+                if (t.actualStartTime && t.actualEndTime) {
+                    const s = new Date(t.actualStartTime);
+                    const e = new Date(t.actualEndTime);
+                    const diff = Math.floor((e - s) / (1000 * 60)); 
+                    timeInfo += ` (실제: ${formatTimeSimple(t.actualStartTime)}~${formatTimeSimple(t.actualEndTime)}, ${diff}분 소요)`;
+                }
+
+                const fb = t.feedback ? ` (사용자 메모: ${t.feedback})` : "";
+                summaryContext += `- ${t.text} [${status}]${timeInfo}${fb}\n`;
             });
             
             showLoading("zipipo가 회고 중");
             
+            // [수정됨] 프롬프트에 시간 비교 및 볼드체 요청 추가
             const sysPrompt = `날짜: ${dateStr}.
             [오늘의 활동 내역]
             ${summaryContext}
             
             위 내용을 바탕으로 아래 4가지 항목으로 정리해줘.
             1. 오늘 잘한 점
-            2. 아쉬운 점 (미완료 원인 등)
+            2. 아쉬운 점 (미완료 원인, 시간 관리 등)
             3. 마인드셋 (동기부여)
             4. 내일 계획 반영 (구체적인 조언)
 
             [규칙]
-            - 각 항목의 제목과 내용은 반드시 줄바꿈으로 구분하세요.
+            - 활동 내역에 '계획'과 '실제' 시간이 있다면 이를 비교해서 시간 관리에 대한 피드백(늦게 시작함, 예상보다 오래 걸림 등)을 구체적으로 포함해줘.
+            - 각 항목의 제목(예: 오늘 잘한 점)은 반드시 <b> 태그를 사용하여 굵게</b> 표시해줘 (예: <b>1. 오늘 잘한 점</b>).
             - 내용은 간결하게 개조식(- 기호 사용)으로 작성하세요.
-            - 마크다운(bold 등)은 쓰지 말고 깔끔한 텍스트로.
-            - 따뜻하고 격려하는 말투.`;
-            
+            - 제목 외에는 마크다운을 쓰지 말고 깔끔한 텍스트로 작성해.
+            - 엄격하고 마인드셋을 제대로 시켜줄 수 있는 말투.`;
+
             await callGemini(sysPrompt, (text) => {
                 if(!appData.dailySummaries) appData.dailySummaries = {};
-                appData.dailySummaries[dateStr] = cleanMarkdown(text);
+                // [수정됨] 볼드체(HTML 태그) 적용을 위해 cleanMarkdown 제거 후 저장
+                appData.dailySummaries[dateStr] = text; 
                 hideLoading();
                 saveData();
                 renderApp();
@@ -1610,46 +1629,48 @@ ${dateContext}
         const month = calendarDate.getMonth();
         const wrapper = document.createElement('div');
         wrapper.className = 'wood-frame p-5 bg-white min-h-[400px] flex flex-col';
-        
         wrapper.innerHTML = `<div class="flex justify-between items-center mb-6"><button onclick="window.moveMonth(-1)" class="text-[#8D6E63]">◀</button><h2 class="font-hand text-2xl text-[#5D4037]">${year}.${month+1}</h2><button onclick="window.moveMonth(1)" class="text-[#8D6E63]">▶</button></div>`;
         
         const calGrid = document.createElement('div');
         calGrid.className = 'grid grid-cols-7 gap-1 mb-6 text-center';
         ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].forEach(d => calGrid.innerHTML+=`<div class="text-xs font-bold text-[#A1887F] mb-2">${d}</div>`);
-        
+
         const firstDay = new Date(year, month, 1).getDay();
         const lastDate = new Date(year, month+1, 0).getDate();
-        
+
         for(let i=0; i<firstDay; i++) calGrid.innerHTML += `<div></div>`;
         for(let i=1; i<=lastDate; i++) {
             const dateStr = `${year}-${(month+1).toString().padStart(2,'0')}-${i.toString().padStart(2,'0')}`;
             const summary = appData.dailySummaries[dateStr];
             const hasTask = appData.daily[dateStr] && appData.daily[dateStr].some(t=>t.done);
             let indicator = '';
-            if(summary) indicator = '✨'; 
+            if(summary) indicator = '✨';
             else if(hasTask) indicator = '●';
             
             const cell = document.createElement('div');
-            cell.className = `h-10 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:bg-[#F1F8E9] ${achievementViewDate===dateStr ? 'bg-[#DCEDC8] border border-[#AED581]' : ''}`;
+            cell.className = `h-10 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:bg-[#F1F8E9] ${achievementViewDate===dateStr ?
+                'bg-[#DCEDC8] border border-[#AED581]' : ''}`;
             cell.innerHTML = `<span class="text-sm ${achievementViewDate===dateStr ? 'font-bold':''}">${i}</span><span class="text-[10px] text-[#FF8A65] h-3">${indicator}</span>`;
             cell.onclick = () => { achievementViewDate = dateStr; renderApp(); };
             calGrid.appendChild(cell);
         }
         wrapper.appendChild(calGrid);
-        
+
         const tasks = appData.daily[achievementViewDate] || [];
         const completedTasks = tasks.filter(t => t.done && !t.isMessage);
         const summary = appData.dailySummaries[achievementViewDate];
-        
+
         const fbSection = document.createElement('div');
         fbSection.className = 'mt-auto pt-4 border-t border-[#EFEBE9]';
+
         let detailsHtml = `<h3 class="font-hand text-lg text-[#5D4037] mb-2 border-b border-[#EFEBE9] pb-1">${achievementViewDate}</h3>`;
         
         if (summary) {
-            // [FIX] Reduced margin/padding
-            detailsHtml += `<div class="mb-4 p-2.5 bg-[#F1F8E9] rounded-xl text-xs text-[#33691E] leading-relaxed font-wando border border-[#AED581] relative whitespace-pre-wrap" style="padding-top: 6px;">
-                                <button onclick="window.generateDailySummary('${achievementViewDate}')" class="absolute top-1 right-1 text-[#8D6E63] hover:bg-white rounded-full p-1">${ICONS.refresh}</button>
-                                <div class="font-bold mb-1">zipipo 회고 요약</div>${summary}
+            // [수정됨] 제목 변경(~ 오늘의 zipipo 회고 ~) 및 가운데 정렬 스타일 적용
+            detailsHtml += `<div class="mb-4 p-4 bg-[#F1F8E9] rounded-xl text-xs text-[#33691E] leading-relaxed font-wando border border-[#AED581] relative whitespace-pre-wrap">
+                                <button onclick="window.generateDailySummary('${achievementViewDate}')" class="absolute top-2 right-2 text-[#8D6E63] hover:bg-white rounded-full p-1">${ICONS.refresh}</button>
+                                <div class="font-bold mb-3 text-center text-base text-[#556B2F]">~ 오늘의 zipipo 회고 ~</div>
+                                ${summary}
                             </div>`;
         } else if (completedTasks.length > 0) {
             detailsHtml += `<button onclick="window.generateDailySummary('${achievementViewDate}')" class="w-full mb-4 py-2 bg-white border border-[#D7CCC8] text-[#8D6E63] rounded-xl text-xs hover:bg-[#FDFCF5] transition flex items-center justify-center gap-1"><span>zipipo 회고 정리</span></button>`;
@@ -1925,4 +1946,5 @@ ${dateContext}
 </script>
 </body>
 </html>
+
 
