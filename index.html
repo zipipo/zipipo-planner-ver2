@@ -812,52 +812,46 @@
             const tasks = appData.daily[dateStr] || [];
             let summaryContext = "";
             
-            // [수정됨] 시간 정보(계획/실제) 포함하여 컨텍스트 구성
+            // 시간 정보(계획/실제) 포함하여 컨텍스트 구성
             tasks.forEach(t => {
                 if (t.isMessage) return;
                 const status = t.done ? "완료" : "미완료";
-                
                 let timeInfo = "";
-                // 계획된 시간
-                if (t.manualTimeRange) {
-                    timeInfo += ` (계획: ${t.manualTimeRange})`;
-                }
-                // 실제 수행 시간 및 소요 시간 계산
+                if (t.manualTimeRange) timeInfo += ` (계획: ${t.manualTimeRange})`;
                 if (t.actualStartTime && t.actualEndTime) {
                     const s = new Date(t.actualStartTime);
                     const e = new Date(t.actualEndTime);
                     const diff = Math.floor((e - s) / (1000 * 60)); 
                     timeInfo += ` (실제: ${formatTimeSimple(t.actualStartTime)}~${formatTimeSimple(t.actualEndTime)}, ${diff}분 소요)`;
                 }
-
                 const fb = t.feedback ? ` (사용자 메모: ${t.feedback})` : "";
                 summaryContext += `- ${t.text} [${status}]${timeInfo}${fb}\n`;
             });
             
             showLoading("zipipo가 회고 중");
             
-            // [수정됨] 프롬프트에 시간 비교 및 볼드체 요청 추가
             const sysPrompt = `날짜: ${dateStr}.
             [오늘의 활동 내역]
             ${summaryContext}
             
             위 내용을 바탕으로 아래 4가지 항목으로 정리해줘.
             1. 오늘 잘한 점
-            2. 아쉬운 점 (미완료 원인, 시간 관리 등)
-            3. 마인드셋 (동기부여)
-            4. 내일 계획 반영 (구체적인 조언)
+            2. 오늘 아쉬운 점
+            3. 마인드셋
+            4. 내일 계획 조언
 
             [규칙]
             - 활동 내역에 '계획'과 '실제' 시간이 있다면 이를 비교해서 시간 관리에 대한 피드백(늦게 시작함, 예상보다 오래 걸림 등)을 구체적으로 포함해줘.
-            - 각 항목의 제목(예: 오늘 잘한 점)은 반드시 <b> 태그를 사용하여 굵게</b> 표시해줘 (예: <b>1. 오늘 잘한 점</b>).
+            - 마크다운(bold 등)은 쓰지 말고 깔끔한 텍스트로 작성해. (제목도 그냥 텍스트로 줘, 내가 알아서 꾸밀게)
             - 내용은 간결하게 개조식(- 기호 사용)으로 작성하세요.
-            - 제목 외에는 마크다운을 쓰지 말고 깔끔한 텍스트로 작성해.
-            - 사용자에게 동기부여를 제대로 시켜줄 수 있는 말투. 엄격하고도 따뜻한 말투`;
+            - 따뜻하고 격려하는 말투.`;
 
             await callGemini(sysPrompt, (text) => {
+                // [추가됨] 강제 볼드 처리: "숫자." 으로 시작하는 줄을 찾아 <b> 태그로 감쌈
+                let formattedText = text.replace(/^(\d+\..*)$/gm, '<b>$1</b>');
+                
                 if(!appData.dailySummaries) appData.dailySummaries = {};
-                // [수정됨] 볼드체(HTML 태그) 적용을 위해 cleanMarkdown 제거 후 저장
-                appData.dailySummaries[dateStr] = text; 
+                appData.dailySummaries[dateStr] = formattedText; 
                 hideLoading();
                 saveData();
                 renderApp();
@@ -868,7 +862,7 @@
             hideLoading();
         }
     }
-
+	
     function completeProject(id, isComplete) {
         const p = appData.projects.find(x => x.id === id);
         if (p) {
@@ -1951,6 +1945,7 @@ ${dateContext}
 </script>
 </body>
 </html>
+
 
 
 
