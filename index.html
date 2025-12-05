@@ -1624,7 +1624,7 @@ ${dateContext}
         }
     }
 
-    function renderCalendar(container) {
+function renderCalendar(container) {
         const year = calendarDate.getFullYear();
         const month = calendarDate.getMonth();
         const wrapper = document.createElement('div');
@@ -1644,7 +1644,8 @@ ${dateContext}
             const summary = appData.dailySummaries[dateStr];
             const hasTask = appData.daily[dateStr] && appData.daily[dateStr].some(t=>t.done);
             let indicator = '';
-            if(summary) indicator = '✨';
+            // 사용자 설정 아이콘 유지
+            if(summary) indicator = '—̳͟͞͞♡';
             else if(hasTask) indicator = '●';
             
             const cell = document.createElement('div');
@@ -1666,11 +1667,11 @@ ${dateContext}
         let detailsHtml = `<h3 class="font-hand text-lg text-[#5D4037] mb-2 border-b border-[#EFEBE9] pb-1">${achievementViewDate}</h3>`;
         
         if (summary) {
-            // [수정됨] 제목 변경(~ 오늘의 zipipo 회고 ~) 및 가운데 정렬 스타일 적용
-            detailsHtml += `<div class="mb-4 p-4 bg-[#F1F8E9] rounded-xl text-xs text-[#33691E] leading-relaxed font-wando border border-[#AED581] relative whitespace-pre-wrap">
+            // [수정됨] whitespace-pre-wrap을 내용 div에만 적용하여 제목 정렬 문제 해결
+            detailsHtml += `<div class="mb-4 p-4 bg-[#F1F8E9] rounded-xl text-xs text-[#33691E] leading-relaxed font-wando border border-[#AED581] relative">
                                 <button onclick="window.generateDailySummary('${achievementViewDate}')" class="absolute top-2 right-2 text-[#8D6E63] hover:bg-white rounded-full p-1">${ICONS.refresh}</button>
-                                <div class="font-bold mb-3 text-center text-base text-[#556B2F]">~ 오늘의 zipipo 회고 ~</div>
-                                ${summary}
+                                <div class="font-bold mb-3 text-center text-base text-[#556B2F] block w-full">~ 오늘의 zipipo 회고 ~</div>
+                                <div class="whitespace-pre-wrap">${summary}</div>
                             </div>`;
         } else if (completedTasks.length > 0) {
             detailsHtml += `<button onclick="window.generateDailySummary('${achievementViewDate}')" class="w-full mb-4 py-2 bg-white border border-[#D7CCC8] text-[#8D6E63] rounded-xl text-xs hover:bg-[#FDFCF5] transition flex items-center justify-center gap-1"><span>zipipo 회고 정리</span></button>`;
@@ -1690,7 +1691,6 @@ ${dateContext}
         wrapper.appendChild(fbSection);
         container.appendChild(wrapper);
     }
-
     function createTaskEl(task, type, key, index, numberPrefix = null) {
         const li = document.createElement('li');
         li.className = 'timeline-container flex flex-col mb-4';
@@ -1946,5 +1946,6 @@ ${dateContext}
 </script>
 </body>
 </html>
+
 
 
