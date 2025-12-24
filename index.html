@@ -1761,6 +1761,7 @@ ${dateContext}
     }
 	
 // [수정됨] createTaskEl 함수: 타임라인 및 텍스트 정리 기능 강화
+  // [수정됨] createTaskEl 함수: 타임라인 풀버전(Start~End) 표시
     function createTaskEl(task, type, key, index, numberPrefix = null) {
         const li = document.createElement('li');
         li.className = 'timeline-container flex flex-col mb-4';
@@ -1782,9 +1783,8 @@ ${dateContext}
             li.style.marginBottom = '0.5rem';
         }
 
-        let displayTimeRaw = ''; 
-        let displayStartTime = ''; 
-        let durationText = '';   
+        let displayTimeRaw = ''; // 왼쪽 타임라인에 표시될 전체 시간 문자열 (예: 12:30~13:30)
+        let durationText = '';   // 우측에 표시될 소요 시간 (예: (60분))
         let displayText = task.text;
         
         if (isProject && numberPrefix) {
@@ -1792,10 +1792,9 @@ ${dateContext}
             else displayText = `${numberPrefix}. ${displayText}`;
         }
         
-        // --- [핵심 수정 구간] 시간 파싱 및 텍스트 정리 로직 ---
+        // --- 시간 파싱 및 텍스트 정리 로직 ---
         if (type === 'daily') {
             // 1. 시간 범위 파싱 (물결(~), 하이픈(-), 공백 허용)
-            // 예: 12:30~14:00, 12:30-14:00, 12:30 ~ 14:00 모두 인식
             const timeRangeMatch = displayText.match(/(\d{1,2}:\d{2})\s*[~-]\s*(\d{1,2}:\d{2})/);
             // 2. 단일 시간 파싱 (예: 12:30 시작)
             const simpleTimeMatch = displayText.match(/^(\d{1,2}:\d{2})/);
@@ -1803,8 +1802,9 @@ ${dateContext}
             if (task.manualTimeRange) {
                 displayTimeRaw = task.manualTimeRange;
             } else if (timeRangeMatch) {
-                // 시간 범위가 발견되면 표준 포맷(~)으로 저장하고 텍스트에서 제거
+                // 시간 범위 발견 -> 표준 포맷(~)으로 저장
                 displayTimeRaw = `${timeRangeMatch[1]}~${timeRangeMatch[2]}`; 
+                // 본문에서는 제거
                 displayText = displayText.replace(timeRangeMatch[0], '').trim();
             } else if (simpleTimeMatch) {
                 // 시작 시간만 있는 경우
@@ -1812,41 +1812,33 @@ ${dateContext}
                 displayText = displayText.replace(simpleTimeMatch[0], '').trim();
             }
 
-            // 3. [강화됨] 소요 시간 텍스트 제거 (괄호 안의 공백, '시간', '분' 모두 처리)
-            // 예: (1시간), ( 1시간 ), (60분), (30m) 모두 제거
+            // 3. 소요 시간 텍스트 제거 (괄호 안의 공백, '시간', '분' 모두 처리)
             displayText = displayText.replace(/\(\s*\d+\s*(시간|분|m)\s*\)/g, '').trim();
             
             // 4. 앞쪽 특수문자(: -) 제거
             displayText = displayText.replace(/^[:\-\s]+/, ''); 
 
-            // 5. 표시 데이터 계산
-            if (displayTimeRaw) {
-                // 왼쪽 타임라인용: 시작 시간 추출
-                // ~ 또는 - 기준으로 나눔
-                const parts = displayTimeRaw.split(/[~-]/);
-                displayStartTime = parts[0].trim();
-
-                // 오른쪽 소요시간용: 분 차이 계산
-                if (parts.length >= 2) {
-                     const startParts = parts[0].trim().split(':');
-                     const endParts = parts[1].trim().split(':');
-                     
-                     if(startParts.length===2 && endParts.length===2) {
-                         const sMin = parseInt(startParts[0])*60 + parseInt(startParts[1]);
-                         const eMin = parseInt(endParts[0])*60 + parseInt(endParts[1]);
-                         const diff = eMin - sMin;
-                         if (diff > 0) durationText = `(${diff}분)`; 
-                     }
-                }
+            // 5. 우측 표시용 소요시간(분) 계산
+            if (displayTimeRaw && displayTimeRaw.includes('~')) {
+                 const parts = displayTimeRaw.split('~');
+                 const startParts = parts[0].trim().split(':');
+                 const endParts = parts[1].trim().split(':');
+                 
+                 if(startParts.length===2 && endParts.length===2) {
+                     const sMin = parseInt(startParts[0])*60 + parseInt(startParts[1]);
+                     const eMin = parseInt(endParts[0])*60 + parseInt(endParts[1]);
+                     const diff = eMin - sMin;
+                     if (diff > 0) durationText = `(${diff}분)`; 
+                 }
             }
         }
         // ---------------------------------------------------
 
-        // 왼쪽 타임라인 (시작 시간)
-        if (type === 'daily' && displayStartTime) {
+        // [수정됨] 왼쪽 타임라인: 시작시간만 보여주던 것을 '전체 시간 범위'로 변경
+        if (type === 'daily' && displayTimeRaw) {
             const timeDiv = document.createElement('div');
             timeDiv.className = 'task-time-label';
-            timeDiv.innerText = displayStartTime;
+            timeDiv.innerText = displayTimeRaw; // 예: 12:30~14:00
             content.appendChild(timeDiv);
         }
 
@@ -1877,7 +1869,7 @@ ${dateContext}
         if (parenMatch) {
              const subDiv = document.createElement('div');
              subDiv.className = 'task-sub-text';
-             // 혹시라도 '분/시간'이 남아있지 않은 경우에만 표시
+             // '분/시간'이 없는 경우에만 표시 (중복 방지)
              if(!parenMatch[1].includes('분') && !parenMatch[1].includes('시간')) {
                 subDiv.innerText = parenMatch[1];
              }
@@ -2059,6 +2051,7 @@ ${dateContext}
 </script>
 </body>
 </html>
+
 
 
 
