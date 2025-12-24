@@ -566,18 +566,26 @@
         if(loadingInterval) clearInterval(loadingInterval);
     }
 
+   // [수정됨] 3. HELPER FUNCTIONS 내 getTaskTimeVal 교체
     function getTaskTimeVal(t) {
+        // 1. manualTimeRange (사용자가 직접 입력/수정한 시간) 우선 확인
         if(t.manualTimeRange) {
             const m = t.manualTimeRange.match(/(\d{1,2}):(\d{2})/);
             if(m) return parseInt(m[1])*60 + parseInt(m[2]);
         }
-        if(t.text && /^\d{1,2}:\d{2}/.test(t.text)) {
-             const m = t.text.match(/^(\d{1,2}):(\d{2})/);
+        
+        // 2. text (AI가 생성한 텍스트) 내 시간 확인
+        // 정규식 설명: 문장 시작 부분 혹은 특수문자 뒤에 나오는 시간 패턴 인식
+        if(t.text) {
+             // "14:00 할일" 또는 "14:00~15:00 할일" 패턴 찾기
+             const m = t.text.match(/(?:^|[\s\(\[])(\d{1,2}):(\d{2})/);
              if(m) return parseInt(m[1])*60 + parseInt(m[2]);
         }
-        return 9999; 
+        
+        // 3. 시간이 없으면 맨 뒤로 (99999 반환)
+        // 기존 9999보다 더 큰 값을 주어 23:59(1439)보다 확실히 뒤에 위치하게 함
+        return 99999; 
     }
-
     // 4. DATA MANAGEMENT
     function loadData() {
         const json = localStorage.getItem(STORAGE_KEY_DATA);
@@ -632,7 +640,7 @@
     }
 
     // 6. LOGIC
- // [수정됨] generateSchedule 함수: AI가 불필요한 제목/헤더를 출력하는 문제 해결
+ // [수정됨] 6. LOGIC 내 generateSchedule 함수 교체 (앞부분만 수정된 로직 반영)
     async function generateSchedule(type) {
         const key = localStorage.getItem(STORAGE_KEY_API);
         if(!key) return alert('API Key가 필요해요!');
@@ -641,6 +649,7 @@
         
         showLoading("zipipo가 만들고 있어요");
         document.getElementById('generatorModal').classList.add('hidden');
+        
         const todayStr = getTodayStr();
         const now = new Date();
         const currentTimeStr = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
@@ -649,15 +658,28 @@
         const currSat = new Date(currSun); currSat.setDate(currSat.getDate()+6);
         const weekRangeStr = `${getLocalDateStr(currSun)} ~ ${getLocalDateStr(currSat)}`;
         
+        // [변경점 1] 완료된 일과 미완료된 일을 분리하여 수집
         let completedTasks = [];
+        let pendingTasks = [];
+        
         if (type === 'daily' && appData.daily[selectedDate]) {
             completedTasks = appData.daily[selectedDate].filter(t => t.done);
+            pendingTasks = appData.daily[selectedDate].filter(t => !t.done && !t.isMessage);
         }
 
         let contextInfo = "";
+        
+        // [변경점 2] 완료된 일정 Context (제외 대상)
         if (completedTasks.length > 0) {
             const doneList = completedTasks.map(t => `- ${t.text} (완료됨)`).join('\n');
-            contextInfo += `\n[현재까지 완료한 일정 (이 시간대는 제외하고 계획해)]\n${doneList}\n`;
+            contextInfo += `\n[이미 완료한 일정 (이 일정들은 절대 다시 생성하지 마. 이미 끝났어.)]\n${doneList}\n`;
+        }
+        
+        // [변경점 3] 아직 안 한 일정 Context (기반 대상)
+        if (pendingTasks.length > 0) {
+            const pendingList = pendingTasks.map(t => `- ${t.text}`).join('\n');
+            contextInfo += `\n[아직 하지 못한 남은 일정 (이 일정들은 남은 시간에 맞춰서 다시 배치해줘)]\n${pendingList}\n`;
+            contextInfo += `(주의: 만약 공부가 오전/오후로 나뉘어 있었다면, 완료된 오전 공부는 제외하고 남은 오후 공부만 계획에 넣어.)\n`;
         }
 
         if (appData.routines && appData.routines.length > 0) {
@@ -670,7 +692,7 @@
              prevDate.setDate(prevDate.getDate() - 1);
              const prevDateStr = getLocalDateStr(prevDate);
              if (appData.dailySummaries[prevDateStr]) {
-                 contextInfo += `\n[참고: 어제의 회고 및 내일 계획 반영]\n${appData.dailySummaries[prevDateStr]}\n`;
+                 contextInfo += `\n[참고: 어제의 회고]\n${appData.dailySummaries[prevDateStr]}\n`;
              }
              
              const wkKey = getWeekKey(new Date(selectedDate));
@@ -691,29 +713,29 @@
              const isTargetToday = selectedDate === todayStr;
              
              const timeConstraint = isTargetToday 
-                ? `2. [중요] 현재 시각이 ${currentTimeStr}입니다. 반드시 현재 시각 이후의 일정만 계획하세요. 완료된 일정은 다시 적지 마세요.` 
+                ? `2. [중요] 현재 시각이 ${currentTimeStr}입니다. **현재 시각 이후의 일정만 계획하세요.**` 
                 : `2. 하루 전체 일정을 계획할 것.`;
              
              sysPrompt = `역할: 플래너 (MBTI T). 날짜: ${selectedDate}. 요청: "${promptText}".
              ${contextInfo}
              [규칙] 
-             1. 인사말 금지. **제목이나 날짜 헤더(예: '2025년... 플래닝') 절대 출력 금지.** 바로 일정부터 출력.
+             1. 인사말 금지. 헤더(제목, 날짜 등) 절대 금지. 바로 일정 목록만 출력.
              ${timeConstraint} 
-             3. 형식: 'HH:MM~HH:MM 할일 | 꿀팁(한 줄)'. 
-             **중요: 할 일 뒤에 반드시 파이프(|)를 넣고, 그 일정에 도움이 되는 구체적인 팁이나 제안을 한 줄 적어줘.**
-             (예: 14:00~15:00 독서 | 인상 깊은 구절은 바로 메모해두면 좋아요)
-             4. 플래너 한마디(전체 조언)는 **맨 마지막 줄에** '[MSG]' 태그를 붙이고 작성해.
-             5. 마크다운 금지.`;
+             3. [아직 하지 못한 남은 일정]이 있다면 반드시 포함해서 시간을 배정해. (단, 이미 완료된 일정은 절대 다시 적지 마.)
+             4. 형식: 'HH:MM~HH:MM 할일 | 꿀팁(한 줄)'
+             **중요: 할 일 뒤에 반드시 파이프(|)를 넣고, 꿀팁을 적어줘.**
+             5. 플래너 한마디는 맨 마지막 줄에 '[MSG]' 태그 붙이고 작성.
+             6. 마크다운 금지.`;
         } else {
              const wk = getWeekKey(currentWeekBaseDate);
              appData.weeklyPrompts[wk] = promptText;
 
              sysPrompt = `역할: 주간 플래너. 기간: ${weekRangeStr}. 요청: "${promptText}".
              [규칙]
-             1. 일주일 치 균형 잡힌 계획 수립. 인사말 및 제목 생략.
-             2. 형식: 'YYYY-MM-DD: 할일 | 꿀팁(한 줄)' (파이프(|)로 팁 구분 필수)
+             1. 일주일 치 균형 잡힌 계획 수립. 인사말/제목 생략.
+             2. 형식: 'YYYY-MM-DD: 할일 | 꿀팁(한 줄)'
              3. 위 기간(${weekRangeStr}) 내의 날짜로만 생성.
-             4. 전체 주간 조언은 맨 마지막에 '[MSG]' 태그를 붙이고 작성.`;
+             4. 전체 주간 조언은 맨 마지막에 '[MSG]' 태그 붙이고 작성.`;
         }
             
         await callGemini(sysPrompt, (text) => {
@@ -725,7 +747,6 @@
                 let trimLine = line.trim();
                 if(!trimLine) return;
 
-                // [추가됨] 불필요한 헤더/제목 라인 필터링
                 if (trimLine.includes('플래닝') || trimLine.includes('현재시각') || trimLine.includes('Timeline')) return;
 
                 if (trimLine.includes('[MSG]')) {
@@ -738,7 +759,6 @@
                     return;
                 }
 
-                // 조언 분리 (| 문자 기준)
                 let adviceText = "";
                 let mainText = trimLine;
 
@@ -761,13 +781,15 @@
                     newTasks.push({ text: mainText, done: false, isMessage: true });
                 }
             });
-
+            
             if (type === 'daily') {
+                // [중요] 기존 완료된 작업 + 새로 생성된 작업 합치기
                 appData.daily[selectedDate] = [...completedTasks, ...newTasks];
+                // 정렬 수행
                 appData.daily[selectedDate].sort((a,b) => getTaskTimeVal(a) - getTaskTimeVal(b));
             } else {
                 const wk = getWeekKey(currentWeekBaseDate);
-                appData.weekly[wk] = { tasks: newTasks }; // 덮어쓰기
+                appData.weekly[wk] = { tasks: newTasks }; 
             }
             
             document.getElementById('taskPrompt').value = '';
@@ -1975,6 +1997,7 @@ ${dateContext}
 </script>
 </body>
 </html>
+
 
 
 
