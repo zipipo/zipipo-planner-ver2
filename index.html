@@ -632,7 +632,8 @@
     }
 
     // 6. LOGIC
-  async function generateSchedule(type) {
+ // [수정됨] generateSchedule 함수: AI가 불필요한 제목/헤더를 출력하는 문제 해결
+    async function generateSchedule(type) {
         const key = localStorage.getItem(STORAGE_KEY_API);
         if(!key) return alert('API Key가 필요해요!');
         const promptText = document.getElementById('taskPrompt').value;
@@ -664,13 +665,23 @@
             contextInfo += `\n[사용자의 고정 루틴]\n${routineList} (이 루틴들도 포함해서 적절한 시간에 배치해줘)\n`;
         }
         
-        // 이전/다음 컨텍스트 (생략 가능하나 유지)
         if (type === 'daily') {
              const prevDate = new Date(selectedDate);
              prevDate.setDate(prevDate.getDate() - 1);
              const prevDateStr = getLocalDateStr(prevDate);
              if (appData.dailySummaries[prevDateStr]) {
                  contextInfo += `\n[참고: 어제의 회고 및 내일 계획 반영]\n${appData.dailySummaries[prevDateStr]}\n`;
+             }
+             
+             const wkKey = getWeekKey(new Date(selectedDate));
+             if (appData.weekly[wkKey] && appData.weekly[wkKey].tasks) {
+                 const todaysWeeklyTasks = appData.weekly[wkKey].tasks.filter(t => 
+                     !t.isMessage && (t.specificDate === selectedDate || !t.specificDate)
+                 );
+                 if (todaysWeeklyTasks.length > 0) {
+                     const taskList = todaysWeeklyTasks.map(t => `- ${t.text}`).join('\n');
+                     contextInfo += `\n[참고: 이번 주 할 일 중 오늘(${selectedDate}) 챙길 항목]\n${taskList}\n`;
+                 }
              }
         }
 
@@ -680,13 +691,13 @@
              const isTargetToday = selectedDate === todayStr;
              
              const timeConstraint = isTargetToday 
-                ? `2. [중요] 현재 시각이 ${currentTimeStr}입니다. 반드시 현재 시각 이후의 일정만 계획하세요.` 
+                ? `2. [중요] 현재 시각이 ${currentTimeStr}입니다. 반드시 현재 시각 이후의 일정만 계획하세요. 완료된 일정은 다시 적지 마세요.` 
                 : `2. 하루 전체 일정을 계획할 것.`;
              
              sysPrompt = `역할: 플래너 (MBTI T). 날짜: ${selectedDate}. 요청: "${promptText}".
              ${contextInfo}
              [규칙] 
-             1. 인사말 금지. 바로 일정부터 출력.
+             1. 인사말 금지. **제목이나 날짜 헤더(예: '2025년... 플래닝') 절대 출력 금지.** 바로 일정부터 출력.
              ${timeConstraint} 
              3. 형식: 'HH:MM~HH:MM 할일 | 꿀팁(한 줄)'. 
              **중요: 할 일 뒤에 반드시 파이프(|)를 넣고, 그 일정에 도움이 되는 구체적인 팁이나 제안을 한 줄 적어줘.**
@@ -699,7 +710,7 @@
 
              sysPrompt = `역할: 주간 플래너. 기간: ${weekRangeStr}. 요청: "${promptText}".
              [규칙]
-             1. 일주일 치 균형 잡힌 계획 수립. 인사말 생략.
+             1. 일주일 치 균형 잡힌 계획 수립. 인사말 및 제목 생략.
              2. 형식: 'YYYY-MM-DD: 할일 | 꿀팁(한 줄)' (파이프(|)로 팁 구분 필수)
              3. 위 기간(${weekRangeStr}) 내의 날짜로만 생성.
              4. 전체 주간 조언은 맨 마지막에 '[MSG]' 태그를 붙이고 작성.`;
@@ -713,6 +724,9 @@
             lines.forEach(line => {
                 let trimLine = line.trim();
                 if(!trimLine) return;
+
+                // [추가됨] 불필요한 헤더/제목 라인 필터링
+                if (trimLine.includes('플래닝') || trimLine.includes('현재시각') || trimLine.includes('Timeline')) return;
 
                 if (trimLine.includes('[MSG]')) {
                     isMsgSection = true;
@@ -762,85 +776,6 @@
             renderApp();
         });
     }
-    async function confirmProjectPlan() {
-        const pid = activeProjectId;
-        const prompt = document.getElementById('projectPlanPrompt').value;
-        if(!prompt) return;
-        closeModal('projectPlanModal');
-        showLoading("프로젝트 계획 중");
-        
-        await callGemini(prompt, (text) => {
-            const lines = parseTasks(text);
-            const newTasks = [];
-            let currentDateContext = null;
-
-            lines.forEach(line => {
-                const clean = line.replace(/\*\*/g, '').replace(/\|/g, '').trim();
-                if (clean.length === 0) return;
-
-                if (/^#{1,3}/.test(clean) || /^(Phase|Step|Stage)\s+\d+/.test(clean)) {
-                    newTasks.push({ text: clean.replace(/#/g, '').trim(), done: false, type: 'header', date: currentDateContext });
-                    return;
-                }
-
-                const indentMatch = line.match(/^(\s+)/);
-                const depth = indentMatch ? Math.floor(indentMatch[1].length / 2) : 0; 
-
-                const dateHeaderMatch = clean.match(/\[.*(\d{4}-\d{2}-\d{2}).*\]/);
-                if (dateHeaderMatch) {
-                    currentDateContext = dateHeaderMatch[1];
-                    return; 
-                }
-                
-                if (clean.toUpperCase().includes('[TIP]') || clean.toUpperCase().includes('기타 팁')) {
-                    const tipText = clean.replace(/\[.*?\]/g, '').replace('기타 팁', '').replace(':', '').trim();
-                    if(tipText) newTasks.push({ text: tipText, done: false, isTip: true });
-                    return;
-                }
-
-                const datePrefixMatch = clean.match(/^(\d{4}-\d{2}-\d{2})[:\s]+(.*)/);
-                let taskText = clean;
-                let taskDate = currentDateContext;
-
-                if (datePrefixMatch) {
-                     taskDate = datePrefixMatch[1];
-                     taskText = datePrefixMatch[2];
-                }
-                
-                taskText = taskText.replace(/^[-*•]\s*/, '');
-                
-                if(!taskDate && taskText.length > 50 && !taskText.includes('-')) {
-                    return;
-                }
-
-                newTasks.push({ text: taskText, done: false, date: taskDate, depth: depth });
-            });
-
-            const p = appData.projects.find(x => x.id === pid);
-            
-            // [수정됨] 완료된 항목은 유지하고 나머지만 교체하는 로직
-            const completedTasks = p.tasks ? p.tasks.filter(t => t.done) : [];
-            
-            if (completedTasks.length > 0) {
-                // 완료된 항목이 있으면, 그것들은 유지하고 뒤에 새 일정을 붙임
-                p.tasks = [...completedTasks, ...newTasks];
-            } else {
-                // 완료된 항목이 없으면 기존 로직대로 덮어씌울지 물어봄
-                if(p.tasks.length > 0 && confirm('기존 일정을 덮어씌울까요? (취소 시 뒤에 추가됩니다)')) {
-                    p.tasks = newTasks;
-                } else if(p.tasks.length === 0) {
-                    p.tasks = newTasks;
-                } else {
-                    p.tasks.push(...newTasks);
-                }
-            }
-
-            hideLoading();
-            saveData();
-            renderApp();
-        });
-    }
-
 	// [수정됨] Weekly 일정을 가져와서 입력창에 넣어주는 함수
     window.linkWeeklyTasks = function() {
         console.log("Weekly 연동 시작..."); // 디버깅용 로그
@@ -2040,6 +1975,7 @@ ${dateContext}
 </script>
 </body>
 </html>
+
 
 
 
