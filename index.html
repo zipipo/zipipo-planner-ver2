@@ -380,7 +380,7 @@
     <div class="flex justify-end mb-2 gap-2">
         <button onclick="document.getElementById('styleOptions').classList.toggle('hidden')" 
                 class="text-[11px] bg-white text-[#8D6E63] px-3 py-1.5 rounded-full border border-[#D7CCC8] hover:bg-[#EFEBE9] transition flex items-center gap-1 font-bold">
-            🎨 스타일 선택
+            @ 스타일 선택
         </button>
         <button onclick="linkWeeklyTasks()" 
                 class="text-[11px] bg-[#F1F8E9] text-[#556B2F] px-3 py-1.5 rounded-full border border-[#DCEDC8] hover:bg-[#AED581] hover:text-white transition flex items-center gap-1 font-bold">
@@ -389,22 +389,22 @@
     </div>
     
     <div id="styleOptions" class="hidden mb-3 p-3 bg-[#FAFAFA] rounded-xl border border-[#EFEBE9]">
-        <div class="text-xs text-[#A1887F] font-bold mb-2 ml-1">@ 일정 스타일 선택</div>
+        <div class="text-xs text-[#A1887F] font-bold mb-2 ml-1"> 일정 스타일 선택</div>
         <div class="flex flex-wrap gap-2" id="preferenceOptions">
             <label class="cursor-pointer flex items-center gap-1 bg-white border border-[#EFEBE9] px-2 py-1.5 rounded-lg text-xs text-[#5D4037] hover:bg-[#FDFCF5]">
-                <input type="checkbox" value="여유롭게 (휴식 많음)" class="accent-[#8D6E63]"> 🍃 여유롭게
+                <input type="checkbox" value="여유롭게 (휴식 많음)" class="accent-[#8D6E63]"> 여유롭게
             </label>
             <label class="cursor-pointer flex items-center gap-1 bg-white border border-[#EFEBE9] px-2 py-1.5 rounded-lg text-xs text-[#5D4037] hover:bg-[#FDFCF5]">
-                <input type="checkbox" value="타이트하게 (몰입)" class="accent-[#8D6E63]"> 🔥 타이트하게
+                <input type="checkbox" value="타이트하게 (몰입)" class="accent-[#8D6E63]"> 타이트하게
             </label>
             <label class="cursor-pointer flex items-center gap-1 bg-white border border-[#EFEBE9] px-2 py-1.5 rounded-lg text-xs text-[#5D4037] hover:bg-[#FDFCF5]">
-                <input type="checkbox" value="밤 늦게까지 가능" class="accent-[#8D6E63]"> 🌙 올빼미
+                <input type="checkbox" value="밤 늦게까지 가능" class="accent-[#8D6E63]"> 올빼미
             </label>
             <label class="cursor-pointer flex items-center gap-1 bg-white border border-[#EFEBE9] px-2 py-1.5 rounded-lg text-xs text-[#5D4037] hover:bg-[#FDFCF5]">
-                <input type="checkbox" value="짧게 여러 번 (전환)" class="accent-[#8D6E63]"> 🔄 짧은 호흡
+                <input type="checkbox" value="짧게 여러 번 (전환)" class="accent-[#8D6E63]"> 짧은 호흡
             </label>
             <label class="cursor-pointer flex items-center gap-1 bg-white border border-[#EFEBE9] px-2 py-1.5 rounded-lg text-xs text-[#5D4037] hover:bg-[#FDFCF5]">
-                <input type="checkbox" value="진득하게 (한 우물)" class="accent-[#8D6E63]"> 🎯 진득하게
+                <input type="checkbox" value="진득하게 (한 우물)" class="accent-[#8D6E63]"> 진득하게
             </label>
         </div>
     </div>
@@ -2076,6 +2076,7 @@ function createTaskEl(task, type, key, index, numberPrefix = null) {
 </script>
 </body>
 </html>
+
 
 
 
