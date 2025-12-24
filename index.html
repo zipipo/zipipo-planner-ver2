@@ -283,36 +283,35 @@
         .proj-memo-area:focus {
             border-color: #8D6E63;
         }
-		/* 1. 팁 박스: 부드럽게 접히는 애니메이션 설정 */
-        .tip-box {
-            max-height: 200px; /* 팁 박스의 최대 높이 (내용보다 넉넉하게) */
-            opacity: 1;
-            overflow: hidden; 
-            transition: all 0.5s ease; /* 0.5초 동안 부드럽게 변함 */
-        }
+		/* 1. 팁 박스: 접히는 애니메이션 유지 */
+.tip-box {
+    max-height: 200px;
+    opacity: 1;
+    overflow: hidden; 
+    transition: all 0.5s ease;
+}
 
-        /* 2. 완료된 카드 스타일 (배경 회색, 그림자 제거) */
-        .todo-item.completed {
-            background-color: #f5f5f5 !important; /* 회색으로 변경 (우선순위 높임) */
-            box-shadow: none !important;
-            border-color: #e0e0e0;
-            opacity: 0.8;
-        }
+/* 2. 완료된 카드 스타일 [수정됨] */
+/* 회색 배경(bg-gray) 제거, 그림자 제거(flat)도 취향에 따라 제거하거나 유지 */
+.todo-item.completed {
+    /* background-color: #f5f5f5 !important;  <-- 이 줄을 삭제하거나 주석 처리하세요! */
+    /* opacity: 0.8; <-- 이것도 삭제하세요. */
+    /* 그냥 아무것도 안 적어도 됩니다. */
+}
 
-        /* 3. 완료된 카드 내 텍스트 (취소선) */
-        .todo-item.completed .todo-text {
-            text-decoration: line-through;
-            color: #999;
-        }
+/* 3. 텍스트 취소선은 유지 */
+.todo-item.completed .todo-text {
+    text-decoration: line-through;
+    color: #BCAAA4; /* 연한 갈색 톤으로 변경 */
+}
 
-        /* 4. 완료된 카드 내 팁 박스 (숨김 처리) */
-        .todo-item.completed .tip-box {
-            max-height: 0;
-            opacity: 0;
-            margin-top: 0;
-            padding: 0;
-        }
-        /* ▲▲▲ 여기까지 ▲▲▲ */
+/* 4. 완료 시 팁 박스 숨김 유지 */
+.todo-item.completed .tip-box {
+    max-height: 0;
+    opacity: 0;
+    margin-top: 0;
+    padding: 0;
+}
     </style>
 </head>
 <body class="max-w-md mx-auto min-h-screen flex flex-col pb-28 relative bg-[#FDFCF5]">
@@ -371,46 +370,52 @@
     </div>
 
    <div id="generatorModal" class="fixed inset-0 bg-[#4E342E]/20 z-50 hidden flex items-end sm:items-center justify-center backdrop-blur-[1px]">
-        <div class="bg-[#FDFCF5] w-full max-w-md p-6 rounded-t-3xl sm:rounded-3xl shadow-none border-2 border-[#EFEBE9] m-0 sm:m-4 wood-frame modal-content">
-            <div class="flex justify-between items-center mb-4">
-                <h3 class="font-hand text-2xl text-[#8D6E63]">일정 짓기</h3>
-                <button onclick="closeModal('generatorModal')" class="text-[#BCAAA4] hover:text-[#8D6E63] text-xl">✕</button>
-            </div>
-            
-            <div class="flex justify-end mb-2">
-                <button onclick="linkWeeklyTasks()" class="text-[11px] bg-[#F1F8E9] text-[#556B2F] px-3 py-1.5 rounded-full border border-[#DCEDC8] hover:bg-[#AED581] hover:text-white transition flex items-center gap-1 font-bold">
-                    @ Weekly랑 엮기
-                </button>
-            </div>
+<div class="bg-[#FDFCF5] w-full max-w-md p-6 rounded-t-3xl sm:rounded-3xl shadow-none border-2 border-[#EFEBE9] m-0 sm:m-4 wood-frame modal-content">
+    
+    <div class="flex justify-between items-center mb-4">
+        <h3 class="font-hand text-2xl text-[#8D6E63]">일정 짓기</h3>
+        <button onclick="closeModal('generatorModal')" class="text-[#BCAAA4] hover:text-[#8D6E63] text-xl">✕</button>
+    </div>
 
-            <textarea id="taskPrompt" rows="3" class="w-full p-4 border-2 border-[#EFEBE9] rounded-xl mb-3 resize-none focus:outline-none focus:border-[#D7CCC8] bg-white text-sm placeholder-gray-300" placeholder="예: 공부 2시간 하고 산책하기"></textarea>
-            
-            <div class="mb-4">
-                <div class="text-xs text-[#A1887F] font-bold mb-2 ml-1">@ 일정 스타일 선택</div>
-                <div class="flex flex-wrap gap-2" id="preferenceOptions">
-                    <label class="cursor-pointer flex items-center gap-1 bg-white border border-[#EFEBE9] px-2 py-1.5 rounded-lg text-xs text-[#5D4037] hover:bg-[#FDFCF5]">
-                        <input type="checkbox" value="여유롭게 (휴식 많음)" class="accent-[#8D6E63]"> @ 여유롭게
-                    </label>
-                    <label class="cursor-pointer flex items-center gap-1 bg-white border border-[#EFEBE9] px-2 py-1.5 rounded-lg text-xs text-[#5D4037] hover:bg-[#FDFCF5]">
-                        <input type="checkbox" value="타이트하게 (몰입)" class="accent-[#8D6E63]"> @ 타이트하게
-                    </label>
-                    <label class="cursor-pointer flex items-center gap-1 bg-white border border-[#EFEBE9] px-2 py-1.5 rounded-lg text-xs text-[#5D4037] hover:bg-[#FDFCF5]">
-                        <input type="checkbox" value="밤 늦게까지 가능" class="accent-[#8D6E63]"> @ 올빼미
-                    </label>
-                    <label class="cursor-pointer flex items-center gap-1 bg-white border border-[#EFEBE9] px-2 py-1.5 rounded-lg text-xs text-[#5D4037] hover:bg-[#FDFCF5]">
-                        <input type="checkbox" value="짧게 여러 번 (전환)" class="accent-[#8D6E63]"> @ 짧은 호흡
-                    </label>
-                    <label class="cursor-pointer flex items-center gap-1 bg-white border border-[#EFEBE9] px-2 py-1.5 rounded-lg text-xs text-[#5D4037] hover:bg-[#FDFCF5]">
-                        <input type="checkbox" value="진득하게 (한 우물)" class="accent-[#8D6E63]"> 🎯 진득하게
-                    </label>
-                </div>
-            </div>
-
-            <div class="flex gap-3 mb-3">
-                <button onclick="generateSchedule('daily')" class="flex-1 py-3 bg-[#FFAB91] text-white font-bold rounded-xl hover:bg-[#FF8A65] transition shadow-sm text-sm">Daily</button>
-                <button onclick="generateSchedule('weekly')" class="flex-1 py-3 bg-[#A5D6A7] text-white font-bold rounded-xl hover:bg-[#81C784] transition shadow-sm text-sm">Weekly</button>
-            </div>
+    <div class="flex justify-end mb-2 gap-2">
+        <button onclick="document.getElementById('styleOptions').classList.toggle('hidden')" 
+                class="text-[11px] bg-white text-[#8D6E63] px-3 py-1.5 rounded-full border border-[#D7CCC8] hover:bg-[#EFEBE9] transition flex items-center gap-1 font-bold">
+            🎨 스타일 선택
+        </button>
+        <button onclick="linkWeeklyTasks()" 
+                class="text-[11px] bg-[#F1F8E9] text-[#556B2F] px-3 py-1.5 rounded-full border border-[#DCEDC8] hover:bg-[#AED581] hover:text-white transition flex items-center gap-1 font-bold">
+            @ Weekly랑 엮기
+        </button>
+    </div>
+    
+    <div id="styleOptions" class="hidden mb-3 p-3 bg-[#FAFAFA] rounded-xl border border-[#EFEBE9]">
+        <div class="text-xs text-[#A1887F] font-bold mb-2 ml-1">@ 일정 스타일 선택</div>
+        <div class="flex flex-wrap gap-2" id="preferenceOptions">
+            <label class="cursor-pointer flex items-center gap-1 bg-white border border-[#EFEBE9] px-2 py-1.5 rounded-lg text-xs text-[#5D4037] hover:bg-[#FDFCF5]">
+                <input type="checkbox" value="여유롭게 (휴식 많음)" class="accent-[#8D6E63]"> 🍃 여유롭게
+            </label>
+            <label class="cursor-pointer flex items-center gap-1 bg-white border border-[#EFEBE9] px-2 py-1.5 rounded-lg text-xs text-[#5D4037] hover:bg-[#FDFCF5]">
+                <input type="checkbox" value="타이트하게 (몰입)" class="accent-[#8D6E63]"> 🔥 타이트하게
+            </label>
+            <label class="cursor-pointer flex items-center gap-1 bg-white border border-[#EFEBE9] px-2 py-1.5 rounded-lg text-xs text-[#5D4037] hover:bg-[#FDFCF5]">
+                <input type="checkbox" value="밤 늦게까지 가능" class="accent-[#8D6E63]"> 🌙 올빼미
+            </label>
+            <label class="cursor-pointer flex items-center gap-1 bg-white border border-[#EFEBE9] px-2 py-1.5 rounded-lg text-xs text-[#5D4037] hover:bg-[#FDFCF5]">
+                <input type="checkbox" value="짧게 여러 번 (전환)" class="accent-[#8D6E63]"> 🔄 짧은 호흡
+            </label>
+            <label class="cursor-pointer flex items-center gap-1 bg-white border border-[#EFEBE9] px-2 py-1.5 rounded-lg text-xs text-[#5D4037] hover:bg-[#FDFCF5]">
+                <input type="checkbox" value="진득하게 (한 우물)" class="accent-[#8D6E63]"> 🎯 진득하게
+            </label>
         </div>
+    </div>
+
+    <textarea id="taskPrompt" rows="3" class="w-full p-4 border-2 border-[#EFEBE9] rounded-xl mb-3 resize-none focus:outline-none focus:border-[#D7CCC8] bg-white text-sm placeholder-gray-300" placeholder="예: 공부 2시간 하고 산책하기"></textarea>
+    
+    <div class="flex gap-3 mb-3">
+        <button onclick="generateSchedule('daily')" class="flex-1 py-3 bg-[#FFAB91] text-white font-bold rounded-xl hover:bg-[#FF8A65] transition shadow-sm text-sm">Daily</button>
+        <button onclick="generateSchedule('weekly')" class="flex-1 py-3 bg-[#A5D6A7] text-white font-bold rounded-xl hover:bg-[#81C784] transition shadow-sm text-sm">Weekly</button>
+    </div>
+</div>
     </div>
 
     <div id="routineModal" class="fixed inset-0 bg-[#4E342E]/20 z-50 hidden flex items-center justify-center backdrop-blur-[1px]">
@@ -617,24 +622,31 @@
         if(loadingInterval) clearInterval(loadingInterval);
     }
 
-  // [수정됨] 3. HELPER FUNCTIONS 내 getTaskTimeVal 교체
-    function getTaskTimeVal(t) {
-        // 1. 수동 입력 시간 우선
-        if(t.manualTimeRange) {
-            const m = t.manualTimeRange.match(/(\d{1,2}):(\d{2})/);
-            if(m) return parseInt(m[1])*60 + parseInt(m[2]);
-        }
-        
-        // 2. 텍스트 내 시간 파싱 (엄격하게 '시:분' 형태만 허용)
-        // Part 4 같은 숫자를 시간으로 인식하지 않게 콜론(:) 필수 체크
-        if(t.text) {
-             const m = t.text.match(/(?:^|[\s\(\[])(\d{1,2}):(\d{2})/);
-             if(m) return parseInt(m[1])*60 + parseInt(m[2]);
-        }
-        
-        // 3. 시간이 없으면 맨 뒤로 (99999)
-        return 999999; 
+// [수정] 3. HELPER FUNCTIONS 내 getTaskTimeVal 교체
+function getTaskTimeVal(t) {
+    // 1. 수동 입력 시간 우선
+    let timeStr = t.manualTimeRange;
+    
+    // 2. 텍스트 내 시간 파싱
+    if (!timeStr && t.text) {
+        const m = t.text.match(/(?:^|[\s\(\[])(\d{1,2}):(\d{2})/);
+        if(m) timeStr = `${m[1]}:${m[2]}`;
     }
+
+    if(timeStr) {
+        const m = timeStr.match(/(\d{1,2}):(\d{2})/);
+        if(m) {
+            let h = parseInt(m[1]);
+            const min = parseInt(m[2]);
+            // ★ 핵심 수정: 새벽 0시~4시 사이는 24를 더해서 맨 뒤로 보냄 (예: 01시는 25시로 취급)
+            if (h < 5) h += 24; 
+            return h * 60 + min;
+        }
+    }
+    
+    // 3. 시간이 없으면 맨 뒤로
+    return 999999; 
+}
     // 4. DATA MANAGEMENT
     function loadData() {
         const json = localStorage.getItem(STORAGE_KEY_DATA);
@@ -1776,10 +1788,10 @@ ${dateContext}
         container.appendChild(wrapper);
     }
 	
-// [수정된 코드] createTaskEl 함수: 애니메이션 및 스타일 클래스 적용
+// [수정] createTaskEl 함수: 회색 박스 제거, 버튼 숨김 로직 적용
 function createTaskEl(task, type, key, index, numberPrefix = null) {
     const li = document.createElement('li');
-    // ★ 1. 'todo-item' 클래스 추가 + 완료된 상태면 'completed' 클래스 즉시 추가
+    // completed 클래스는 팁 박스 접기용으로만 유지 (CSS 수정 필요)
     li.className = `timeline-container flex flex-col mb-4 todo-item ${task.done ? 'completed' : ''}`;
     
     const isProject = type === 'project';
@@ -1808,7 +1820,7 @@ function createTaskEl(task, type, key, index, numberPrefix = null) {
         else displayText = `${numberPrefix}. ${displayText}`;
     }
     
-    // --- 시간 파싱 및 텍스트 정리 ---
+    // --- 시간 파싱 ---
     if (type === 'daily') {
         const timeRangeMatch = displayText.match(/(\d{1,2}:\d{2})\s*[~-]\s*(\d{1,2}:\d{2})/);
         const simpleTimeMatch = displayText.match(/^(\d{1,2}:\d{2})/);
@@ -1822,18 +1834,18 @@ function createTaskEl(task, type, key, index, numberPrefix = null) {
             displayTimeRaw = simpleTimeMatch[1];
             displayText = displayText.replace(simpleTimeMatch[0], '').trim();
         }
-
         displayText = displayText.replace(/^[:\-\s]+/, '');
+        
         if (displayTimeRaw && displayTimeRaw.includes('~')) {
-                const parts = displayTimeRaw.split('~');
-                const startParts = parts[0].trim().split(':');
-                const endParts = parts[1].trim().split(':');
-                if(startParts.length===2 && endParts.length===2) {
-                    const sMin = parseInt(startParts[0])*60 + parseInt(startParts[1]);
-                    const eMin = parseInt(endParts[0])*60 + parseInt(endParts[1]);
-                    const diff = eMin - sMin;
-                    if (diff > 0) durationText = `(${diff}분)`;
-                }
+             const parts = displayTimeRaw.split('~');
+             const startParts = parts[0].trim().split(':');
+             const endParts = parts[1].trim().split(':');
+             if(startParts.length===2 && endParts.length===2) {
+                 const sMin = parseInt(startParts[0])*60 + parseInt(startParts[1]);
+                 const eMin = parseInt(endParts[0])*60 + parseInt(endParts[1]);
+                 const diff = eMin - sMin;
+                 if (diff > 0) durationText = `(${diff}분)`;
+             }
         }
     }
 
@@ -1850,33 +1862,30 @@ function createTaskEl(task, type, key, index, numberPrefix = null) {
     const leftCol = document.createElement('div');
     leftCol.className = 'flex-1';
     
-    // 괄호 처리 로직
+    // 괄호 텍스트 추출
     let subText = "";
     const parenMatch = displayText.match(/\(([^)]+)\)/);
     if (parenMatch) {
-            const contentInside = parenMatch[1];
-            if(!contentInside.includes('분') && !contentInside.includes('시간')) {
+        const contentInside = parenMatch[1];
+        if(!contentInside.includes('분') && !contentInside.includes('시간')) {
             subText = contentInside;
             displayText = displayText.replace(parenMatch[0], '').trim();
-            } else {
+        } else {
             displayText = displayText.replace(parenMatch[0], '').trim();
-            }
+        }
     }
 
     const title = document.createElement('div');
-    // ★ 2. 텍스트에 'todo-text' 클래스 추가
     title.className = 'text-sm cursor-pointer hover:text-[#8D6E63] transition leading-relaxed todo-text';
     title.innerHTML = displayText;
-    // (CSS에서 처리하므로 여기서 직접 line-through 안 해도 되지만, 안전장치로 유지)
-    // if(task.done) title.classList.add('line-through', 'text-opacity-50', 'text-[#A1887F]');
     title.onclick = () => window.openEditTimeModal(type, key, index, task);
     leftCol.appendChild(title);
 
     if (subText) {
-            const subDiv = document.createElement('div');
-            subDiv.className = 'task-sub-text';
-            subDiv.innerText = subText;
-            leftCol.appendChild(subDiv);
+        const subDiv = document.createElement('div');
+        subDiv.className = 'task-sub-text';
+        subDiv.innerText = subText;
+        leftCol.appendChild(subDiv);
     }
     
     actionGroup.appendChild(leftCol);
@@ -1889,15 +1898,16 @@ function createTaskEl(task, type, key, index, numberPrefix = null) {
         rightCol.appendChild(timeSpan);
     }
 
-    if (!task.feedback) { 
-            const fbBtn = document.createElement('button');
-            fbBtn.className = 'text-[#BCAAA4] hover:text-[#8D6E63] mx-1';
-            fbBtn.innerHTML = ICONS.speech;
-            fbBtn.onclick = (e) => {
-                e.stopPropagation();
-                window.openInputModal('한줄 피드백', (val) => window.updateTask(type, key, index, {feedback: val}));
-            };
-            rightCol.appendChild(fbBtn);
+    // 피드백 버튼 (완료되면 숨김)
+    if (!task.feedback && !task.done) { 
+        const fbBtn = document.createElement('button');
+        fbBtn.className = 'text-[#BCAAA4] hover:text-[#8D6E63] mx-1';
+        fbBtn.innerHTML = ICONS.speech;
+        fbBtn.onclick = (e) => {
+            e.stopPropagation();
+            window.openInputModal('한줄 피드백', (val) => window.updateTask(type, key, index, {feedback: val}));
+        };
+        rightCol.appendChild(fbBtn);
     }
 
     const chk = document.createElement('input');
@@ -1905,23 +1915,14 @@ function createTaskEl(task, type, key, index, numberPrefix = null) {
     chk.className = 'custom-checkbox';
     chk.checked = task.done;
     
-    // ★ 3. 체크박스 클릭 이벤트 수정 (애니메이션 -> 데이터 저장 순서)
+    // ★ 클릭 로직 수정: 이동 기능 제거, 상태만 변경
     chk.onclick = (e) => { 
         e.stopPropagation();
+        // UI 즉시 반영을 위해 클래스 토글
+        if(chk.checked) li.classList.add('completed');
+        else li.classList.remove('completed');
         
-        if (chk.checked) {
-            // (1) 시각적 변화 먼저 실행 (회색 변하고 접히기)
-            li.classList.add('completed');
-            
-            // (2) 0.5초 뒤에 데이터 저장 (이때 목록이 다시 그려지며 아래로 이동됨)
-            setTimeout(() => {
-                window.updateTask(type, key, index, {done: true});
-            }, 500); 
-        } else {
-            // 체크 해제는 즉시 반영
-            li.classList.remove('completed');
-            window.updateTask(type, key, index, {done: false});
-        }
+        window.updateTask(type, key, index, {done: chk.checked}); 
     };
     rightCol.appendChild(chk);
 
@@ -1930,7 +1931,6 @@ function createTaskEl(task, type, key, index, numberPrefix = null) {
 
     if (task.advice) {
         const adviceDiv = document.createElement('div');
-        // ★ 4. 팁 박스에 'tip-box' 클래스 추가
         adviceDiv.className = 'tip-box text-[11px] text-[#8D6E63] mt-1.5 opacity-90 font-sans bg-[#EFEBE9]/50 px-2 py-1 rounded block w-full leading-snug';
         adviceDiv.innerHTML = `💡 ${task.advice}`;
         content.appendChild(adviceDiv);
@@ -1938,10 +1938,12 @@ function createTaskEl(task, type, key, index, numberPrefix = null) {
 
     li.appendChild(content);
 
+    // ★ 하단 버튼 영역 (Start/Stop)
     if(type === 'daily') {
         const timerRow = document.createElement('div');
-        timerRow.className = 'flex items-center gap-2 mt-1 pl-1';
+        timerRow.className = 'flex items-center gap-2 mt-1 pl-1 min-h-[24px]'; // 높이 확보
         
+        // 1. 실제 수행 시간 기록(타임스탬프)은 언제나 표시
         if (task.actualStartTime && task.actualEndTime) {
             const s = new Date(task.actualStartTime);
             const e = new Date(task.actualEndTime);
@@ -1952,18 +1954,21 @@ function createTaskEl(task, type, key, index, numberPrefix = null) {
             displaySpan.innerText = timeStr;
             timerRow.appendChild(displaySpan);
         } else {
-            if(!task.actualStartTime) {
-                const btn = document.createElement('button');
-                btn.className = 'font-hand text-sm text-[#A1887F] hover:text-[#FF8A65] border border-[#D7CCC8] px-2 py-0.5 rounded-full bg-white';
-                btn.textContent = 'start !';
-                btn.onclick = () => window.updateTask(type, key, index, {actualStartTime: new Date().toISOString()});
-                timerRow.appendChild(btn);
-            } else if (!task.actualEndTime) {
-                const btn = document.createElement('button');
-                btn.className = 'font-hand text-sm text-white bg-[#FFAB91] hover:bg-[#FF8A65] px-2 py-0.5 rounded-full';
-                btn.textContent = 'stop !';
-                btn.onclick = () => window.updateTask(type, key, index, {actualEndTime: new Date().toISOString()});
-                timerRow.appendChild(btn);
+            // 2. Start/Stop 버튼은 "완료되지 않았을 때만" 표시
+            if (!task.done) {
+                if(!task.actualStartTime) {
+                    const btn = document.createElement('button');
+                    btn.className = 'font-hand text-sm text-[#A1887F] hover:text-[#FF8A65] border border-[#D7CCC8] px-2 py-0.5 rounded-full bg-white';
+                    btn.textContent = 'start !';
+                    btn.onclick = () => window.updateTask(type, key, index, {actualStartTime: new Date().toISOString()});
+                    timerRow.appendChild(btn);
+                } else if (!task.actualEndTime) {
+                    const btn = document.createElement('button');
+                    btn.className = 'font-hand text-sm text-white bg-[#FFAB91] hover:bg-[#FF8A65] px-2 py-0.5 rounded-full';
+                    btn.textContent = 'stop !';
+                    btn.onclick = () => window.updateTask(type, key, index, {actualEndTime: new Date().toISOString()});
+                    timerRow.appendChild(btn);
+                }
             }
         }
 
@@ -1973,12 +1978,13 @@ function createTaskEl(task, type, key, index, numberPrefix = null) {
             fb.innerText = `"${task.feedback}"`;
             timerRow.appendChild(fb);
         }
+        
+        // 내용이 있을 때만 추가
         if(timerRow.hasChildNodes()) li.appendChild(timerRow);
     }
     
     return li;
 }
-
     // --- Init ---
     setInterval(() => {
         const now = getLocalDateStr(new Date());
@@ -2066,35 +2072,11 @@ function createTaskEl(task, type, key, index, numberPrefix = null) {
         saveData();
         renderRoutineList();
     }
-	function toggleTodo(checkbox) {
-            // 체크박스가 있는 줄(카드) 전체를 찾습니다.
-            // 주의: HTML에서 class="todo-item"인 요소를 찾아야 합니다.
-            const todoItem = checkbox.closest('.todo-item');
-            
-            // 할 일 목록 전체 컨테이너 (ID가 'todo-list'라고 가정)
-            const todoList = document.getElementById('todo-list'); 
-
-            if (checkbox.checked) {
-                // 1. 시각적 변화 (회색 변경, 팁 접기)
-                todoItem.classList.add('completed');
-
-                // 2. 0.5초 뒤에 맨 아래로 이동
-                setTimeout(() => {
-                    if (checkbox.checked) { // 여전히 체크된 상태라면 이동
-                        todoList.appendChild(todoItem); 
-                    }
-                }, 500); 
-
-            } else {
-                // 체크 해제 시 원상복구
-                todoItem.classList.remove('completed');
-            }
-        }
-        /* ▲▲▲ 여기까지 ▲▲▲ */
 
 </script>
 </body>
 </html>
+
 
 
 
