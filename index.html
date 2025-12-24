@@ -340,13 +340,21 @@
         </button>
     </div>
 
-    <div id="generatorModal" class="fixed inset-0 bg-[#4E342E]/20 z-50 hidden flex items-end sm:items-center justify-center backdrop-blur-[1px]">
+   <div id="generatorModal" class="fixed inset-0 bg-[#4E342E]/20 z-50 hidden flex items-end sm:items-center justify-center backdrop-blur-[1px]">
         <div class="bg-[#FDFCF5] w-full max-w-md p-6 rounded-t-3xl sm:rounded-3xl shadow-none border-2 border-[#EFEBE9] m-0 sm:m-4 wood-frame modal-content">
             <div class="flex justify-between items-center mb-4">
                 <h3 class="font-hand text-2xl text-[#8D6E63]">일정 짓기</h3>
                 <button onclick="closeModal('generatorModal')" class="text-[#BCAAA4] hover:text-[#8D6E63] text-xl">✕</button>
             </div>
+            
+            <div class="flex justify-end mb-2">
+                <button onclick="linkWeeklyTasks()" class="text-[11px] bg-[#F1F8E9] text-[#556B2F] px-3 py-1.5 rounded-full border border-[#DCEDC8] hover:bg-[#AED581] hover:text-white transition flex items-center gap-1 font-bold">
+                    🔗 Weekly랑 엮기
+                </button>
+            </div>
+
             <textarea id="taskPrompt" rows="3" class="w-full p-4 border-2 border-[#EFEBE9] rounded-xl mb-4 resize-none focus:outline-none focus:border-[#D7CCC8] bg-white text-sm placeholder-gray-300" placeholder="예: 공부 2시간 하고 산책하기"></textarea>
+            
             <div class="flex gap-3 mb-3">
                 <button onclick="generateSchedule('daily')" class="flex-1 py-3 bg-[#FFAB91] text-white font-bold rounded-xl hover:bg-[#FF8A65] transition shadow-sm text-sm">Daily</button>
                 <button onclick="generateSchedule('weekly')" class="flex-1 py-3 bg-[#A5D6A7] text-white font-bold rounded-xl hover:bg-[#81C784] transition shadow-sm text-sm">Weekly</button>
@@ -832,6 +840,39 @@
             renderApp();
         });
     }
+
+	// [추가됨] Weekly 일정을 가져와서 입력창에 넣어주는 함수
+    window.linkWeeklyTasks = function() {
+        // 1. 현재 선택된 날짜의 주간 키(Key) 찾기
+        const wkKey = getWeekKey(new Date(selectedDate));
+        
+        // 2. 해당 주간 데이터가 있는지 확인
+        if (!appData.weekly[wkKey] || !appData.weekly[wkKey].tasks || appData.weekly[wkKey].tasks.length === 0) {
+            return alert('이번 주에 등록된 Weekly 일정이 없어요.');
+        }
+
+        // 3. 오늘 날짜(selectedDate)로 지정된 할 일만 필터링
+        const todaysTasks = appData.weekly[wkKey].tasks.filter(t => 
+            !t.isMessage && (t.specificDate === selectedDate)
+        );
+
+        if (todaysTasks.length === 0) {
+            return alert(`오늘(${selectedDate}) 날짜로 지정된 Weekly 할 일이 없어요.\nWeekly 탭에서 날짜를 지정해주세요!`);
+        }
+
+        // 4. 텍스트 생성 및 입력창에 추가
+        const taskListStr = todaysTasks.map(t => t.text).join(', ');
+        const promptBox = document.getElementById('taskPrompt');
+        
+        // 기존 입력값이 있으면 줄바꿈 후 추가
+        const prefix = promptBox.value.trim() ? '\n' : '';
+        const appendText = `${prefix}오늘 Weekly 할일: ${taskListStr} (이 일정들을 포함해서 계획 짜줘)`;
+        
+        promptBox.value += appendText;
+        
+        // 사용자에게 알림 (선택 사항)
+        // alert(`${todaysTasks.length}개의 Weekly 일정을 가져왔어요!`);
+    };
 
     // [수정됨] generateDailySummary 함수
     async function generateDailySummary(dateStr) {
@@ -1719,8 +1760,8 @@ ${dateContext}
         container.appendChild(wrapper);
     }
 	
-// [수정됨] createTaskEl 함수
-   function createTaskEl(task, type, key, index, numberPrefix = null) {
+// [수정됨] createTaskEl 함수: 타임라인 및 텍스트 정리 기능 강화
+    function createTaskEl(task, type, key, index, numberPrefix = null) {
         const li = document.createElement('li');
         li.className = 'timeline-container flex flex-col mb-4';
         
@@ -1741,53 +1782,67 @@ ${dateContext}
             li.style.marginBottom = '0.5rem';
         }
 
-        let displayTimeRaw = ''; // 원본 시간 문자열 (HH:MM~HH:MM)
-        let durationText = '';   // 우측에 표시할 계산된 시간 (N분)
+        let displayTimeRaw = ''; 
+        let displayStartTime = ''; 
+        let durationText = '';   
         let displayText = task.text;
-        let displayStartTime = ''; // 왼쪽 상단에 보여줄 시작 시간
-
+        
         if (isProject && numberPrefix) {
             if (task.depth && task.depth > 0) displayText = `- ${displayText}`;
             else displayText = `${numberPrefix}. ${displayText}`;
         }
         
-        // 1. 시간 파싱
+        // --- [핵심 수정 구간] 시간 파싱 및 텍스트 정리 로직 ---
         if (type === 'daily') {
-            const timeMatch = displayText.match(/(\d{1,2}:\d{2})(~\d{1,2}:\d{2})?/);
+            // 1. 시간 범위 파싱 (물결(~), 하이픈(-), 공백 허용)
+            // 예: 12:30~14:00, 12:30-14:00, 12:30 ~ 14:00 모두 인식
+            const timeRangeMatch = displayText.match(/(\d{1,2}:\d{2})\s*[~-]\s*(\d{1,2}:\d{2})/);
+            // 2. 단일 시간 파싱 (예: 12:30 시작)
+            const simpleTimeMatch = displayText.match(/^(\d{1,2}:\d{2})/);
             
             if (task.manualTimeRange) {
                 displayTimeRaw = task.manualTimeRange;
-            } else if (timeMatch) {
-                displayTimeRaw = timeMatch[0];
-                // 텍스트에서 시간 범위 제거
-                displayText = displayText.replace(timeMatch[0], '').trim();
+            } else if (timeRangeMatch) {
+                // 시간 범위가 발견되면 표준 포맷(~)으로 저장하고 텍스트에서 제거
+                displayTimeRaw = `${timeRangeMatch[1]}~${timeRangeMatch[2]}`; 
+                displayText = displayText.replace(timeRangeMatch[0], '').trim();
+            } else if (simpleTimeMatch) {
+                // 시작 시간만 있는 경우
+                displayTimeRaw = simpleTimeMatch[1];
+                displayText = displayText.replace(simpleTimeMatch[0], '').trim();
             }
 
-            // [추가] 텍스트 내의 "(60분)", "(1시간)" 같은 소요시간 텍스트 제거
-            displayText = displayText.replace(/\(\d+(분|시간|m)\)/g, '').trim();
-            displayText = displayText.replace(/^[:\-\s]+/, ''); // 앞쪽 특수문자 정리
+            // 3. [강화됨] 소요 시간 텍스트 제거 (괄호 안의 공백, '시간', '분' 모두 처리)
+            // 예: (1시간), ( 1시간 ), (60분), (30m) 모두 제거
+            displayText = displayText.replace(/\(\s*\d+\s*(시간|분|m)\s*\)/g, '').trim();
+            
+            // 4. 앞쪽 특수문자(: -) 제거
+            displayText = displayText.replace(/^[:\-\s]+/, ''); 
 
-            // 2. 시간 데이터 처리 (왼쪽 라벨용 / 우측 기간용)
+            // 5. 표시 데이터 계산
             if (displayTimeRaw) {
-                // 왼쪽 상단 라벨용: 시작 시간만 추출
-                displayStartTime = displayTimeRaw.split('~')[0].trim();
+                // 왼쪽 타임라인용: 시작 시간 추출
+                // ~ 또는 - 기준으로 나눔
+                const parts = displayTimeRaw.split(/[~-]/);
+                displayStartTime = parts[0].trim();
 
-                // 우측 표시용: 시간 차이 계산
-                if (displayTimeRaw.includes('~')) {
-                     const times = displayTimeRaw.split('~');
-                     const start = times[0].trim().split(':');
-                     const end = times[1].trim().split(':');
-                     if(start.length===2 && end.length===2) {
-                         const sMin = parseInt(start[0])*60 + parseInt(start[1]);
-                         const eMin = parseInt(end[0])*60 + parseInt(end[1]);
+                // 오른쪽 소요시간용: 분 차이 계산
+                if (parts.length >= 2) {
+                     const startParts = parts[0].trim().split(':');
+                     const endParts = parts[1].trim().split(':');
+                     
+                     if(startParts.length===2 && endParts.length===2) {
+                         const sMin = parseInt(startParts[0])*60 + parseInt(startParts[1]);
+                         const eMin = parseInt(endParts[0])*60 + parseInt(endParts[1]);
                          const diff = eMin - sMin;
                          if (diff > 0) durationText = `(${diff}분)`; 
                      }
                 }
             }
         }
+        // ---------------------------------------------------
 
-        // [Goal 1] 왼쪽 상단 시간 라벨 복구 (타임라인)
+        // 왼쪽 타임라인 (시작 시간)
         if (type === 'daily' && displayStartTime) {
             const timeDiv = document.createElement('div');
             timeDiv.className = 'task-time-label';
@@ -1798,7 +1853,7 @@ ${dateContext}
         const actionGroup = document.createElement('div');
         actionGroup.className = 'flex items-start gap-2 justify-between';
 
-        // [Left Side] 텍스트 + 팁
+        // [Left Side] 할 일 내용 + 조언
         const leftCol = document.createElement('div');
         leftCol.className = 'flex-1';
         
@@ -1809,7 +1864,7 @@ ${dateContext}
         title.onclick = () => window.openEditTimeModal(type, key, index, task);
         leftCol.appendChild(title);
 
-        // [Goal 5] AI 조언/팁 표시 (작은 글씨)
+        // AI 꿀팁/조언 표시
         if (task.advice) {
             const adviceDiv = document.createElement('div');
             adviceDiv.className = 'text-[11px] text-[#8D6E63] mt-1 opacity-90 font-sans bg-[#EFEBE9]/50 px-2 py-0.5 rounded inline-block';
@@ -1817,11 +1872,12 @@ ${dateContext}
             leftCol.appendChild(adviceDiv);
         }
         
+        // 괄호 텍스트 (기타 메모) 처리
         const parenMatch = displayText.match(/\((.*?)\)/);
         if (parenMatch) {
              const subDiv = document.createElement('div');
              subDiv.className = 'task-sub-text';
-             // 괄호 안에 '분'이나 '시간'이 들어가지 않는 경우만 표시 (중복 방지)
+             // 혹시라도 '분/시간'이 남아있지 않은 경우에만 표시
              if(!parenMatch[1].includes('분') && !parenMatch[1].includes('시간')) {
                 subDiv.innerText = parenMatch[1];
              }
@@ -1829,11 +1885,11 @@ ${dateContext}
 
         actionGroup.appendChild(leftCol);
 
-        // [Right Side] 컨트롤 버튼들
+        // [Right Side] 시간, 버튼, 체크박스
         const rightCol = document.createElement('div');
         rightCol.className = 'flex items-center gap-1 shrink-0';
 
-        // [Goal 2] 오른쪽 소요 시간 (계산된 분)
+        // 계산된 소요 시간 표시 (우측)
         if (durationText) {
             const timeSpan = document.createElement('span');
             timeSpan.className = 'text-xs text-[#A1887F] mr-1 font-mono';
@@ -2003,6 +2059,7 @@ ${dateContext}
 </script>
 </body>
 </html>
+
 
 
 
