@@ -1762,7 +1762,7 @@ ${dateContext}
         container.appendChild(wrapper);
     }
 	
-// [수정됨] createTaskEl 함수: 타임라인 풀버전(Start~End) 표시 보장
+// [수정됨] createTaskEl 함수: 팁 박스 길이 확장 (전체 너비 사용)
     function createTaskEl(task, type, key, index, numberPrefix = null) {
         const li = document.createElement('li');
         li.className = 'timeline-container flex flex-col mb-4';
@@ -1784,8 +1784,8 @@ ${dateContext}
             li.style.marginBottom = '0.5rem';
         }
 
-        let displayTimeRaw = ''; // 왼쪽 타임라인에 표시될 전체 시간 문자열 (예: 12:30~13:30)
-        let durationText = '';   // 우측에 표시될 소요 시간 (예: (60분))
+        let displayTimeRaw = ''; 
+        let durationText = '';   
         let displayText = task.text;
         
         if (isProject && numberPrefix) {
@@ -1793,39 +1793,28 @@ ${dateContext}
             else displayText = `${numberPrefix}. ${displayText}`;
         }
         
-        // --- 시간 파싱 및 텍스트 정리 로직 ---
+        // --- 시간 파싱 및 텍스트 정리 ---
         if (type === 'daily') {
-            // 1. 시간 범위 파싱 (물결(~), 하이픈(-), 공백 허용)
-            // 예: 12:30~14:00, 12:30-14:00, 12:30 ~ 14:00
             const timeRangeMatch = displayText.match(/(\d{1,2}:\d{2})\s*[~-]\s*(\d{1,2}:\d{2})/);
-            // 2. 단일 시간 파싱 (예: 12:30 시작)
             const simpleTimeMatch = displayText.match(/^(\d{1,2}:\d{2})/);
             
             if (task.manualTimeRange) {
                 displayTimeRaw = task.manualTimeRange;
             } else if (timeRangeMatch) {
-                // 시간 범위 발견 -> 표준 포맷(~)으로 통일하여 저장
                 displayTimeRaw = `${timeRangeMatch[1]}~${timeRangeMatch[2]}`; 
-                // 본문에서는 제거
                 displayText = displayText.replace(timeRangeMatch[0], '').trim();
             } else if (simpleTimeMatch) {
-                // 시작 시간만 있는 경우
                 displayTimeRaw = simpleTimeMatch[1];
                 displayText = displayText.replace(simpleTimeMatch[0], '').trim();
             }
 
-            // 3. 소요 시간 텍스트 제거 (괄호 안의 공백, '시간', '분' 모두 처리)
             displayText = displayText.replace(/\(\s*\d+\s*(시간|분|m)\s*\)/g, '').trim();
-            
-            // 4. 앞쪽 특수문자(: -) 제거
             displayText = displayText.replace(/^[:\-\s]+/, ''); 
 
-            // 5. 우측 표시용 소요시간(분) 계산
             if (displayTimeRaw && displayTimeRaw.includes('~')) {
                  const parts = displayTimeRaw.split('~');
                  const startParts = parts[0].trim().split(':');
                  const endParts = parts[1].trim().split(':');
-                 
                  if(startParts.length===2 && endParts.length===2) {
                      const sMin = parseInt(startParts[0])*60 + parseInt(startParts[1]);
                      const eMin = parseInt(endParts[0])*60 + parseInt(endParts[1]);
@@ -1834,20 +1823,20 @@ ${dateContext}
                  }
             }
         }
-        // ---------------------------------------------------
 
-        // [핵심 수정] 왼쪽 타임라인: 시작시간이 아니라 displayTimeRaw 전체를 출력
+        // 왼쪽 타임라인 (시간 표시)
         if (type === 'daily' && displayTimeRaw) {
             const timeDiv = document.createElement('div');
             timeDiv.className = 'task-time-label';
-            timeDiv.innerText = displayTimeRaw; // 예: 12:30~14:00 그대로 표시
+            timeDiv.innerText = displayTimeRaw; 
             content.appendChild(timeDiv);
         }
 
+        // --- [구조 변경] 상단 영역 (텍스트 + 버튼들) ---
         const actionGroup = document.createElement('div');
         actionGroup.className = 'flex items-start gap-2 justify-between';
 
-        // [Left Side] 할 일 내용 + 조언
+        // [Left] 할 일 텍스트
         const leftCol = document.createElement('div');
         leftCol.className = 'flex-1';
         
@@ -1857,33 +1846,24 @@ ${dateContext}
         if(task.done) title.classList.add('line-through', 'text-opacity-50', 'text-[#A1887F]');
         title.onclick = () => window.openEditTimeModal(type, key, index, task);
         leftCol.appendChild(title);
-
-        // AI 꿀팁/조언 표시
-        if (task.advice) {
-            const adviceDiv = document.createElement('div');
-            adviceDiv.className = 'text-[11px] text-[#8D6E63] mt-1 opacity-90 font-sans bg-[#EFEBE9]/50 px-2 py-0.5 rounded inline-block';
-            adviceDiv.innerHTML = `💡 ${task.advice}`;
-            leftCol.appendChild(adviceDiv);
-        }
         
-        // 괄호 텍스트 (기타 메모) 처리
+        // 괄호 내용 처리 (텍스트 바로 아래)
         const parenMatch = displayText.match(/\((.*?)\)/);
         if (parenMatch) {
              const subDiv = document.createElement('div');
              subDiv.className = 'task-sub-text';
-             // '분/시간'이 없는 경우에만 표시 (중복 방지)
              if(!parenMatch[1].includes('분') && !parenMatch[1].includes('시간')) {
                 subDiv.innerText = parenMatch[1];
              }
+             leftCol.appendChild(subDiv);
         }
-
+        
         actionGroup.appendChild(leftCol);
 
-        // [Right Side] 시간, 버튼, 체크박스
+        // [Right] 시간, 버튼, 체크박스
         const rightCol = document.createElement('div');
         rightCol.className = 'flex items-center gap-1 shrink-0';
 
-        // 계산된 소요 시간 표시 (우측)
         if (durationText) {
             const timeSpan = document.createElement('span');
             timeSpan.className = 'text-xs text-[#A1887F] mr-1 font-mono';
@@ -1891,7 +1871,6 @@ ${dateContext}
             rightCol.appendChild(timeSpan);
         }
 
-        // 피드백 버튼
         if (!task.feedback) { 
              const fbBtn = document.createElement('button');
              fbBtn.className = 'text-[#BCAAA4] hover:text-[#8D6E63] mx-1';
@@ -1903,7 +1882,6 @@ ${dateContext}
              rightCol.appendChild(fbBtn);
         }
 
-        // 체크박스
         const chk = document.createElement('input');
         chk.type = 'checkbox';
         chk.className = 'custom-checkbox';
@@ -1915,7 +1893,16 @@ ${dateContext}
         rightCol.appendChild(chk);
 
         actionGroup.appendChild(rightCol);
-        content.appendChild(actionGroup);
+        content.appendChild(actionGroup); // 상단 영역 추가 완료
+
+        // --- [위치 이동] AI 꿀팁 (전체 너비 사용) ---
+        if (task.advice) {
+            const adviceDiv = document.createElement('div');
+            // w-full과 block을 사용하여 전체 너비 차지
+            adviceDiv.className = 'text-[11px] text-[#8D6E63] mt-1.5 opacity-90 font-sans bg-[#EFEBE9]/50 px-2 py-1 rounded block w-full leading-snug';
+            adviceDiv.innerHTML = `💡 ${task.advice}`;
+            content.appendChild(adviceDiv);
+        }
 
         li.appendChild(content);
         
@@ -2053,6 +2040,7 @@ ${dateContext}
 </script>
 </body>
 </html>
+
 
 
 
