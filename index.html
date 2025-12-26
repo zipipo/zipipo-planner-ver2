@@ -3,272 +3,156 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="zipipo">
-    <meta name="mobile-web-app-capable" content="yes">
-    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏠</text></svg>">
-    <link rel="shortcut icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏠</text></svg>">
-
     <title>zipipo planner</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Kirang+Haerang&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
- <style>
-    /* --- Theme Variables --- */
-    :root {
-        --bg-ivory: #FDFCF5; --wood-frame: #A1887F; --wood-text: #5D4037;
-        --sage-green: #8FBC8F; --point-coral: #FF8A65; --moon-yellow: #FFF9C4;
-    }
-    @font-face { font-family: 'S-CoreDream'; src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_six@1.2/S-CoreDream-3Light.woff') format('woff'); font-weight: normal; font-style: normal; }
-    body, button, input, textarea, select { font-family: 'Gowun Dodum', sans-serif !important; color: var(--wood-text); -webkit-tap-highlight-color: transparent; }
-    .font-hand { font-family: 'Kirang Haerang', cursive !important; }
-    .font-wando { font-family: 'S-CoreDream', sans-serif !important; } 
-    body { background-color: var(--bg-ivory); }
-    .sticky-header-wrapper { position: sticky; top: 0; z-index: 40; background-color: var(--bg-ivory); border-bottom: 1px solid #EFEBE9; padding-top: env(safe-area-inset-top); }
-    
-    /* Timeline */
-    .timeline-container { position: relative; padding-left: 20px; padding-bottom: 10px; transition: all 0.3s ease; }
-    .timeline-line { position: absolute; left: 7px; top: 10px; bottom: -10px; width: 2px; background-color: var(--wood-text); opacity: 0.2; border-radius: 2px; }
-    .timeline-container:last-child .timeline-line { display: none; }
-    .timeline-dot { position: absolute; left: 4px; top: 7px; width: 8px; height: 8px; background-color: var(--wood-text); border-radius: 50%; z-index: 2; }
-    .weekly-item .timeline-line { display: none !important; }
-    
-    .wood-frame { border: 2px solid var(--wood-frame); border-radius: 16px; background: white; }
-    .tab-btn { font-family: 'Kirang Haerang', cursive !important; font-size: 1.3rem; color: #D7CCC8; transition: color 0.2s; }
-    .tab-active { color: var(--wood-text); position: relative; }
-    .tab-active::after { content: ''; position: absolute; bottom: 2px; left: 50%; transform: translateX(-50%); width: 6px; height: 6px; background-color: var(--point-coral); border-radius: 50%; }
 
-    /* Checkbox & Completed */
-    .custom-checkbox { appearance: none; width: 18px; height: 18px; border: 2px solid #BCAAA4; border-radius: 5px; cursor: pointer; position: relative; background-color: #fff; transition: all 0.2s; flex-shrink: 0; }
-    .custom-checkbox:checked { background-color: var(--sage-green); border-color: var(--sage-green); }
-    .todo-item.completed .todo-text { text-decoration: line-through; color: #BCAAA4; }
-    .todo-item.completed .tip-box { max-height: 0; opacity: 0; margin-top: 0; padding: 0; overflow: hidden; }
-    .tip-box { max-height: 200px; opacity: 1; overflow: hidden; transition: all 0.5s ease; }
-
-    /* Animation & Modal */
-    .fab-house { background-color: #A5D6A7; clip-path: polygon(50% 0%, 100% 35%, 100% 100%, 0% 100%, 0% 35%); display: flex; align-items: flex-end; justify-content: center; padding-bottom: 8px; }
-    @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-    .modal-content { animation: slideUp 0.3s ease-out; }
+    <style>
+        /* --- Theme Variables --- */
+        :root {
+            --bg-ivory: #FDFCF5; --wood-frame: #A1887F; --wood-text: #5D4037;
+            --sage-green: #8FBC8F; --point-coral: #FF8A65; 
+            --moon-yellow: #FFF8E1; /* 스톱워치 배경 */
+            --stopwatch-border: #D7CCC8; /* 스톱워치 테두리 */
+        }
+        @font-face { font-family: 'S-CoreDream'; src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_six@1.2/S-CoreDream-3Light.woff') format('woff'); font-weight: normal; font-style: normal; }
+        body, button, input, textarea, select { font-family: 'Gowun Dodum', sans-serif !important; color: var(--wood-text); -webkit-tap-highlight-color: transparent; }
+        .font-hand { font-family: 'Kirang Haerang', cursive !important; }
+        .font-wando { font-family: 'S-CoreDream', sans-serif !important; } 
+        body { background-color: var(--bg-ivory); }
+        .sticky-header-wrapper { position: sticky; top: 0; z-index: 40; background-color: var(--bg-ivory); border-bottom: 1px solid #EFEBE9; padding-top: env(safe-area-inset-top); }
+        
+        /* Timeline & Common */
+        .timeline-container { position: relative; padding-left: 20px; padding-bottom: 10px; transition: all 0.3s ease; }
+        .timeline-line { position: absolute; left: 7px; top: 10px; bottom: -10px; width: 2px; background-color: var(--wood-text); opacity: 0.2; border-radius: 2px; }
+        .timeline-container:last-child .timeline-line { display: none; }
+        .timeline-dot { position: absolute; left: 4px; top: 7px; width: 8px; height: 8px; background-color: var(--wood-text); border-radius: 50%; z-index: 2; }
+        .wood-frame { border: 2px solid var(--wood-frame); border-radius: 16px; background: white; }
+        
+        /* Tabs */
+        .tab-btn { font-family: 'Kirang Haerang', cursive !important; font-size: 1.3rem; color: #D7CCC8; transition: color 0.2s; }
+        .tab-active { color: var(--wood-text); position: relative; }
+        .tab-active::after { content: ''; position: absolute; bottom: 2px; left: 50%; transform: translateX(-50%); width: 6px; height: 6px; background-color: var(--point-coral); border-radius: 50%; }
     
-    /* Stopwatch & Flower */
-    .stopwatch-popup { background-color: var(--moon-yellow); border: 2px solid #FBC02D; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1); }
-    .stopwatch-digits { font-variant-numeric: tabular-nums; letter-spacing: 2px; }
-    @keyframes bloom { 0% { transform: scale(0); } 80% { transform: scale(1.2); } 100% { transform: scale(1); } }
-    .flower-icon { animation: bloom 0.6s ease-out forwards; }
-
-    /* Helper Classes */
-    .time-select { border: 1px solid #EFEBE9; border-radius: 8px; padding: 4px; font-size: 0.8rem; background: white; outline: none; }
-    .mini-cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; text-align: center; font-size: 0.8rem; }
-    .mini-cal-cell { padding: 6px; border-radius: 50%; cursor: pointer; transition: all 0.2s; }
-    .mini-cal-cell.selected { background-color: var(--sage-green); color: white; font-weight: bold; }
-    .modal-tab { padding: 8px; font-size: 0.9rem; color: #BCAAA4; border-bottom: 2px solid transparent; cursor: pointer; }
-    .modal-tab.active { color: var(--wood-text); border-bottom: 2px solid var(--point-coral); font-weight: bold; }
-    .task-time-label { font-size: 0.7rem; color: #BCAAA4; margin-bottom: -2px; display: block; }
-    .proj-date-header { font-size: 0.8rem; font-weight: bold; color: #556B2F; background-color: #F1F8E9; padding: 4px 10px; border-radius: 8px; display: inline-block; margin-bottom: 6px; margin-top: 12px; border: 1px solid #DCEDC8; }
-    .proj-tip-box { background-color: #FFF8E1; border: 1px solid #FFE0B2; border-radius: 12px; padding: 10px; margin-top: 10px; margin-bottom: 12px; font-size: 0.8rem; color: #E65100; line-height: 1.5; }
-    .proj-msg-box { font-size: 0.8rem; color: #795548; background-color: #EFEBE9; padding: 6px 10px; border-radius: 8px; margin-bottom: 4px; font-weight: bold; }
-    .proj-memo-area { width: 100%; background-color: #FDFCF5; border: 1px solid #D7CCC8; border-radius: 12px; padding: 10px; font-size: 0.8rem; color: #5D4037; resize: none; margin-top: 10px; outline: none; transition: border-color 0.2s; }
-    .proj-memo-area:focus { border-color: #8D6E63; }
-</style>
-	
+        /* Checkbox & Completed */
+        .custom-checkbox { appearance: none; width: 18px; height: 18px; border: 2px solid #BCAAA4; border-radius: 5px; cursor: pointer; position: relative; background-color: #fff; transition: all 0.2s; flex-shrink: 0; }
+        .custom-checkbox:checked { background-color: var(--sage-green); border-color: var(--sage-green); }
+        .todo-item.completed .todo-text { text-decoration: line-through; color: #BCAAA4; }
+        .tip-box { max-height: 200px; opacity: 1; overflow: hidden; transition: all 0.5s ease; }
+        .todo-item.completed .tip-box { max-height: 0; opacity: 0; margin-top: 0; padding: 0; }
+    
+        /* Modals & Animation */
+        .fab-house { background-color: #A5D6A7; clip-path: polygon(50% 0%, 100% 35%, 100% 100%, 0% 100%, 0% 35%); display: flex; align-items: flex-end; justify-content: center; padding-bottom: 8px; }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .modal-content { animation: slideUp 0.3s ease-out; }
+        
+        /* Stopwatch Design */
+        .stopwatch-popup { 
+            background-color: var(--moon-yellow); 
+            border: 2px solid var(--stopwatch-border); 
+            box-shadow: 0 10px 25px -5px rgba(93, 64, 55, 0.15); 
+        }
+        .stopwatch-digits { font-variant-numeric: tabular-nums; letter-spacing: 2px; color: #5D4037; }
+        
+        /* Flower & Soil */
+        @keyframes bloom { 0% { transform: scale(0); } 80% { transform: scale(1.2); } 100% { transform: scale(1); } }
+        .flower-icon { animation: bloom 0.6s ease-out forwards; }
+    
+        /* Project Specifics */
+        .proj-date-header { font-size: 0.8rem; font-weight: bold; color: #556B2F; background-color: #F1F8E9; padding: 4px 10px; border-radius: 8px; display: inline-block; margin-bottom: 6px; margin-top: 12px; border: 1px solid #DCEDC8; }
+        .proj-tip-box { background-color: #FFF8E1; border: 1px solid #FFE0B2; border-radius: 12px; padding: 10px; margin-top: 10px; margin-bottom: 12px; font-size: 0.8rem; color: #E65100; line-height: 1.5; }
+        .proj-header-box { background-color: #EFEBE9; color: #5D4037; padding: 6px 10px; border-radius: 8px; margin-bottom: 4px; font-weight: bold; font-size: 0.85rem; display: flex; justify-content: space-between; align-items: center; }
+        .proj-memo-area { width: 100%; background-color: #FDFCF5; border: 1px solid #D7CCC8; border-radius: 12px; padding: 10px; font-size: 0.8rem; color: #5D4037; resize: none; margin-top: 10px; outline: none; transition: border-color 0.2s; }
+        .proj-memo-area:focus { border-color: #8D6E63; }
+    
+        /* Helper Classes */
+        .time-select { border: 1px solid #EFEBE9; border-radius: 8px; padding: 4px; font-size: 0.8rem; background: white; outline: none; }
+        .mini-cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; text-align: center; font-size: 0.8rem; }
+        .mini-cal-cell { padding: 6px; border-radius: 50%; cursor: pointer; transition: all 0.2s; }
+        .mini-cal-cell.selected { background-color: var(--sage-green); color: white; font-weight: bold; }
+        .modal-tab { padding: 8px; font-size: 0.9rem; color: #BCAAA4; border-bottom: 2px solid transparent; cursor: pointer; }
+        .modal-tab.active { color: var(--wood-text); border-bottom: 2px solid var(--point-coral); font-weight: bold; }
+        .task-time-label { font-size: 0.7rem; color: #BCAAA4; margin-bottom: -2px; display: block; }
+    </style>
 </head>
-<body class="max-w-md mx-auto min-h-screen flex flex-col pb-28 relative bg-[#FDFCF5]">
+<body class="min-h-screen pb-20 select-none">
 
-    <div class="sticky-header-wrapper">
-        <header class="px-6 pt-8 pb-2 flex justify-between items-center bg-[#FDFCF5]">
-            <div class="flex items-center gap-2">
-                <svg class="w-8 h-8 text-[#8D6E63]" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
-                </svg>
-                <h1 class="font-hand text-4xl text-[#5D4037] pt-1">zipipo planner</h1>
+    <div class="sticky-header-wrapper px-6 pb-2">
+        <div class="flex justify-between items-center h-14">
+            <h1 class="font-hand text-2xl text-[#8D6E63] flex items-center gap-2">
+                zipipo <span class="text-xs font-sans opacity-50 bg-[#EFEBE9] px-2 py-0.5 rounded-full">v2.1</span>
+            </h1>
+            <button onclick="toggleApiKeyInput()" class="p-2 text-[#D7CCC8] hover:text-[#8D6E63] transition">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+            </button>
+        </div>
+        
+        <div id="apiKeyContainer" class="hidden mb-4 p-4 bg-white border-2 border-[#EFEBE9] rounded-2xl shadow-sm">
+            <label class="block text-xs font-bold text-[#A1887F] mb-1">Google Gemini API Key</label>
+            <div class="flex gap-2">
+                <input type="password" id="apiKeyInput" class="flex-1 bg-[#FDFCF5] border border-[#D7CCC8] rounded-xl px-3 py-2 text-sm outline-none focus:border-[#8D6E63]" placeholder="AI 키를 입력하세요">
+                <button onclick="saveApiKey()" class="bg-[#8D6E63] text-white px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap">저장</button>
             </div>
-            <div id="headerDate" class="font-hand text-lg text-[#A1887F]"></div>
-        </header>
+            <p class="text-[10px] text-[#D7CCC8] mt-2">*키는 브라우저에만 안전하게 저장됩니다.</p>
+        </div>
 
-        <nav class="flex justify-around bg-[#FDFCF5] pb-2 border-b border-[#EFEBE9]">
-            <button onclick="switchTab('home')" id="tab-home" class="flex-1 py-2 tab-btn tab-active">Home</button>
-            <button onclick="switchTab('project')" id="tab-project" class="flex-1 py-2 tab-btn">Project</button>
-            <button onclick="switchTab('achievement')" id="tab-achievement" class="flex-1 py-2 tab-btn">Achievement</button>
+        <nav class="flex justify-around items-center border-b border-[#EFEBE9] pb-0">
+            <button id="tab-home" class="tab-btn tab-active px-4 pb-2" onclick="switchTab('home')">Home</button>
+            <button id="tab-project" class="tab-btn px-4 pb-2" onclick="switchTab('project')">Project</button>
+            <button id="tab-achievement" class="tab-btn px-4 pb-2" onclick="switchTab('achievement')">Log</button>
         </nav>
     </div>
 
-    <main id="appContent" class="p-5 flex-1 space-y-6 overflow-y-auto"></main>
+    <main id="appContent" class="px-6 py-6 max-w-lg mx-auto">
+        </main>
 
-    <div id="saveToast" class="fixed bottom-24 left-1/2 transform -translate-x-1/2 bg-[#5D4037] text-white text-xs px-4 py-2 rounded-full shadow-none opacity-0 transition-opacity duration-300 pointer-events-none z-50 bg-opacity-90 backdrop-blur-sm">
-        저장됨
-    </div>
-
-    <div id="aiLoadingPopup" class="fixed inset-0 bg-black/10 z-[70] hidden flex items-center justify-center backdrop-blur-[1px]">
-        <div class="bg-white px-8 py-6 rounded-3xl shadow-lg border-2 border-[#EFEBE9] w-[280px] mx-4 text-center">
-            <div class="text-[#5D4037] font-hand text-xl mb-1 whitespace-nowrap">
-                zipipo가 만들고 있어요<span id="loadingDots" class="inline-block w-6 text-left"></span>
+    <div class="fixed bottom-6 left-0 right-0 flex justify-center z-30 pointer-events-none">
+        <button onclick="addManualTask()" class="pointer-events-auto shadow-lg hover:scale-105 transition active:scale-95">
+            <div class="fab-house w-14 h-14">
+                <span class="text-2xl text-white mb-1">+</span>
             </div>
-            <div class="text-[10px] text-[#A1887F]">잠시만 기다려주세요</div>
-        </div>
-    </div>
-
-    <footer id="homeFooter" class="mt-auto py-8 text-center">
-        <div class="flex justify-center gap-4 text-xs text-[#BCAAA4]">
-            <button onclick="toggleApiKeyInput()" class="hover:text-[#8D6E63] font-hand text-lg flex items-center gap-1">
-                <svg class="w-4 h-4 text-[#D7CCC8]" fill="currentColor" viewBox="0 0 24 24"><path d="M12.65 10C11.83 7.67 9.61 6 7 6c-3.31 0-6 2.69-6 6s2.69 6 6 6c2.61 0 4.83-1.67 5.65-4H17v4h4v-4h2v-4H12.65zM7 14c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z"/></svg>
-                Key Setting
-            </button>
-        </div>
-        <div id="apiKeyContainer" class="hidden mt-3 mx-8 p-4 bg-white border-2 border-[#EFEBE9] rounded-2xl">
-            <input type="password" id="apiKeyInput" placeholder="API Key를 입력해주세요" 
-                   class="w-full p-2 border-b border-[#D7CCC8] mb-3 text-sm bg-transparent focus:outline-none focus:border-[#8D6E63] text-center text-[#5D4037]">
-            <button onclick="saveApiKey()" class="w-full bg-[#D7CCC8] text-white text-sm py-2 rounded-lg font-bold hover:bg-[#BCAAA4]">저장하기</button>
-        </div>
-    </footer>
-
-    <div class="fixed bottom-8 right-6 z-30">
-        <button onclick="openGeneratorModal('new')" class="w-14 h-14 fab-house text-white hover:scale-105 transition active:scale-95 shadow-sm">
-            <span class="text-2xl font-bold font-hand">+</span>
         </button>
     </div>
 
-<div id="generatorModal" class="fixed inset-0 bg-[#4E342E]/20 z-50 hidden flex items-end sm:items-center justify-center backdrop-blur-[1px]">
+    <div id="generatorModal" class="fixed inset-0 bg-[#4E342E]/20 z-50 hidden flex items-end sm:items-center justify-center backdrop-blur-[1px]">
         <div class="bg-[#FDFCF5] w-full max-w-md p-6 rounded-t-3xl sm:rounded-3xl shadow-none border-2 border-[#EFEBE9] m-0 sm:m-4 wood-frame modal-content">
-            
             <div class="flex justify-between items-center mb-4">
-                <h3 class="font-hand text-2xl text-[#8D6E63]">정원 가꾸기 (일정 생성)</h3>
+                <h3 class="font-hand text-2xl text-[#8D6E63]">정원 가꾸기</h3>
                 <button onclick="closeModal('generatorModal')" class="text-[#BCAAA4] hover:text-[#8D6E63] text-xl">✕</button>
             </div>
-
             <div class="flex justify-end mb-2 gap-2">
-                 <button onclick="linkWeeklyTasks()" 
-                        class="text-[11px] bg-[#F1F8E9] text-[#556B2F] px-3 py-1.5 rounded-full border border-[#DCEDC8] hover:bg-[#AED581] hover:text-white transition flex items-center gap-1 font-bold">
-                    @ Weekly랑 엮기
-                </button>
+                <button onclick="linkWeeklyTasks()" class="text-[11px] bg-[#F1F8E9] text-[#556B2F] px-3 py-1.5 rounded-full border border-[#DCEDC8] hover:bg-[#AED581] hover:text-white transition flex items-center gap-1 font-bold">@ Weekly랑 엮기</button>
             </div>
-            
-            <textarea id="taskPrompt" rows="3" class="w-full p-4 border-2 border-[#EFEBE9] rounded-xl mb-3 resize-none focus:outline-none focus:border-[#D7CCC8] bg-white text-sm placeholder-gray-300" placeholder="예: 오후 2시쯤 산책하고 싶어, 혹은 기존 계획 유지해줘."></textarea>
-            
+            <textarea id="taskPrompt" rows="3" class="w-full p-4 border-2 border-[#EFEBE9] rounded-xl mb-3 resize-none focus:outline-none focus:border-[#D7CCC8] bg-white text-sm placeholder-gray-300" placeholder="예: 오후 2시쯤 산책하고 싶어."></textarea>
             <div class="flex gap-3 mb-3">
-                <button onclick="generateSchedule('daily')" class="flex-1 py-3 bg-[#FFAB91] text-white font-bold rounded-xl hover:bg-[#FF8A65] transition shadow-sm text-sm">오늘의 씨앗 심기 (Daily)</button>
-                <button onclick="generateSchedule('weekly')" class="flex-1 py-3 bg-[#A5D6A7] text-white font-bold rounded-xl hover:bg-[#81C784] transition shadow-sm text-sm">이번 주 밭갈기 (Weekly)</button>
+                <button onclick="generateSchedule('daily')" class="flex-1 py-3 bg-[#FFAB91] text-white font-bold rounded-xl hover:bg-[#FF8A65] transition shadow-sm text-sm">오늘의 씨앗 심기</button>
+                <button onclick="generateSchedule('weekly')" class="flex-1 py-3 bg-[#A5D6A7] text-white font-bold rounded-xl hover:bg-[#81C784] transition shadow-sm text-sm">이번 주 밭갈기</button>
             </div>
         </div>
     </div>
 
-    <div id="routineModal" class="fixed inset-0 bg-[#4E342E]/20 z-50 hidden flex items-center justify-center backdrop-blur-[1px]">
-        <div class="bg-[#FDFCF5] w-full max-w-md p-6 rounded-2xl shadow-none border-2 border-[#EFEBE9] m-4 wood-frame modal-content">
+    <div id="modifierModal" class="fixed inset-0 bg-[#37474F]/20 z-50 hidden flex items-end sm:items-center justify-center backdrop-blur-[1px]">
+        <div class="bg-[#ECEFF1] w-full max-w-md p-6 rounded-t-3xl sm:rounded-3xl shadow-lg border-2 border-[#CFD8DC] m-0 sm:m-4 modal-content">
             <div class="flex justify-between items-center mb-4">
-                <h3 class="font-hand text-xl text-[#8D6E63]">루틴 관리</h3>
-                <button onclick="closeModal('routineModal')" class="text-[#BCAAA4] hover:text-[#8D6E63] text-xl">✕</button>
+                <h3 class="font-hand text-2xl text-[#455A64]">일정 다듬기</h3>
+                <button onclick="closeModal('modifierModal')" class="text-[#90A4AE] hover:text-[#455A64] text-xl">✕</button>
             </div>
-            <div class="flex gap-2 mb-4">
-                <input type="text" id="newRoutineInput" class="flex-1 border-b-2 border-[#D7CCC8] p-1 text-sm focus:outline-none bg-transparent" placeholder="새 루틴 (예: 🧘 스트레칭)">
-                <button onclick="addRoutine()" class="bg-[#D7CCC8] text-white px-3 py-1 rounded-lg text-xs font-bold hover:bg-[#A1887F]">+</button>
-            </div>
-            <div id="routineList" class="max-h-60 overflow-y-auto space-y-2">
-                </div>
+            <p class="text-xs text-[#78909C] mb-2">기존 흐름을 유지하며 새로운 요청을 반영합니다.</p>
+            <textarea id="modifyPrompt" rows="3" class="w-full p-4 border-2 border-[#CFD8DC] rounded-xl mb-3 resize-none focus:outline-none focus:border-[#90A4AE] bg-white text-sm placeholder-[#B0BEC5] text-[#455A64]" placeholder="변경할 내용을 입력하세요 (예: 3시에 회의 추가해줘)"></textarea>
+            <button onclick="generateSchedule(currentGenMode, true)" class="w-full py-3 bg-[#78909C] text-white font-bold rounded-xl hover:bg-[#546E7A] transition shadow-sm text-sm">변경사항 반영하기</button>
         </div>
     </div>
 
-    <div id="projectPlanModal" class="fixed inset-0 bg-[#4E342E]/20 z-50 hidden flex items-center justify-center backdrop-blur-[1px]">
-        <div class="bg-[#FDFCF5] w-full max-w-md p-6 rounded-2xl shadow-none border-2 border-[#EFEBE9] m-4 wood-frame modal-content">
-            <h3 class="font-hand text-xl text-[#8D6E63] mb-2">프로젝트 계획 짜기</h3>
-            <p class="text-xs text-[#A1887F] mb-4">구체적인 실행 계획을 요청하세요.</p>
-            <textarea id="projectPlanPrompt" rows="6" class="w-full p-4 border-2 border-[#EFEBE9] rounded-xl mb-4 resize-none focus:outline-none focus:border-[#D7CCC8] bg-white text-sm text-[#5D4037] leading-relaxed"></textarea>
-            <div class="flex gap-3">
-                <button onclick="closeModal('projectPlanModal')" class="flex-1 py-3 bg-gray-100 text-[#8D6E63] rounded-xl text-xs hover:bg-gray-200">취소</button>
-                <button onclick="confirmProjectPlan()" class="flex-1 py-3 bg-[#8D6E63] text-white rounded-xl text-xs font-bold hover:bg-[#6D4C41]">계획 생성하기</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="addTaskModal" class="fixed inset-0 bg-black/20 z-[60] hidden flex items-center justify-center backdrop-blur-[1px]">
-        <div class="bg-white p-6 rounded-2xl shadow-lg w-80 wood-frame modal-content text-center">
-            <h3 id="taskModalTitle" class="font-hand text-xl text-[#8D6E63] mb-4">할 일 추가</h3>
-            <input type="text" id="manualTaskText" class="w-full border-b-2 border-[#D7CCC8] p-2 mb-4 focus:outline-none text-center text-sm" placeholder="할 일 내용">
-            <div id="dailyTimeInputWrapper" class="flex flex-col gap-3 mb-5">
-                <div class="flex items-center justify-center gap-2">
-                    <span class="text-xs text-[#A1887F] w-8">시작</span>
-                    <select id="startHour" class="time-select"></select> : <select id="startMin" class="time-select"></select>
-                </div>
-                <div class="flex items-center justify-center gap-2">
-                    <span class="text-xs text-[#A1887F] w-8">종료</span>
-                    <select id="endHour" class="time-select"></select> : <select id="endMin" class="time-select"></select>
-                </div>
-            </div>
-            <div id="weeklyDateInputWrapper" class="hidden mb-5">
-                <label class="text-xs text-[#A1887F] block mb-2">수행할 날짜 (선택)</label>
-                <input type="date" id="weeklyTaskDate" class="border border-[#EFEBE9] rounded p-2 text-sm text-[#5D4037] w-full bg-white">
-            </div>
-            <div class="flex gap-2 justify-center">
-                <button id="btnDeleteTask" onclick="deleteTaskFromModal()" class="hidden px-4 py-2 bg-[#FFAB91] text-white rounded-lg text-xs font-bold hover:bg-[#FF8A65]">삭제</button>
-                
-                <button onclick="closeModal('addTaskModal')" class="px-4 py-2 bg-gray-100 rounded-lg text-xs text-gray-500 hover:bg-gray-200">취소</button>
-                <button onclick="confirmTaskAction()" class="px-4 py-2 bg-[#8D6E63] text-white rounded-lg text-xs font-bold hover:bg-[#6D4C41]">확인</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="projectInputModal" class="fixed inset-0 bg-black/20 z-[60] hidden flex items-center justify-center backdrop-blur-[1px]">
-        <div class="bg-white p-6 rounded-2xl shadow-lg w-80 wood-frame modal-content">
-            <h3 class="font-hand text-xl text-[#8D6E63] mb-4 text-center">새 프로젝트 심기</h3>
-            <label class="text-xs text-[#A1887F] mb-1 block">프로젝트 이름</label>
-            <input type="text" id="projTitle" class="w-full border-b-2 border-[#D7CCC8] p-2 mb-3 focus:outline-none text-center text-sm" placeholder="">
-            <label class="text-xs text-[#A1887F] mb-1 block">내용</label>
-            <textarea id="projDesc" class="w-full border-2 border-[#EFEBE9] rounded-xl p-2 mb-3 text-sm focus:outline-none focus:border-[#D7CCC8] resize-none" rows="2"></textarea>
-            <div class="flex border-b border-[#EFEBE9] mb-3">
-                <div onclick="switchProjMode('range')" id="pm-range" class="flex-1 text-center modal-tab active">기간 지정</div>
-                <div onclick="switchProjMode('select')" id="pm-select" class="flex-1 text-center modal-tab">날짜 선택</div>
-            </div>
-            <div id="projModeRange">
-                <div class="flex gap-2 mb-2">
-                    <div class="flex-1">
-                        <label class="text-xs text-[#A1887F] mb-1 block">시작일</label>
-                        <input type="date" id="projStart" class="w-full border border-[#EFEBE9] rounded p-1 text-xs text-[#5D4037]">
-                    </div>
-                    <div class="flex-1">
-                        <label class="text-xs text-[#A1887F] mb-1 block">종료일</label>
-                        <input type="date" id="projEnd" class="w-full border border-[#EFEBE9] rounded p-1 text-xs text-[#5D4037]">
-                    </div>
-                </div>
-            </div>
-            <div id="projModeSelect" class="hidden">
-                <div class="flex justify-between items-center mb-2 px-2">
-                    <button onclick="moveProjCal(-1)" class="text-[#8D6E63]">◀</button>
-                    <span id="projCalTitle" class="text-xs font-bold text-[#5D4037]"></span>
-                    <button onclick="moveProjCal(1)" class="text-[#8D6E63]">▶</button>
-                </div>
-                <div class="mini-cal-grid mb-1" id="projCalGrid"></div>
-                <div class="text-[10px] text-right text-[#8D6E63]"><span id="selectedCount">0</span>일 선택됨</div>
-            </div>
-            <div class="flex gap-2 justify-center mt-3">
-                <button onclick="closeModal('projectInputModal')" class="px-4 py-2 bg-gray-100 rounded-lg text-xs text-gray-500 hover:bg-gray-200">취소</button>
-                <button onclick="confirmCreateProject()" class="px-4 py-2 bg-[#556B2F] text-white rounded-lg text-xs font-bold hover:bg-[#33691E]">심기</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="inputModal" class="fixed inset-0 bg-black/20 z-[60] hidden flex items-center justify-center backdrop-blur-[1px]">
-        <div class="bg-white p-5 rounded-2xl shadow-lg w-80 wood-frame modal-content text-center">
-            <h3 id="inputModalTitle" class="font-hand text-xl text-[#8D6E63] mb-3">입력</h3>
-            <textarea id="inputModalField" rows="3" class="w-full border-2 border-[#EFEBE9] rounded-xl p-2 mb-4 focus:outline-none focus:border-[#D7CCC8] text-center resize-none bg-transparent" placeholder="내용을 입력하세요"></textarea>
-            <div class="flex gap-2 justify-center">
-                <button onclick="closeModal('inputModal')" class="px-4 py-2 bg-gray-200 rounded-lg text-xs text-gray-500">취소</button>
-                <button onclick="confirmInput()" class="px-4 py-2 bg-[#8D6E63] text-white rounded-lg text-xs font-bold">확인</button>
-            </div>
-        </div>
-    </div>
-
-	<div id="stopwatchModal" class="fixed inset-0 bg-black/30 z-[80] hidden flex items-center justify-center backdrop-blur-sm">
+    <div id="stopwatchModal" class="fixed inset-0 bg-black/30 z-[80] hidden flex items-center justify-center backdrop-blur-sm">
         <div class="stopwatch-popup w-72 rounded-3xl p-6 text-center relative modal-content">
-            <h3 class="font-hand text-xl text-[#F9A825] mb-2">집중의 시간</h3>
-            <div id="stopwatchTaskTitle" class="text-sm text-[#5D4037] mb-6 font-bold truncate"></div>
-            
-            <div id="stopwatchTime" class="text-4xl font-mono font-bold text-[#554740] mb-8 stopwatch-digits">00:00:00</div>
-            
-            <button onclick="stopStopwatch()" class="bg-[#FBC02D] text-white px-8 py-3 rounded-full font-bold shadow-md hover:bg-[#F9A825] hover:scale-105 transition active:scale-95">
-                그만하기 (완료)
-            </button>
-            <div class="mt-4 text-[10px] text-[#A1887F]/80">지금은 이 일에만 몰입해보세요</div>
+            <h3 class="font-hand text-xl text-[#A1887F] mb-1">집중의 시간</h3>
+            <div id="stopwatchDuration" class="text-xs text-[#FF8A65] font-bold mb-4 h-4 tracking-widest"></div>
+            <div id="stopwatchTaskTitle" class="text-sm text-[#5D4037] mb-6 font-bold truncate px-2"></div>
+            <div id="stopwatchTime" class="text-4xl font-mono font-bold text-[#5D4037] mb-8 stopwatch-digits">00:00:00</div>
+            <button onclick="stopStopwatch()" class="bg-[#D7CCC8] text-white px-8 py-3 rounded-full font-bold shadow-sm hover:bg-[#A1887F] hover:scale-105 transition active:scale-95 text-sm">그만하기</button>
+            <div class="mt-4 text-[10px] text-[#A1887F]/60">지금은 이 일에만 몰입해보세요</div>
         </div>
     </div>
 
@@ -276,7 +160,7 @@
         <div class="bg-white p-6 rounded-2xl shadow-lg w-80 wood-frame modal-content text-center">
             <h3 class="font-hand text-xl text-[#8D6E63] mb-3">수고하셨어요!</h3>
             <p class="text-xs text-[#A1887F] mb-4">방금 마친 일에 대해 짧은 메모를 남길까요?</p>
-            <textarea id="feedbackInput" rows="3" class="w-full border-2 border-[#EFEBE9] rounded-xl p-3 mb-4 focus:outline-none focus:border-[#D7CCC8] bg-[#FDFCF5] resize-none text-sm" placeholder="예: 생각보다 오래 걸렸다, 뿌듯하다..."></textarea>
+            <textarea id="feedbackInput" rows="3" class="w-full border-2 border-[#EFEBE9] rounded-xl p-3 mb-4 focus:outline-none focus:border-[#D7CCC8] bg-[#FDFCF5] resize-none text-sm" placeholder="메모..."></textarea>
             <div class="flex gap-2 justify-center">
                 <button onclick="skipFeedback()" class="px-4 py-2 bg-gray-100 rounded-lg text-xs text-gray-400 hover:bg-gray-200">건너뛰기</button>
                 <button onclick="saveFeedback()" class="px-4 py-2 bg-[#8D6E63] text-white rounded-lg text-xs font-bold hover:bg-[#6D4C41]">저장</button>
@@ -284,554 +168,766 @@
         </div>
     </div>
 
-<script>
-    // 1. CONSTANTS & CONFIG
-    const STORAGE_KEY_API = 'zipipo_v2_apikey';
-    const STORAGE_KEY_DATA = 'zipipo_v2_data'; 
-    const GEMINI_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent';
-    
-    // [WILDFLOWER DB] 1. 일반 야생화 도감 (랜덤 매핑용)
-    const WILD_FLOWERS = [
-        { name: '민들레', svg: '<svg viewBox="0 0 100 100" class="text-[#FFD54F]"><circle cx="50" cy="50" r="15" fill="currentColor"/><path d="M50 35 L50 15 M65 40 L80 25 M35 40 L20 25 M65 60 L80 75 M35 60 L20 75" stroke="currentColor" stroke-width="4" stroke-linecap="round"/><circle cx="50" cy="50" r="8" fill="#FFF"/></svg>' },
-        { name: '강아지풀', svg: '<svg viewBox="0 0 100 100" class="text-[#81C784]"><path d="M50 90 Q50 50 70 30" stroke="currentColor" stroke-width="3" fill="none"/><ellipse cx="70" cy="30" rx="8" ry="15" fill="currentColor"/><path d="M50 90 Q50 60 30 50" stroke="currentColor" stroke-width="2" fill="none"/><ellipse cx="30" cy="50" rx="5" ry="10" fill="currentColor"/></svg>' },
-        { name: '선인장', svg: '<svg viewBox="0 0 100 100" class="text-[#66BB6A]"><rect x="40" y="30" width="20" height="50" rx="10" fill="currentColor"/><path d="M40 50 Q30 50 30 40" stroke="currentColor" stroke-width="3" fill="none"/><path d="M60 60 Q70 60 70 50" stroke="currentColor" stroke-width="3" fill="none"/></svg>' },
-        { name: '해바라기', svg: '<svg viewBox="0 0 100 100" class="text-[#FBC02D]"><circle cx="50" cy="50" r="10" fill="#5D4037"/><path d="M50 30 L50 20 M65 35 L75 25 M70 50 L80 50 M65 65 L75 75 M50 70 L50 80 M35 65 L25 75 M30 50 L20 50 M35 35 L25 25" stroke="currentColor" stroke-width="6" stroke-linecap="round"/></svg>' },
-        { name: '몬스테라', svg: '<svg viewBox="0 0 100 100" class="text-[#2E7D32]"><path d="M50 90 Q50 20 20 20 Q50 20 50 50 Q50 20 80 20 Q50 20 50 90 Z" fill="currentColor"/><circle cx="35" cy="40" r="3" fill="#FDFCF5"/><circle cx="65" cy="35" r="2" fill="#FDFCF5"/></svg>' },
-        { name: '방울꽃', svg: '<svg viewBox="0 0 100 100" class="text-[#9575CD]"><path d="M50 90 Q50 10 30 30" stroke="#8D6E63" stroke-width="2" fill="none"/><circle cx="30" cy="30" r="8" fill="currentColor"/><path d="M50 90 Q50 20 70 40" stroke="#8D6E63" stroke-width="2" fill="none"/><circle cx="70" cy="40" r="8" fill="currentColor"/></svg>' },
-        { name: '클로버', svg: '<svg viewBox="0 0 100 100" class="text-[#66BB6A]"><circle cx="45" cy="45" r="12" fill="currentColor" opacity="0.9"/><circle cx="55" cy="45" r="12" fill="currentColor" opacity="0.9"/><circle cx="50" cy="38" r="12" fill="currentColor" opacity="0.9"/><path d="M50 55 Q50 80 60 90" stroke="currentColor" stroke-width="3" fill="none"/></svg>' },
-        { name: '참나무', svg: '<svg viewBox="0 0 100 100" class="text-[#8D6E63]"><rect x="45" y="60" width="10" height="30" fill="currentColor"/><circle cx="50" cy="45" r="25" fill="#66BB6A"/></svg>' },
-        { name: '튤립', svg: '<svg viewBox="0 0 100 100" class="text-[#FF7043]"><path d="M50 90 L50 50" stroke="#8D6E63" stroke-width="3"/><path d="M35 30 Q50 60 65 30 Q50 10 35 30 Z" fill="currentColor"/></svg>' },
-        { name: '라벤더', svg: '<svg viewBox="0 0 100 100" class="text-[#7E57C2]"><path d="M50 90 L50 30" stroke="#8D6E63" stroke-width="2"/><circle cx="50" cy="30" r="4" fill="currentColor"/><circle cx="50" cy="40" r="4" fill="currentColor"/><circle cx="45" cy="35" r="4" fill="currentColor"/><circle cx="55" cy="35" r="4" fill="currentColor"/></svg>' }
-    ];
+    <div id="addTaskModal" class="fixed inset-0 bg-black/20 z-[60] hidden flex items-center justify-center backdrop-blur-[1px]">
+        <div class="bg-white w-80 p-5 rounded-2xl shadow-lg wood-frame modal-content">
+            <h3 class="font-hand text-xl text-[#8D6E63] mb-3">직접 기록하기</h3>
+            <input type="text" id="manualTaskText" class="w-full border-b-2 border-[#EFEBE9] p-2 mb-4 text-sm outline-none focus:border-[#8D6E63]" placeholder="할 일 입력 (예: 14:00 미팅)">
+            <div class="flex justify-end gap-2">
+                <button onclick="closeAddTaskModal()" class="px-3 py-1.5 text-xs text-[#BCAAA4]">취소</button>
+                <button onclick="confirmTaskAction()" class="px-4 py-1.5 bg-[#8D6E63] text-white rounded-lg text-xs font-bold">확인</button>
+            </div>
+        </div>
+    </div>
 
-    // [WILDFLOWER DB] 2. 한국 기념일/특정일 전용 식물 (MM-DD)
-    const SPECIAL_DAYS = {
-        '01-01': { name: '새해 소나무', svg: '<svg viewBox="0 0 100 100" class="text-[#2E7D32]"><path d="M50 10 L20 60 L80 60 Z" fill="currentColor"/><rect x="45" y="60" width="10" height="30" fill="#795548"/><circle cx="50" cy="10" r="5" fill="#FFC107"/></svg>' },
-        '03-01': { name: '무궁화 (삼일절)', svg: '<svg viewBox="0 0 100 100" class="text-[#EC407A]"><circle cx="50" cy="50" r="20" fill="currentColor" opacity="0.3"/><path d="M50 50 L50 20 M50 50 L80 50 M50 50 L50 80 M50 50 L20 50" stroke="currentColor" stroke-width="15" stroke-linecap="round"/><circle cx="50" cy="50" r="5" fill="#FFEB3B"/></svg>' },
-        '04-05': { name: '묘목 (식목일)', svg: '<svg viewBox="0 0 100 100" class="text-[#66BB6A]"><path d="M50 80 L50 50" stroke="#795548" stroke-width="4"/><path d="M50 50 Q30 30 20 40 Q30 50 50 50 Z" fill="currentColor"/><path d="M50 50 Q70 30 80 40 Q70 50 50 50 Z" fill="currentColor"/></svg>' },
-        '05-05': { name: '새싹 (어린이날)', svg: '<svg viewBox="0 0 100 100" class="text-[#8BC34A]"><path d="M50 90 L50 60" stroke="#795548" stroke-width="3"/><circle cx="40" cy="50" r="10" fill="currentColor"/><circle cx="60" cy="50" r="10" fill="currentColor"/><circle cx="50" cy="40" r="8" fill="currentColor"/></svg>' },
-        '05-08': { name: '카네이션 (어버이날)', svg: '<svg viewBox="0 0 100 100" class="text-[#F44336]"><path d="M50 90 L50 50" stroke="#4CAF50" stroke-width="2"/><circle cx="50" cy="40" r="15" fill="currentColor" stroke="white" stroke-width="2" stroke-dasharray="3,3"/><path d="M50 55 Q30 55 30 45" stroke="#4CAF50" stroke-width="2" fill="none"/></svg>' },
-        '08-15': { name: '태극꽃 (광복절)', svg: '<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="20" fill="#CD2E3A"/><path d="M50 50 A 10 10 0 0 1 50 70 A 10 10 0 0 0 50 30 Z" fill="#0047A0"/><path d="M20 20 L30 30 M80 20 L70 30 M20 80 L30 70 M80 80 L70 70" stroke="black" stroke-width="2"/></svg>' },
-        '10-09': { name: '뿌리깊은 나무 (한글날)', svg: '<svg viewBox="0 0 100 100" class="text-[#795548]"><rect x="40" y="50" width="20" height="40" fill="currentColor"/><circle cx="50" cy="40" r="25" fill="#4CAF50"/><text x="50" y="45" font-size="20" text-anchor="middle" fill="white" font-weight="bold">ㄱ</text></svg>' },
-        '12-25': { name: '포인세티아 (성탄절)', svg: '<svg viewBox="0 0 100 100" class="text-[#D32F2F]"><path d="M50 50 L50 20 M50 50 L75 35 M50 50 L75 65 M50 50 L50 80 M50 50 L25 65 M50 50 L25 35" stroke="currentColor" stroke-width="8" stroke-linecap="round"/><circle cx="50" cy="50" r="6" fill="#FFD700"/></svg>' }
-    };
-    // [DIRT SVG]
-    const SOIL_SVG = '<svg viewBox="0 0 100 100" class="text-[#8D6E63] opacity-60"><path d="M20 80 Q50 60 80 80 Q50 100 20 80 Z" fill="currentColor"/><circle cx="30" cy="80" r="2" fill="#5D4037"/><circle cx="70" cy="80" r="2" fill="#5D4037"/><circle cx="50" cy="85" r="2" fill="#5D4037"/></svg>';
+    <div id="routineModal" class="fixed inset-0 bg-black/20 z-[60] hidden flex items-center justify-center backdrop-blur-[1px]">
+        <div class="bg-white w-80 p-5 rounded-2xl shadow-lg wood-frame modal-content">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="font-hand text-xl text-[#8D6E63]">나의 루틴 관리</h3>
+                <button onclick="closeModal('routineModal')" class="text-[#BCAAA4]">✕</button>
+            </div>
+            <div class="flex gap-2 mb-4">
+                <input type="text" id="newRoutineInput" class="flex-1 border border-[#EFEBE9] rounded px-2 py-1 text-sm outline-none" placeholder="매일 할 루틴 (예: 영양제)">
+                <button onclick="addRoutine()" class="bg-[#A5D6A7] text-white px-3 py-1 rounded text-xs font-bold">+</button>
+            </div>
+            <div id="routineList" class="space-y-2 max-h-60 overflow-y-auto text-sm text-[#5D4037]"></div>
+        </div>
+    </div>
 
-    const ICONS = {
-        check: `<svg class="w-4 h-4 text-[#8D6E63]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"></path></svg>`,
-        undo: `<svg class="w-4 h-4 text-[#8D6E63]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"></path></svg>`,
-        closeX: `<svg class="w-4 h-4 text-[#D7CCC8]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path></svg>`,
-        speech: `<svg class="w-4 h-4 text-[#BCAAA4]" fill="currentColor" viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg>`,
-        refresh: `<svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>`
-    };
-
-    // 2. STATE
-    let appData = { daily: {}, weekly: {}, projects: [], dailySummaries: {}, dailyPrompts: {}, weeklyPrompts: {}, routines: [] };
-    let currentTab = 'home';
-    let selectedDate = new Date().toISOString().split('T')[0];
-    let lastKnownToday = new Date().toISOString().split('T')[0]; 
-    let currentWeekBaseDate = new Date();
-    let achievementViewDate = new Date().toISOString().split('T')[0];
-    let inputCallback = null;
-    let editingTask = null;
-    let loadingInterval;
-    // Stopwatch
-    let stopwatchInterval;
-    let stopwatchStartTime;
-    let currentStopwatchTask = null; 
-    // Feedback
-    let pendingFeedbackInfo = null;
-    // Projects
-    let selectedProjDates = new Set();
-    let projMode = 'range';
-    let projCalDate = new Date();
-    let lastProjectScrollTop = 0;
-
-    // 3. HELPER FUNCTIONS
-    function getLocalDateStr(d) { return `${d.getFullYear()}-${(d.getMonth()+1).toString().padStart(2,'0')}-${d.getDate().toString().padStart(2,'0')}`; }
-    function formatTimeSimple(iso) { const d = new Date(iso); return `${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`; }
-    function getTodayStr() { return getLocalDateStr(new Date()); }
-    function parseTasks(text) { return text.split('\n').map(l=>l).filter(l=>l.trim().length>0 && !l.trim().startsWith('---')); } 
-    function getWeekKey(d) { const date = new Date(d); const diff = date.getDate() - date.getDay(); const sunday = new Date(date.setDate(diff)); return getLocalDateStr(sunday); }
-    function getWeekRangeStr(d) { const curr = new Date(d); const day = curr.getDay(); const first = new Date(curr); first.setDate(curr.getDate() - day); const last = new Date(first); last.setDate(first.getDate() + 6); return `${first.getMonth()+1}.${first.getDate()} ~ ${last.getMonth()+1}.${last.getDate()}`; }
-    function getSunday(d) { d = new Date(d); var day = d.getDay(); var diff = d.getDate() - day; return new Date(d.setDate(diff)); }
-    function getTaskTimeVal(t) {
-        let timeStr = t.manualTimeRange;
-        if (!timeStr && t.text) { const m = t.text.match(/(?:^|[\s\(\[])(\d{1,2}):(\d{2})/); if(m) timeStr = `${m[1]}:${m[2]}`; }
-        if(timeStr) { const m = timeStr.match(/(\d{1,2}):(\d{2})/); if(m) { let h = parseInt(m[1]); const min = parseInt(m[2]); if (h < 5) h += 24; return h * 60 + min; } }
-        return 999999; 
-    }
-    
-    // [WILDFLOWER LOGIC]
-    function getFlowerForDate(dateStr) {
-        const [y, m, d] = dateStr.split('-');
-        const key = `${m}-${d}`;
-        if (SPECIAL_DAYS[key]) return SPECIAL_DAYS[key];
-        let hash = 0;
-        for (let i = 0; i < dateStr.length; i++) hash = dateStr.charCodeAt(i) + ((hash << 5) - hash);
-        const index = Math.abs(hash) % WILD_FLOWERS.length;
-        return WILD_FLOWERS[index];
-    }
-
-    // 4. DATA MANGEMENT
-    function loadData() {
-        const json = localStorage.getItem(STORAGE_KEY_DATA);
-        if (json) { try { appData = JSON.parse(json); } catch(e) { console.error(e); } }
-        if (!appData.daily) appData.daily = {};
-        if (!appData.weekly) appData.weekly = {};
-        if (!appData.projects) appData.projects = [];
-        if (!appData.dailySummaries) appData.dailySummaries = {};
-        if (!appData.dailyPrompts) appData.dailyPrompts = {}; 
-        if (!appData.weeklyPrompts) appData.weeklyPrompts = {};
-        if (!appData.routines) appData.routines = [];
-    }
-    function saveData() {
-        localStorage.setItem(STORAGE_KEY_DATA, JSON.stringify(appData));
-        const toast = document.getElementById('saveToast');
-        if(toast) { toast.style.opacity = '1'; setTimeout(() => { toast.style.opacity = '0'; }, 2000); }
-    }
-    function saveApiKey() { const key = document.getElementById('apiKeyInput').value; if(key) { localStorage.setItem(STORAGE_KEY_API, key); alert('저장됨'); toggleApiKeyInput(); } }
-    function toggleApiKeyInput() { document.getElementById('apiKeyContainer').classList.toggle('hidden'); }
-
-    // 5. API
-    async function callGemini(sysPrompt, cb) {
-        const key = localStorage.getItem(STORAGE_KEY_API);
-        if (!key) { alert("API Key 필요!"); hideLoading(); return; }
-        try {
-            const res = await fetch(`${GEMINI_URL}?key=${key}`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ contents: [{ parts: [{ text: sysPrompt }] }] }) });
-            const data = await res.json();
-            if(data.candidates && data.candidates[0].content) cb(data.candidates[0].content.parts[0].text);
-            else { alert('오류: ' + (data.error ? data.error.message : 'Unknown')); hideLoading(); }
-        } catch(e) { alert('네트워크 오류'); hideLoading(); }
-    }
-
-    // 6. GENERATION LOGIC
-    async function generateSchedule(type) {
-        const key = localStorage.getItem(STORAGE_KEY_API);
-        if(!key) return alert('API Key 필요');
-        const newRequest = document.getElementById('taskPrompt').value; 
-        
-        let previousContext = "";
-        if (type === 'daily') previousContext = appData.dailyPrompts[selectedDate] || "";
-        else previousContext = appData.weeklyPrompts[getWeekKey(currentWeekBaseDate)] || "";
-        
-        const finalRequest = newRequest ? `[추가 요청사항]: ${newRequest}` : "(기존 맥락을 유지하며 재검토해줘)";
-        showLoading("정원을 가꾸는 중...");
-        document.getElementById('generatorModal').classList.add('hidden');
-        
-        const now = new Date();
-        const currentTimeStr = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
-        
-        let contextInfo = "";
-        let completedTasks = [], pendingTasks = [];
-        if (type === 'daily' && appData.daily[selectedDate]) {
-            completedTasks = appData.daily[selectedDate].filter(t => t.done);
-            pendingTasks = appData.daily[selectedDate].filter(t => !t.done && !t.isMessage);
-        }
-        if (completedTasks.length > 0) contextInfo += `\n[완료한 일정]: ${completedTasks.map(t=>t.text).join(', ')}`;
-        if (pendingTasks.length > 0) contextInfo += `\n[남은 일정]: ${pendingTasks.map(t=>t.text).join(', ')}`;
-        if (appData.routines.length > 0) contextInfo += `\n[루틴]: ${appData.routines.map(r=>r.text).join(', ')}`;
-
-        let sysPrompt = "";
-        if (type === 'daily') {
-            if (newRequest) appData.dailyPrompts[selectedDate] = (previousContext + "\n" + finalRequest).trim();
-            sysPrompt = `역할: 따뜻하고 똑똑한 플래너. 날짜: ${selectedDate}. 현재: ${currentTimeStr}.
-            ${contextInfo}
-            [규칙]
-            1. 중요도/긴급도 고려해 균형 잡힌 일정 제안. 휴식도 챙겨줘.
-            2. 현재 시각 이후 일정만 계획.
-            3. 형식: 'HH:MM~HH:MM 할일 | 조언' (조언은 필요할때만 짧게)
-            4. 마지막 줄에 '[MSG] 응원 한마디' 작성.
-            `;
-        } else {
-             const wk = getWeekKey(currentWeekBaseDate);
-             if(newRequest) appData.weeklyPrompts[wk] = (previousContext + "\n" + finalRequest).trim();
-             sysPrompt = `역할: 주간 플래너. 기간: ${getWeekRangeStr(currentWeekBaseDate)}.
-             맥락: ${previousContext}
-             요청: ${finalRequest}
-             [규칙]
-             1. 에너지 흐름 고려.
-             2. 형식: 'YYYY-MM-DD: 할일' (위클리는 조언/팁 불필요)
-             3. 주간 조언만 마지막에 '[MSG]' 태그 후 작성.
-             `;
-        }
-
-        await callGemini(sysPrompt, (text) => {
-            const lines = parseTasks(text);
-            const newTasks = [];
-            let isMsgSection = false;
-            lines.forEach(line => {
-                let trimLine = line.trim();
-                if(!trimLine || trimLine.includes('플래닝') || trimLine.includes('Timeline')) return;
-                if (trimLine.includes('[MSG]')) { isMsgSection = true; trimLine = trimLine.replace('[MSG]', '').trim(); }
-                if (isMsgSection) { if(trimLine) newTasks.push({ text: trimLine, done: false, isMessage: true }); return; }
-
-                let adviceText = "";
-                let mainText = trimLine;
-                if (trimLine.includes('|')) { const parts = trimLine.split('|'); mainText = parts[0].trim(); adviceText = parts[1].trim(); }
-                let taskObj = { text: mainText, done: false, isMessage: false, advice: adviceText };
-                if (/\d{4}-\d{2}-\d{2}/.test(mainText)) { const m = mainText.match(/(\d{4}-\d{2}-\d{2})[:\s]*(.*)/); if(m) { taskObj.specificDate = m[1]; taskObj.text = m[2]; } }
-                if(!taskObj.isMessage) newTasks.push(taskObj);
-            });
-            if (type === 'daily') {
-                appData.daily[selectedDate] = [...completedTasks, ...newTasks];
-                appData.daily[selectedDate].sort((a,b) => getTaskTimeVal(a) - getTaskTimeVal(b));
-            } else {
-                const wk = getWeekKey(currentWeekBaseDate);
-                appData.weekly[wk] = { tasks: newTasks }; 
-            }
-            document.getElementById('taskPrompt').value = '';
-            hideLoading(); saveData(); renderApp();
-        });
-    }
-
-    async function generateDailySummary(dateStr) {
-        const key = localStorage.getItem(STORAGE_KEY_API);
-        if(!key) return alert('API Key 필요');
-        const tasks = appData.daily[dateStr] || [];
-        let context = tasks.filter(t=>!t.isMessage).map(t => `- ${t.text} (${t.done?'완료':'미완료'}) ${t.feedback ? '[메모:'+t.feedback+']' : ''}`).join('\n');
-        showLoading("회고 중...");
-        const sysPrompt = `날짜: ${dateStr}. 활동:\n${context}\n3줄 내외로 따뜻하게 핵심 회고 작성해줘. 잘한 점과 내일의 조언 포함.`;
-        await callGemini(sysPrompt, (text) => { appData.dailySummaries[dateStr] = text; hideLoading(); saveData(); renderApp(); });
-    }
-
-    // 7. STOPWATCH & FEEDBACK
-    function startStopwatch(task, type, key, index) {
-        currentStopwatchTask = { type, key, index, task };
-        stopwatchStartTime = new Date();
-        updateTask(type, key, index, { actualStartTime: stopwatchStartTime.toISOString() });
-        document.getElementById('stopwatchModal').classList.remove('hidden');
-        document.getElementById('stopwatchTaskTitle').innerText = task.text;
-        if(stopwatchInterval) clearInterval(stopwatchInterval);
-        stopwatchInterval = setInterval(updateStopwatchDisplay, 1000);
-        updateStopwatchDisplay();
-    }
-    function updateStopwatchDisplay() {
-        const diff = new Date() - stopwatchStartTime; 
-        const hrs = Math.floor(diff / 3600000); const mins = Math.floor((diff % 3600000) / 60000); const secs = Math.floor((diff % 60000) / 1000);
-        document.getElementById('stopwatchTime').innerText = `${hrs.toString().padStart(2,'0')}:${mins.toString().padStart(2,'0')}:${secs.toString().padStart(2,'0')}`;
-    }
-    function stopStopwatch() {
-        if(stopwatchInterval) clearInterval(stopwatchInterval);
-        if (currentStopwatchTask) updateTask(currentStopwatchTask.type, currentStopwatchTask.key, currentStopwatchTask.index, { actualEndTime: new Date().toISOString() });
-        document.getElementById('stopwatchModal').classList.add('hidden');
-        currentStopwatchTask = null;
-    }
-    function handleTaskCheck(chk, type, key, index) {
-        const isChecked = chk.checked;
-        updateTask(type, key, index, { done: isChecked });
-        if (isChecked) {
-            pendingFeedbackInfo = { type, key, index };
-            document.getElementById('feedbackInput').value = '';
-            document.getElementById('feedbackModal').classList.remove('hidden');
-            document.getElementById('feedbackInput').focus();
-        }
-    }
-    function saveFeedback() {
-        const text = document.getElementById('feedbackInput').value;
-        if (pendingFeedbackInfo) updateTask(pendingFeedbackInfo.type, pendingFeedbackInfo.key, pendingFeedbackInfo.index, { feedback: text });
-        closeModal('feedbackModal'); pendingFeedbackInfo = null;
-    }
-    function skipFeedback() { closeModal('feedbackModal'); pendingFeedbackInfo = null; }
-
-    // 8. RENDER
-    function renderApp() {
-        const container = document.getElementById('appContent'); container.innerHTML = '';
-        if (currentTab === 'home') renderDaily(container);
-        else if (currentTab === 'project') renderProjects(container);
-        else if (currentTab === 'achievement') renderCalendar(container);
-    }
-
-    function renderDaily(container) {
-        const d = new Date(selectedDate); const dayNames = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
-        const flower = getFlowerForDate(selectedDate);
-        const sec = document.createElement('section');
-        sec.innerHTML = `
-            <div class="flex justify-between items-end mb-4 px-1">
-                <div class="flex flex-col">
-                    <div class="text-2xl font-hand text-[#5D4037] flex items-baseline gap-2"><span>${d.getMonth()+1}.${d.getDate()}</span><span class="text-sm text-[#A1887F] font-sans font-bold">${dayNames[d.getDay()]}</span></div>
-                    <div class="text-[10px] text-[#8D6E63] mt-1 flex items-center gap-1">오늘의 꽃: <span class="font-bold">${flower.name}</span></div>
+    <div id="projectInputModal" class="fixed inset-0 bg-black/20 z-[60] hidden flex items-center justify-center backdrop-blur-[1px]">
+        <div class="bg-white w-80 p-5 rounded-2xl shadow-lg wood-frame modal-content">
+            <h3 class="font-hand text-xl text-[#8D6E63] mb-4">새 프로젝트 심기</h3>
+            <input type="text" id="projTitle" class="w-full border-b border-[#EFEBE9] p-2 mb-2 text-sm outline-none" placeholder="프로젝트 이름 (예: 자격증 따기)">
+            <textarea id="projDesc" rows="2" class="w-full border border-[#EFEBE9] rounded p-2 mb-4 text-xs outline-none resize-none" placeholder="목표나 다짐을 적어보세요"></textarea>
+            
+            <div class="mb-4">
+                <div class="flex gap-2 mb-2 border-b border-[#EFEBE9] pb-1">
+                    <button onclick="switchProjMode('range')" class="text-xs font-bold flex-1 text-[#8D6E63]">기간 지정</button>
+                    <button onclick="switchProjMode('select')" class="text-xs font-bold flex-1 text-[#BCAAA4]">날짜 선택</button>
                 </div>
-                <div class="flex gap-2"><button onclick="window.openRoutineModal()" class="text-[10px] bg-white border border-[#D7CCC8] px-2 py-1 rounded-full text-[#8D6E63]">루틴</button><input type="date" class="border border-[#D7CCC8] rounded px-2 py-1 text-xs bg-white" value="${selectedDate}" onchange="window.changeDate(this.value)"></div>
-            </div>`;
-        
-        const dailyData = appData.daily[selectedDate] || [];
-        const dailyMsgs = dailyData.filter(t => t.isMessage);
-        if (dailyMsgs.length > 0) {
-            const msgBox = document.createElement('div');
-            msgBox.className = 'mx-6 mt-1 mb-3 p-3 bg-white/60 rounded-xl border border-[#C5E1A5] text-sm text-[#556B2F] font-wando cursor-pointer';
-            msgBox.onclick = () => editDailyMessage(selectedDate);
-            msgBox.innerHTML = dailyMsgs.map(m => m.text).join('<br>');
-            sec.appendChild(msgBox);
-        }
+                
+                <div id="projRangeInput" class="flex gap-2 items-center text-xs">
+                    <input type="date" id="projStart" class="border p-1 rounded"> ~ <input type="date" id="projEnd" class="border p-1 rounded">
+                </div>
+            </div>
 
-        const content = document.createElement('div');
-        content.className = 'bg-white rounded-[24px] border border-[#EFEBE9] p-5 relative min-h-[300px] shadow-sm';
-        content.innerHTML = `<div class="absolute inset-0 pointer-events-none opacity-30" style="background-image: linear-gradient(#EFEBE9 1px, transparent 1px); background-size: 100% 24px;"></div>`;
-        const promptBtn = document.createElement('button');
-        promptBtn.className = 'absolute top-3 right-3 text-[10px] text-[#A1887F] bg-[#FDFCF5] border border-[#D7CCC8] px-2 py-1 rounded-full hover:bg-[#EFEBE9] z-20';
-        promptBtn.innerHTML = `수정`;
-        promptBtn.onclick = () => openGeneratorModal('daily');
-        content.appendChild(promptBtn);
+            <button onclick="confirmCreateProject()" class="w-full bg-[#8D6E63] text-white py-2 rounded-lg text-xs font-bold">생성하기</button>
+            <button onclick="closeModal('projectInputModal')" class="w-full mt-2 text-[#BCAAA4] text-xs">취소</button>
+        </div>
+    </div>
 
-        const realDailyTasks = dailyData.filter(t => !t.isMessage);
-        if (realDailyTasks.length > 0) {
-            const ul = document.createElement('ul');
-            realDailyTasks.sort((a, b) => (a.done !== b.done) ? (a.done ? 1 : -1) : getTaskTimeVal(a) - getTaskTimeVal(b));
-            realDailyTasks.forEach((t) => ul.appendChild(createTaskEl(t, 'daily', selectedDate, dailyData.indexOf(t))));
-            content.appendChild(ul);
-        } else {
-            content.innerHTML += `<div class="empty-state relative z-10"><span class="text-xs text-[#8D6E63] opacity-60">오늘의 정원을 꾸며보세요!</span></div>`;
-        }
-        sec.appendChild(content);
+    <div id="projectPlanModal" class="fixed inset-0 bg-black/20 z-[65] hidden flex items-center justify-center backdrop-blur-[1px]">
+        <div class="bg-white w-80 p-5 rounded-2xl shadow-lg wood-frame modal-content">
+            <h3 class="font-hand text-xl text-[#556B2F] mb-2">AI 정원사에게 부탁하기</h3>
+            <p class="text-[10px] text-[#A1887F] mb-3">이 프로젝트를 달성하기 위한 구체적인 계획을 짜드릴게요.</p>
+            <textarea id="projectPlanPrompt" rows="4" class="w-full border border-[#DCEDC8] rounded p-2 mb-4 text-xs outline-none resize-none bg-[#F1F8E9]" placeholder="예: 2주 안에 토익 800점 넘고 싶어. 하루에 단어 50개씩 외우고 모의고사 푸는 일정 짜줘."></textarea>
+            <button onclick="confirmProjectPlan()" class="w-full bg-[#7CB342] text-white py-2 rounded-lg text-xs font-bold shadow-sm">계획 생성</button>
+            <button onclick="closeModal('projectPlanModal')" class="w-full mt-2 text-[#BCAAA4] text-xs">닫기</button>
+        </div>
+    </div>
+
+    <div id="inputModal" class="fixed inset-0 bg-black/20 z-[90] hidden flex items-center justify-center backdrop-blur-[1px]">
+        <div class="bg-white p-4 rounded-xl shadow-lg w-64 wood-frame">
+            <h3 class="text-sm font-bold text-[#5D4037] mb-2">입력해주세요</h3>
+            <input type="text" id="inputModalField" class="w-full border p-2 mb-2 rounded text-sm">
+            <div class="flex justify-end gap-2">
+                <button onclick="closeModal('inputModal')" class="text-xs text-gray-400">취소</button>
+                <button onclick="confirmInput()" class="text-xs font-bold text-[#8D6E63]">확인</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="aiLoadingPopup" class="fixed inset-0 bg-white/80 z-[100] hidden flex flex-col items-center justify-center backdrop-blur-sm">
+        <div class="w-16 h-16 border-4 border-[#EFEBE9] border-t-[#8D6E63] rounded-full animate-spin mb-4"></div>
+        <p class="font-hand text-xl text-[#5D4037] animate-pulse">정원을 가꾸는 중...</p>
+    </div>
+
+    <div id="saveToast" class="fixed bottom-24 left-1/2 transform -translate-x-1/2 bg-[#5D4037]/90 text-white px-4 py-2 rounded-full text-xs opacity-0 transition-opacity duration-300 pointer-events-none z-50 shadow-lg">
+        저장되었습니다
+    </div>
+
+    <script>
+        // 1. CONSTANTS & CONFIG
+        const STORAGE_KEY_API = 'zipipo_v2_apikey';
+        const STORAGE_KEY_DATA = 'zipipo_v2_data'; 
+        const GEMINI_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent';
         
-        // Weekly Section (Simplified)
-        const secWk = document.createElement('section');
-        secWk.className = 'mt-8 pt-6 border-t border-dashed border-[#D7CCC8]';
-        secWk.innerHTML = `<div class="flex justify-between items-center mb-4 px-1"><h3 class="font-hand text-xl text-[#8D6E63]">Weekly Board</h3><div class="flex gap-2"><button onclick="moveWeek(-1)" class="text-[#A1887F]">◀</button><span class="text-xs font-bold text-[#5D4037]">${getWeekRangeStr(currentWeekBaseDate)}</span><button onclick="moveWeek(1)" class="text-[#A1887F]">▶</button><button onclick="openWeeklyGenerator()" class="text-[10px] border border-[#D7CCC8] px-2 rounded bg-white">수정</button></div></div>`;
-        const wkKey = getWeekKey(currentWeekBaseDate);
-        const weeklyData = appData.weekly[wkKey] || { tasks: [] };
-        
-        const weekList = document.createElement('div');
-        weekList.className = 'px-4 space-y-4';
-        const currentSun = getSunday(currentWeekBaseDate);
-        for(let i=0; i<7; i++){
-             const d = new Date(currentSun); d.setDate(d.getDate()+i);
-             const dayStr = getLocalDateStr(d);
-             const tasks = weeklyData.tasks.filter(t => t.specificDate === dayStr && !t.isMessage);
-             if(tasks.length > 0) {
-                 const dayDiv = document.createElement('div');
-                 dayDiv.innerHTML = `<div class="text-xs font-bold text-[#8D6E63] mb-1">${d.getMonth()+1}.${d.getDate()}</div>`;
-                 const ul = document.createElement('ul');
-                 ul.className = 'space-y-1';
-                 tasks.forEach(t => ul.appendChild(createTaskEl(t, 'weekly', wkKey, weeklyData.tasks.indexOf(t))));
-                 dayDiv.appendChild(ul);
-                 weekList.appendChild(dayDiv);
-             }
-        }
-        secWk.appendChild(weekList);
-        container.append(sec, secWk);
-    }
+        // [WILDFLOWER DB]
+        const WILD_FLOWERS = [
+            { name: '민들레', svg: '<svg viewBox="0 0 100 100" class="text-[#FFD54F]"><circle cx="50" cy="50" r="15" fill="currentColor"/><path d="M50 35 L50 15 M65 40 L80 25 M35 40 L20 25 M65 60 L80 75 M35 60 L20 75" stroke="currentColor" stroke-width="4" stroke-linecap="round"/><circle cx="50" cy="50" r="8" fill="#FFF"/></svg>' },
+            { name: '강아지풀', svg: '<svg viewBox="0 0 100 100" class="text-[#81C784]"><path d="M50 90 Q50 50 70 30" stroke="currentColor" stroke-width="3" fill="none"/><ellipse cx="70" cy="30" rx="8" ry="15" fill="currentColor"/><path d="M50 90 Q50 60 30 50" stroke="currentColor" stroke-width="2" fill="none"/><ellipse cx="30" cy="50" rx="5" ry="10" fill="currentColor"/></svg>' },
+            { name: '선인장', svg: '<svg viewBox="0 0 100 100" class="text-[#66BB6A]"><rect x="40" y="30" width="20" height="50" rx="10" fill="currentColor"/><path d="M40 50 Q30 50 30 40" stroke="currentColor" stroke-width="3" fill="none"/><path d="M60 60 Q70 60 70 50" stroke="currentColor" stroke-width="3" fill="none"/></svg>' },
+            { name: '해바라기', svg: '<svg viewBox="0 0 100 100" class="text-[#FBC02D]"><circle cx="50" cy="50" r="10" fill="#5D4037"/><path d="M50 30 L50 20 M65 35 L75 25 M70 50 L80 50 M65 65 L75 75 M50 70 L50 80 M35 65 L25 75 M30 50 L20 50 M35 35 L25 25" stroke="currentColor" stroke-width="6" stroke-linecap="round"/></svg>' },
+            { name: '몬스테라', svg: '<svg viewBox="0 0 100 100" class="text-[#2E7D32]"><path d="M50 90 Q50 20 20 20 Q50 20 50 50 Q50 20 80 20 Q50 20 50 90 Z" fill="currentColor"/><circle cx="35" cy="40" r="3" fill="#FDFCF5"/><circle cx="65" cy="35" r="2" fill="#FDFCF5"/></svg>' },
+            { name: '방울꽃', svg: '<svg viewBox="0 0 100 100" class="text-[#9575CD]"><path d="M50 90 Q50 10 30 30" stroke="#8D6E63" stroke-width="2" fill="none"/><circle cx="30" cy="30" r="8" fill="currentColor"/><path d="M50 90 Q50 20 70 40" stroke="#8D6E63" stroke-width="2" fill="none"/><circle cx="70" cy="40" r="8" fill="currentColor"/></svg>' },
+            { name: '클로버', svg: '<svg viewBox="0 0 100 100" class="text-[#66BB6A]"><circle cx="45" cy="45" r="12" fill="currentColor" opacity="0.9"/><circle cx="55" cy="45" r="12" fill="currentColor" opacity="0.9"/><circle cx="50" cy="38" r="12" fill="currentColor" opacity="0.9"/><path d="M50 55 Q50 80 60 90" stroke="currentColor" stroke-width="3" fill="none"/></svg>' },
+            { name: '참나무', svg: '<svg viewBox="0 0 100 100" class="text-[#8D6E63]"><rect x="45" y="60" width="10" height="30" fill="currentColor"/><circle cx="50" cy="45" r="25" fill="#66BB6A"/></svg>' },
+            { name: '튤립', svg: '<svg viewBox="0 0 100 100" class="text-[#FF7043]"><path d="M50 90 L50 50" stroke="#8D6E63" stroke-width="3"/><path d="M35 30 Q50 60 65 30 Q50 10 35 30 Z" fill="currentColor"/></svg>' },
+            { name: '라벤더', svg: '<svg viewBox="0 0 100 100" class="text-[#7E57C2]"><path d="M50 90 L50 30" stroke="#8D6E63" stroke-width="2"/><circle cx="50" cy="30" r="4" fill="currentColor"/><circle cx="50" cy="40" r="4" fill="currentColor"/><circle cx="45" cy="35" r="4" fill="currentColor"/><circle cx="55" cy="35" r="4" fill="currentColor"/></svg>' }
+        ];
     
-    // [MODIFIED] createTaskEl (Weekly = Simple, Daily = Full)
-    function createTaskEl(task, type, key, index, numberPrefix = null) {
-        const li = document.createElement('li');
-        if (type === 'weekly') {
-            li.className = 'mb-1'; 
+        const SPECIAL_DAYS = {
+            '01-01': { name: '새해 소나무', svg: '<svg viewBox="0 0 100 100" class="text-[#2E7D32]"><path d="M50 10 L20 60 L80 60 Z" fill="currentColor"/><rect x="45" y="60" width="10" height="30" fill="#795548"/><circle cx="50" cy="10" r="5" fill="#FFC107"/></svg>' },
+            '03-01': { name: '무궁화 (삼일절)', svg: '<svg viewBox="0 0 100 100" class="text-[#EC407A]"><circle cx="50" cy="50" r="20" fill="currentColor" opacity="0.3"/><path d="M50 50 L50 20 M50 50 L80 50 M50 50 L50 80 M50 50 L20 50" stroke="currentColor" stroke-width="15" stroke-linecap="round"/><circle cx="50" cy="50" r="5" fill="#FFEB3B"/></svg>' },
+            '04-05': { name: '묘목 (식목일)', svg: '<svg viewBox="0 0 100 100" class="text-[#66BB6A]"><path d="M50 80 L50 50" stroke="#795548" stroke-width="4"/><path d="M50 50 Q30 30 20 40 Q30 50 50 50 Z" fill="currentColor"/><path d="M50 50 Q70 30 80 40 Q70 50 50 50 Z" fill="currentColor"/></svg>' },
+            '05-05': { name: '새싹 (어린이날)', svg: '<svg viewBox="0 0 100 100" class="text-[#8BC34A]"><path d="M50 90 L50 60" stroke="#795548" stroke-width="3"/><circle cx="40" cy="50" r="10" fill="currentColor"/><circle cx="60" cy="50" r="10" fill="currentColor"/><circle cx="50" cy="40" r="8" fill="currentColor"/></svg>' },
+            '05-08': { name: '카네이션 (어버이날)', svg: '<svg viewBox="0 0 100 100" class="text-[#F44336]"><path d="M50 90 L50 50" stroke="#4CAF50" stroke-width="2"/><circle cx="50" cy="40" r="15" fill="currentColor" stroke="white" stroke-width="2" stroke-dasharray="3,3"/><path d="M50 55 Q30 55 30 45" stroke="#4CAF50" stroke-width="2" fill="none"/></svg>' },
+            '08-15': { name: '태극꽃 (광복절)', svg: '<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="20" fill="#CD2E3A"/><path d="M50 50 A 10 10 0 0 1 50 70 A 10 10 0 0 0 50 30 Z" fill="#0047A0"/><path d="M20 20 L30 30 M80 20 L70 30 M20 80 L30 70 M80 80 L70 70" stroke="black" stroke-width="2"/></svg>' },
+            '10-09': { name: '뿌리깊은 나무 (한글날)', svg: '<svg viewBox="0 0 100 100" class="text-[#795548]"><rect x="40" y="50" width="20" height="40" fill="currentColor"/><circle cx="50" cy="40" r="25" fill="#4CAF50"/><text x="50" y="45" font-size="20" text-anchor="middle" fill="white" font-weight="bold">ㄱ</text></svg>' },
+            '12-25': { name: '포인세티아 (성탄절)', svg: '<svg viewBox="0 0 100 100" class="text-[#D32F2F]"><path d="M50 50 L50 20 M50 50 L75 35 M50 50 L75 65 M50 50 L50 80 M50 50 L25 65 M50 50 L25 35" stroke="currentColor" stroke-width="8" stroke-linecap="round"/><circle cx="50" cy="50" r="6" fill="#FFD700"/></svg>' }
+        };
+    
+        const SOIL_SVG = '<svg viewBox="0 0 100 100" class="text-[#8D6E63] opacity-60"><path d="M20 80 Q50 60 80 80 Q50 100 20 80 Z" fill="currentColor"/><circle cx="30" cy="80" r="2" fill="#5D4037"/><circle cx="70" cy="80" r="2" fill="#5D4037"/><circle cx="50" cy="85" r="2" fill="#5D4037"/></svg>';
+        const ICONS = {
+            check: `<svg class="w-4 h-4 text-[#8D6E63] hover:text-[#5D4037]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"></path></svg>`,
+            closeX: `<svg class="w-4 h-4 text-[#D7CCC8] hover:text-[#FF7F50]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path></svg>`,
+        };
+    
+        // 2. STATE
+        let appData = { daily: {}, weekly: {}, projects: [], dailySummaries: {}, dailyPrompts: {}, weeklyPrompts: {}, routines: [] };
+        let currentTab = 'home';
+        let selectedDate = new Date().toISOString().split('T')[0];
+        let lastKnownToday = new Date().toISOString().split('T')[0]; 
+        let currentWeekBaseDate = new Date();
+        let achievementViewDate = new Date().toISOString().split('T')[0];
+        let inputCallback = null;
+        let editingTask = null;
+        let activeProjectId = null;
+        let loadingInterval;
+        let stopwatchInterval;
+        let stopwatchStartTime;
+        let currentStopwatchTask = null; 
+        let pendingFeedbackInfo = null;
+        let selectedProjDates = new Set();
+        let projMode = 'range';
+        let projCalDate = new Date();
+        let lastProjectScrollTop = 0;
+        let currentGenMode = 'daily'; 
+    
+        // 3. HELPER FUNCTIONS
+        function getLocalDateStr(d) { return `${d.getFullYear()}-${(d.getMonth()+1).toString().padStart(2,'0')}-${d.getDate().toString().padStart(2,'0')}`; }
+        function formatTimeSimple(iso) { const d = new Date(iso); return `${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`; }
+        function getTodayStr() { return getLocalDateStr(new Date()); }
+        function parseTasks(text) { return text.split('\n').map(l=>l).filter(l=>l.trim().length>0 && !l.trim().startsWith('---')); } 
+        function getWeekKey(d) { const date = new Date(d); const diff = date.getDate() - date.getDay(); const sunday = new Date(date.setDate(diff)); return getLocalDateStr(sunday); }
+        function getWeekRangeStr(d) { const curr = new Date(d); const day = curr.getDay(); const first = new Date(curr); first.setDate(curr.getDate() - day); const last = new Date(first); last.setDate(first.getDate() + 6); return `${first.getMonth()+1}.${first.getDate()} ~ ${last.getMonth()+1}.${last.getDate()}`; }
+        function getSunday(d) { d = new Date(d); var day = d.getDay(); var diff = d.getDate() - day; return new Date(d.setDate(diff)); }
+        function getTaskTimeVal(t) {
+            let timeStr = t.manualTimeRange;
+            if (!timeStr && t.text) { const m = t.text.match(/(?:^|[\s\(\[])(\d{1,2}):(\d{2})/); if(m) timeStr = `${m[1]}:${m[2]}`; }
+            if(timeStr) { const m = timeStr.match(/(\d{1,2}):(\d{2})/); if(m) { let h = parseInt(m[1]); const min = parseInt(m[2]); if (h < 5) h += 24; return h * 60 + min; } }
+            return 999999; 
+        }
+        
+        // [New] Weekly Pastel Color
+        function getPastelColor(text) {
+            const colors = ['#FFEBEE', '#F3E5F5', '#E3F2FD', '#E0F2F1', '#E8F5E9', '#FFFDE7', '#FFF3E0', '#FBE9E7'];
+            let hash = 0;
+            for (let i = 0; i < text.length; i++) hash = text.charCodeAt(i) + ((hash << 5) - hash);
+            return colors[Math.abs(hash) % colors.length];
+        }
+        
+        function getFlowerForDate(dateStr) {
+            const [y, m, d] = dateStr.split('-');
+            const key = `${m}-${d}`;
+            if (SPECIAL_DAYS[key]) return SPECIAL_DAYS[key];
+            let hash = 0;
+            for (let i = 0; i < dateStr.length; i++) hash = dateStr.charCodeAt(i) + ((hash << 5) - hash);
+            const index = Math.abs(hash) % WILD_FLOWERS.length;
+            return WILD_FLOWERS[index];
+        }
+    
+        // 4. DATA MANGEMENT
+        function loadData() {
+            const json = localStorage.getItem(STORAGE_KEY_DATA);
+            if (json) { try { appData = JSON.parse(json); } catch(e) { console.error(e); } }
+            if (!appData.daily) appData.daily = {};
+            if (!appData.weekly) appData.weekly = {};
+            if (!appData.projects) appData.projects = [];
+            if (!appData.dailySummaries) appData.dailySummaries = {};
+            if (!appData.dailyPrompts) appData.dailyPrompts = {}; 
+            if (!appData.weeklyPrompts) appData.weeklyPrompts = {};
+            if (!appData.routines) appData.routines = [];
+        }
+        function saveData() {
+            localStorage.setItem(STORAGE_KEY_DATA, JSON.stringify(appData));
+            const toast = document.getElementById('saveToast');
+            if(toast) { toast.style.opacity = '1'; setTimeout(() => { toast.style.opacity = '0'; }, 2000); }
+        }
+        function saveApiKey() { const key = document.getElementById('apiKeyInput').value; if(key) { localStorage.setItem(STORAGE_KEY_API, key); alert('저장됨'); toggleApiKeyInput(); } }
+        function toggleApiKeyInput() { document.getElementById('apiKeyContainer').classList.toggle('hidden'); }
+    
+        // 5. API
+        async function callGemini(sysPrompt, cb) {
+            const key = localStorage.getItem(STORAGE_KEY_API);
+            if (!key) { alert("API Key 필요!"); hideLoading(); return; }
+            try {
+                const res = await fetch(`${GEMINI_URL}?key=${key}`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ contents: [{ parts: [{ text: sysPrompt }] }] }) });
+                const data = await res.json();
+                if(data.candidates && data.candidates[0].content) cb(data.candidates[0].content.parts[0].text);
+                else { alert('오류: ' + (data.error ? data.error.message : 'Unknown')); hideLoading(); }
+            } catch(e) { alert('네트워크 오류'); hideLoading(); }
+        }
+    
+        // 6. GENERATION LOGIC
+        async function generateSchedule(type, isModify = false) {
+            const key = localStorage.getItem(STORAGE_KEY_API);
+            if(!key) return alert('API Key 필요');
+            
+            let newRequest = "";
+            if (isModify) {
+                newRequest = document.getElementById('modifyPrompt').value;
+                closeModal('modifierModal');
+            } else {
+                newRequest = document.getElementById('taskPrompt').value;
+                closeModal('generatorModal');
+            }
+            
+            let previousContext = "";
+            if (type === 'daily') previousContext = appData.dailyPrompts[selectedDate] || "";
+            else previousContext = appData.weeklyPrompts[getWeekKey(currentWeekBaseDate)] || "";
+            
+            const finalRequest = isModify 
+                ? `[수정/추가 요청]: ${newRequest}` 
+                : (newRequest ? newRequest : "(기존 맥락 유지)");
+                
+            showLoading(isModify ? "일정을 다듬는 중..." : "정원을 가꾸는 중...");
+            
+            const now = new Date();
+            const currentTimeStr = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+            
+            let contextInfo = "";
+            let completedTasks = [], pendingTasks = [];
+            if (type === 'daily' && appData.daily[selectedDate]) {
+                completedTasks = appData.daily[selectedDate].filter(t => t.done);
+                pendingTasks = appData.daily[selectedDate].filter(t => !t.done && !t.isMessage);
+            }
+            if (completedTasks.length > 0) contextInfo += `\n[완료한 일정]: ${completedTasks.map(t=>t.text).join(', ')}`;
+            if (pendingTasks.length > 0) contextInfo += `\n[남은 일정]: ${pendingTasks.map(t=>t.text).join(', ')}`;
+            if (appData.routines.length > 0) contextInfo += `\n[루틴]: ${appData.routines.map(r=>r.text).join(', ')}`;
+    
+            let sysPrompt = "";
+            if (type === 'daily') {
+                appData.dailyPrompts[selectedDate] = (previousContext + "\n" + finalRequest).trim();
+                
+                sysPrompt = `역할: 따뜻하고 똑똑한 플래너. 날짜: ${selectedDate}. 현재: ${currentTimeStr}.
+                이전 대화 맥락: ${previousContext}
+                새로운 요청: ${finalRequest}
+                ${contextInfo}
+                [규칙]
+                1. 중요도/긴급도 고려해 균형 잡힌 일정 제안. 휴식도 챙겨줘.
+                2. 현재 시각 이후 일정만 계획.
+                3. 형식: 'HH:MM~HH:MM 할일 | 조언' (조언은 필요할때만 짧게)
+                4. 마지막 줄에 '[MSG] 응원 한마디' 작성.
+                `;
+            } else {
+                 const wk = getWeekKey(currentWeekBaseDate);
+                 appData.weeklyPrompts[wk] = (previousContext + "\n" + finalRequest).trim();
+                 
+                 sysPrompt = `역할: 주간 플래너. 기간: ${getWeekRangeStr(currentWeekBaseDate)}.
+                 맥락: ${previousContext}
+                 요청: ${finalRequest}
+                 [규칙]
+                 1. 에너지 흐름 고려.
+                 2. 형식: 'YYYY-MM-DD: 할일' (위클리는 조언/팁 불필요)
+                 3. 주간 조언만 마지막에 '[MSG]' 태그 후 작성.
+                 `;
+            }
+    
+            await callGemini(sysPrompt, (text) => {
+                const lines = parseTasks(text);
+                const newTasks = [];
+                let isMsgSection = false;
+                lines.forEach(line => {
+                    let trimLine = line.trim();
+                    if(!trimLine || trimLine.includes('플래닝') || trimLine.includes('Timeline')) return;
+                    if (trimLine.includes('[MSG]')) { isMsgSection = true; trimLine = trimLine.replace('[MSG]', '').trim(); }
+                    if (isMsgSection) { if(trimLine) newTasks.push({ text: trimLine, done: false, isMessage: true }); return; }
+    
+                    let adviceText = "";
+                    let mainText = trimLine;
+                    if (trimLine.includes('|')) { const parts = trimLine.split('|'); mainText = parts[0].trim(); adviceText = parts[1].trim(); }
+                    let taskObj = { text: mainText, done: false, isMessage: false, advice: adviceText };
+                    if (/\d{4}-\d{2}-\d{2}/.test(mainText)) { const m = mainText.match(/(\d{4}-\d{2}-\d{2})[:\s]*(.*)/); if(m) { taskObj.specificDate = m[1]; taskObj.text = m[2]; } }
+                    if(!taskObj.isMessage) newTasks.push(taskObj);
+                });
+                if (type === 'daily') {
+                    appData.daily[selectedDate] = [...completedTasks, ...newTasks];
+                    appData.daily[selectedDate].sort((a,b) => getTaskTimeVal(a) - getTaskTimeVal(b));
+                } else {
+                    const wk = getWeekKey(currentWeekBaseDate);
+                    appData.weekly[wk] = { tasks: newTasks }; 
+                }
+                document.getElementById('taskPrompt').value = '';
+                document.getElementById('modifyPrompt').value = '';
+                
+                hideLoading(); saveData(); renderApp();
+            });
+        }
+    
+        async function generateDailySummary(dateStr) {
+            const key = localStorage.getItem(STORAGE_KEY_API);
+            if(!key) return alert('API Key 필요');
+            const tasks = appData.daily[dateStr] || [];
+            let context = tasks.filter(t=>!t.isMessage).map(t => `- ${t.text} (${t.done?'완료':'미완료'}) ${t.feedback ? '[메모:'+t.feedback+']' : ''}`).join('\n');
+            showLoading("회고 중...");
+            const sysPrompt = `날짜: ${dateStr}. 활동:\n${context}\n3줄 내외로 따뜻하게 핵심 회고 작성해줘. 잘한 점과 내일의 조언 포함.`;
+            await callGemini(sysPrompt, (text) => { appData.dailySummaries[dateStr] = text; hideLoading(); saveData(); renderApp(); });
+        }
+    
+        // 7. STOPWATCH & FEEDBACK
+        function startStopwatch(task, type, key, index) {
+            currentStopwatchTask = { type, key, index, task };
+            stopwatchStartTime = new Date();
+            updateTask(type, key, index, { actualStartTime: stopwatchStartTime.toISOString() });
+            document.getElementById('stopwatchModal').classList.remove('hidden');
+            document.getElementById('stopwatchTaskTitle').innerText = task.text;
+            
+            // [수정] 예정 시간 표시 로직
+            let durationStr = "";
+            const tm = task.text.match(/(\d{1,2}:\d{2})\s*[~-]\s*(\d{1,2}:\d{2})/);
+            if(tm) {
+                const startParts = tm[1].split(':');
+                const endParts = tm[2].split(':');
+                const sMin = parseInt(startParts[0])*60 + parseInt(startParts[1]);
+                const eMin = parseInt(endParts[0])*60 + parseInt(endParts[1]);
+                let diff = eMin - sMin;
+                if (diff < 0) diff += 24*60; 
+                if (diff > 0) durationStr = `~ ${diff}분 ~`;
+            }
+            document.getElementById('stopwatchDuration').innerText = durationStr;
+    
+            if(stopwatchInterval) clearInterval(stopwatchInterval);
+            stopwatchInterval = setInterval(updateStopwatchDisplay, 1000);
+            updateStopwatchDisplay();
+        }
+        function updateStopwatchDisplay() {
+            const diff = new Date() - stopwatchStartTime; 
+            const hrs = Math.floor(diff / 3600000); const mins = Math.floor((diff % 3600000) / 60000); const secs = Math.floor((diff % 60000) / 1000);
+            document.getElementById('stopwatchTime').innerText = `${hrs.toString().padStart(2,'0')}:${mins.toString().padStart(2,'0')}:${secs.toString().padStart(2,'0')}`;
+        }
+        function stopStopwatch() {
+            if(stopwatchInterval) clearInterval(stopwatchInterval);
+            if (currentStopwatchTask) updateTask(currentStopwatchTask.type, currentStopwatchTask.key, currentStopwatchTask.index, { actualEndTime: new Date().toISOString() });
+            document.getElementById('stopwatchModal').classList.add('hidden');
+            currentStopwatchTask = null;
+        }
+        function handleTaskCheck(chk, type, key, index) {
+            const isChecked = chk.checked;
+            updateTask(type, key, index, { done: isChecked });
+            if (isChecked) {
+                pendingFeedbackInfo = { type, key, index };
+                document.getElementById('feedbackInput').value = '';
+                document.getElementById('feedbackModal').classList.remove('hidden');
+                document.getElementById('feedbackInput').focus();
+            }
+        }
+        function saveFeedback() {
+            const text = document.getElementById('feedbackInput').value;
+            if (pendingFeedbackInfo) updateTask(pendingFeedbackInfo.type, pendingFeedbackInfo.key, pendingFeedbackInfo.index, { feedback: text });
+            closeModal('feedbackModal'); pendingFeedbackInfo = null;
+        }
+        function skipFeedback() { closeModal('feedbackModal'); pendingFeedbackInfo = null; }
+    
+        // 8. RENDER
+        function renderApp() {
+            const container = document.getElementById('appContent'); container.innerHTML = '';
+            if (currentTab === 'home') renderDaily(container);
+            else if (currentTab === 'project') renderProjects(container);
+            else if (currentTab === 'achievement') renderCalendar(container);
+        }
+    
+        function renderDaily(container) {
+            const d = new Date(selectedDate); const dayNames = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+            const flower = getFlowerForDate(selectedDate);
+            const sec = document.createElement('section');
+            sec.innerHTML = `
+                <div class="flex justify-between items-end mb-4 px-1">
+                    <div class="flex flex-col">
+                        <div class="text-2xl font-hand text-[#5D4037] flex items-baseline gap-2"><span>${d.getMonth()+1}.${d.getDate()}</span><span class="text-sm text-[#A1887F] font-sans font-bold">${dayNames[d.getDay()]}</span></div>
+                        <div class="text-[10px] text-[#8D6E63] mt-1 flex items-center gap-1">오늘의 꽃: <span class="font-bold">${flower.name}</span></div>
+                    </div>
+                    <div class="flex gap-2"><button onclick="window.openRoutineModal()" class="text-[10px] bg-white border border-[#D7CCC8] px-2 py-1 rounded-full text-[#8D6E63]">루틴</button><input type="date" class="border border-[#D7CCC8] rounded px-2 py-1 text-xs bg-white" value="${selectedDate}" onchange="window.changeDate(this.value)"></div>
+                </div>`;
+            
+            const dailyData = appData.daily[selectedDate] || [];
+            const dailyMsgs = dailyData.filter(t => t.isMessage);
+            if (dailyMsgs.length > 0) {
+                const msgBox = document.createElement('div');
+                msgBox.className = 'mx-6 mt-1 mb-3 p-3 bg-white/60 rounded-xl border border-[#C5E1A5] text-sm text-[#556B2F] font-wando cursor-pointer';
+                msgBox.onclick = () => editDailyMessage(selectedDate);
+                msgBox.innerHTML = dailyMsgs.map(m => m.text).join('<br>');
+                sec.appendChild(msgBox);
+            }
+    
             const content = document.createElement('div');
-            content.className = 'text-xs text-[#5D4037] py-1.5 px-2 bg-[#FDFCF5] rounded border border-[#EFEBE9] hover:border-[#D7CCC8] transition cursor-pointer flex items-start leading-relaxed';
-            content.innerHTML = `<span class="mr-1.5 text-[#8D6E63] font-bold mt-0.5">·</span> ${task.text}`;
-            content.onclick = () => openEditTimeModal(type, key, index, task);
+            content.className = 'bg-white rounded-[24px] border border-[#EFEBE9] p-5 relative min-h-[300px] shadow-sm';
+            content.innerHTML = `<div class="absolute inset-0 pointer-events-none opacity-30" style="background-image: linear-gradient(#EFEBE9 1px, transparent 1px); background-size: 100% 24px;"></div>`;
+            
+            // [수정] 수정 버튼 클릭 시 새로운 모달 열기
+            const promptBtn = document.createElement('button');
+            promptBtn.className = 'absolute top-3 right-3 text-[10px] text-[#A1887F] bg-[#FDFCF5] border border-[#D7CCC8] px-2 py-1 rounded-full hover:bg-[#EFEBE9] z-20';
+            promptBtn.innerHTML = `수정`;
+            promptBtn.onclick = () => openModifierModal('daily');
+            content.appendChild(promptBtn);
+    
+            const realDailyTasks = dailyData.filter(t => !t.isMessage);
+            if (realDailyTasks.length > 0) {
+                const ul = document.createElement('ul');
+                realDailyTasks.sort((a, b) => (a.done !== b.done) ? (a.done ? 1 : -1) : getTaskTimeVal(a) - getTaskTimeVal(b));
+                realDailyTasks.forEach((t) => ul.appendChild(createTaskEl(t, 'daily', selectedDate, dailyData.indexOf(t))));
+                content.appendChild(ul);
+            } else {
+                content.innerHTML += `<div class="empty-state relative z-10"><span class="text-xs text-[#8D6E63] opacity-60">오늘의 정원을 꾸며보세요!</span></div>`;
+            }
+            sec.appendChild(content);
+            
+            // Weekly Section
+            const secWk = document.createElement('section');
+            secWk.className = 'mt-8 pt-6 border-t border-dashed border-[#D7CCC8]';
+            secWk.innerHTML = `<div class="flex justify-between items-center mb-4 px-1"><h3 class="font-hand text-xl text-[#8D6E63]">Weekly Board</h3><div class="flex gap-2"><button onclick="moveWeek(-1)" class="text-[#A1887F]">◀</button><span class="text-xs font-bold text-[#5D4037]">${getWeekRangeStr(currentWeekBaseDate)}</span><button onclick="moveWeek(1)" class="text-[#A1887F]">▶</button><button onclick="openModifierModal('weekly')" class="text-[10px] border border-[#D7CCC8] px-2 rounded bg-white">수정</button></div></div>`;
+            const wkKey = getWeekKey(currentWeekBaseDate);
+            const weeklyData = appData.weekly[wkKey] || { tasks: [] };
+            
+            const weekList = document.createElement('div');
+            weekList.className = 'px-4 space-y-4';
+            const currentSun = getSunday(currentWeekBaseDate);
+            for(let i=0; i<7; i++){
+                 const d = new Date(currentSun); d.setDate(d.getDate()+i);
+                 const dayStr = getLocalDateStr(d);
+                 const tasks = weeklyData.tasks.filter(t => t.specificDate === dayStr && !t.isMessage);
+                 if(tasks.length > 0) {
+                     const dayDiv = document.createElement('div');
+                     dayDiv.innerHTML = `<div class="text-xs font-bold text-[#8D6E63] mb-1">${d.getMonth()+1}.${d.getDate()}</div>`;
+                     const ul = document.createElement('ul');
+                     ul.className = 'space-y-1';
+                     tasks.forEach(t => ul.appendChild(createTaskEl(t, 'weekly', wkKey, weeklyData.tasks.indexOf(t))));
+                     dayDiv.appendChild(ul);
+                     weekList.appendChild(dayDiv);
+                 }
+            }
+            secWk.appendChild(weekList);
+            container.append(sec, secWk);
+        }
+        
+        // [MODIFIED] createTaskEl
+        function createTaskEl(task, type, key, index, numberPrefix = null) {
+            const li = document.createElement('li');
+            
+            // [수정] Weekly Board: 같은 내용은 같은 파스텔톤 배경
+            if (type === 'weekly') {
+                li.className = 'mb-1'; 
+                const content = document.createElement('div');
+                const bgCol = getPastelColor(task.text);
+                content.className = 'text-xs text-[#5D4037] py-1.5 px-2 rounded border border-transparent hover:border-[#D7CCC8] transition cursor-pointer flex items-start leading-relaxed';
+                content.style.backgroundColor = bgCol;
+                content.innerHTML = `<span class="mr-1.5 text-[#8D6E63] font-bold mt-0.5">·</span> ${task.text}`;
+                content.onclick = () => openEditTimeModal(type, key, index, task);
+                li.appendChild(content);
+                return li;
+            }
+    
+            li.className = `timeline-container flex flex-col mb-4 todo-item ${task.done ? 'completed' : ''}`;
+            
+            // [복구] 프로젝트 헤더(소제목) 처리 (체크박스 없음)
+            if (type === 'project' && task.type === 'header') {
+                 const headerDiv = document.createElement('div');
+                 headerDiv.className = 'proj-header-box';
+                 headerDiv.innerHTML = `${task.text} <button class="text-[#D7CCC8] hover:text-[#FF7F50]" onclick="window.deleteTaskItem('project', '${key}', ${index})">x</button>`;
+                 li.innerHTML = ''; li.appendChild(headerDiv); li.style.paddingLeft='0';
+                 return li;
+            }
+    
+            if (type !== 'project') li.innerHTML += `<div class="timeline-line"></div><div class="timeline-dot"></div>`;
+            else { li.style.paddingLeft = '0'; li.style.marginBottom = '0.5rem'; }
+            
+            const content = document.createElement('div');
+            content.className = 'relative z-10 w-full';
+            let displayText = task.text;
+            let cleanAdvice = task.advice || "";
+            if (!cleanAdvice && displayText.includes('(꿀팁')) { const tm = displayText.match(/\(꿀팁.*?\)/); if(tm) displayText = displayText.replace(tm[0], '').trim(); }
+            
+            // [복구] 프로젝트 넘버링
+            if (type === 'project' && numberPrefix) {
+                 displayText = (task.depth > 0) ? `- ${displayText}` : `${numberPrefix}. ${displayText}`;
+            }
+    
+            let timeLabel = "";
+            const tm = displayText.match(/(\d{1,2}:\d{2})\s*[~-]\s*(\d{1,2}:\d{2})/);
+            if(tm) { timeLabel = tm[0]; displayText = displayText.replace(tm[0], '').trim(); }
+            else if(task.manualTimeRange) timeLabel = task.manualTimeRange;
+            if(timeLabel && type==='daily') content.innerHTML += `<div class="task-time-label">${timeLabel}</div>`;
+    
+            const row = document.createElement('div');
+            row.className = 'flex items-start justify-between gap-2';
+            const left = document.createElement('div'); left.className = 'flex-1';
+            const titleDiv = document.createElement('div');
+            titleDiv.className = 'text-sm cursor-pointer hover:text-[#8D6E63] todo-text leading-relaxed';
+            titleDiv.innerHTML = displayText;
+            titleDiv.onclick = () => openEditTimeModal(type, key, index, task);
+            left.appendChild(titleDiv);
+            
+            if(task.feedback) {
+                const fb = document.createElement('div');
+                fb.className = 'text-xs text-[#8D6E63] mt-1 bg-[#FDFCF5] border border-[#EFEBE9] p-1 rounded inline-block cursor-pointer';
+                fb.innerHTML = `💬 ${task.feedback}`;
+                fb.onclick = () => { pendingFeedbackInfo = {type, key, index}; document.getElementById('feedbackInput').value = task.feedback; document.getElementById('feedbackModal').classList.remove('hidden'); }
+                left.appendChild(fb);
+            }
+            row.appendChild(left);
+            const right = document.createElement('div'); right.className = 'flex items-center gap-1 shrink-0';
+            const chk = document.createElement('input'); chk.type = 'checkbox'; chk.className = 'custom-checkbox'; chk.checked = task.done;
+            chk.onclick = (e) => { e.stopPropagation(); handleTaskCheck(chk, type, key, index); };
+            right.appendChild(chk);
+            row.appendChild(right);
+            content.appendChild(row);
+            
+            if (cleanAdvice && !displayText.includes(cleanAdvice.replace('꿀팁', '').trim())) {
+                const adDiv = document.createElement('div');
+                adDiv.className = 'tip-box text-[11px] text-[#8D6E63] mt-1.5 opacity-90 font-sans bg-[#EFEBE9]/50 px-2 py-1 rounded block w-full leading-snug';
+                adDiv.innerHTML = `💡 ${cleanAdvice}`;
+                content.appendChild(adDiv);
+            }
             li.appendChild(content);
+    
+            if(type === 'daily') {
+                const timerRow = document.createElement('div');
+                timerRow.className = 'flex items-center gap-2 mt-1 pl-1 h-6';
+                if (task.actualStartTime && task.actualEndTime) {
+                    const s = new Date(task.actualStartTime); const e = new Date(task.actualEndTime);
+                    const diff = Math.floor((e - s) / 60000);
+                    timerRow.innerHTML = `<span class="text-xs text-[#5D4037] font-bold bg-[#F1F8E9] px-2 rounded border border-[#C5E1A5]">${formatTimeSimple(s)}~${formatTimeSimple(e)} (${diff}m)</span>`;
+                } else if (!task.done) {
+                    const btn = document.createElement('button');
+                    if (!task.actualStartTime) {
+                        btn.className = 'font-hand text-sm text-[#A1887F] hover:text-[#FF8A65] border border-[#D7CCC8] px-2 rounded-full bg-white';
+                        btn.innerText = 'start !';
+                        btn.onclick = () => startStopwatch(task, type, key, index);
+                    } else {
+                        btn.className = 'font-hand text-sm text-white bg-[#FFAB91] hover:bg-[#FF8A65] px-2 rounded-full animate-pulse';
+                        btn.innerText = 'ing...';
+                        btn.onclick = () => startStopwatch(task, type, key, index);
+                    }
+                    timerRow.appendChild(btn);
+                }
+                if(timerRow.hasChildNodes()) li.appendChild(timerRow);
+            }
             return li;
         }
-
-        li.className = `timeline-container flex flex-col mb-4 todo-item ${task.done ? 'completed' : ''}`;
-        if (type !== 'project') li.innerHTML += `<div class="timeline-line"></div><div class="timeline-dot"></div>`;
-        else { li.style.paddingLeft = '0'; li.style.marginBottom = '0.5rem'; }
-        
-        const content = document.createElement('div');
-        content.className = 'relative z-10 w-full';
-        let displayText = task.text;
-        let cleanAdvice = task.advice || "";
-        if (!cleanAdvice && displayText.includes('(꿀팁')) { const tm = displayText.match(/\(꿀팁.*?\)/); if(tm) displayText = displayText.replace(tm[0], '').trim(); }
-        if (type === 'project' && numberPrefix) displayText = (task.depth > 0) ? `- ${displayText}` : `${numberPrefix}. ${displayText}`;
-
-        let timeLabel = "";
-        const tm = displayText.match(/(\d{1,2}:\d{2})\s*[~-]\s*(\d{1,2}:\d{2})/);
-        if(tm) { timeLabel = tm[0]; displayText = displayText.replace(tm[0], '').trim(); }
-        else if(task.manualTimeRange) timeLabel = task.manualTimeRange;
-        if(timeLabel && type==='daily') content.innerHTML += `<div class="task-time-label">${timeLabel}</div>`;
-
-        const row = document.createElement('div');
-        row.className = 'flex items-start justify-between gap-2';
-        const left = document.createElement('div'); left.className = 'flex-1';
-        const titleDiv = document.createElement('div');
-        titleDiv.className = 'text-sm cursor-pointer hover:text-[#8D6E63] todo-text leading-relaxed';
-        titleDiv.innerHTML = displayText;
-        titleDiv.onclick = () => openEditTimeModal(type, key, index, task);
-        left.appendChild(titleDiv);
-        
-        if(task.feedback) {
-            const fb = document.createElement('div');
-            fb.className = 'text-xs text-[#8D6E63] mt-1 bg-[#FDFCF5] border border-[#EFEBE9] p-1 rounded inline-block cursor-pointer';
-            fb.innerHTML = `💬 ${task.feedback}`;
-            fb.onclick = () => { pendingFeedbackInfo = {type, key, index}; document.getElementById('feedbackInput').value = task.feedback; document.getElementById('feedbackModal').classList.remove('hidden'); }
-            left.appendChild(fb);
-        }
-        row.appendChild(left);
-        const right = document.createElement('div'); right.className = 'flex items-center gap-1 shrink-0';
-        const chk = document.createElement('input'); chk.type = 'checkbox'; chk.className = 'custom-checkbox'; chk.checked = task.done;
-        chk.onclick = (e) => { e.stopPropagation(); handleTaskCheck(chk, type, key, index); };
-        right.appendChild(chk);
-        row.appendChild(right);
-        content.appendChild(row);
-        
-        if (cleanAdvice && !displayText.includes(cleanAdvice.replace('꿀팁', '').trim())) {
-            const adDiv = document.createElement('div');
-            adDiv.className = 'tip-box text-[11px] text-[#8D6E63] mt-1.5 opacity-90 font-sans bg-[#EFEBE9]/50 px-2 py-1 rounded block w-full leading-snug';
-            adDiv.innerHTML = `💡 ${cleanAdvice}`;
-            content.appendChild(adDiv);
-        }
-        li.appendChild(content);
-
-        if(type === 'daily') {
-            const timerRow = document.createElement('div');
-            timerRow.className = 'flex items-center gap-2 mt-1 pl-1 h-6';
-            if (task.actualStartTime && task.actualEndTime) {
-                const s = new Date(task.actualStartTime); const e = new Date(task.actualEndTime);
-                const diff = Math.floor((e - s) / 60000);
-                timerRow.innerHTML = `<span class="text-xs text-[#5D4037] font-bold bg-[#F1F8E9] px-2 rounded border border-[#C5E1A5]">${formatTimeSimple(s)}~${formatTimeSimple(e)} (${diff}m)</span>`;
-            } else if (!task.done) {
-                const btn = document.createElement('button');
-                if (!task.actualStartTime) {
-                    btn.className = 'font-hand text-sm text-[#A1887F] hover:text-[#FF8A65] border border-[#D7CCC8] px-2 rounded-full bg-white';
-                    btn.innerText = 'start !';
-                    btn.onclick = () => startStopwatch(task, type, key, index);
-                } else {
-                    btn.className = 'font-hand text-sm text-white bg-[#FFAB91] hover:bg-[#FF8A65] px-2 rounded-full animate-pulse';
-                    btn.innerText = 'ing...';
-                    btn.onclick = () => startStopwatch(task, type, key, index);
-                }
-                timerRow.appendChild(btn);
-            }
-            if(timerRow.hasChildNodes()) li.appendChild(timerRow);
-        }
-        return li;
-    }
-
-    function renderCalendar(container) {
-        const year = calendarDate.getFullYear(); const month = calendarDate.getMonth();
-        const wrapper = document.createElement('div');
-        wrapper.className = 'wood-frame p-5 bg-white min-h-[400px] flex flex-col';
-        wrapper.innerHTML = `<div class="flex justify-between items-center mb-6"><button onclick="moveMonth(-1)" class="text-[#8D6E63]">◀</button><h2 class="font-hand text-2xl text-[#5D4037]">${year}.${month+1}</h2><button onclick="moveMonth(1)" class="text-[#8D6E63]">▶</button></div>`;
-        
-        const calGrid = document.createElement('div');
-        calGrid.className = 'grid grid-cols-7 gap-1 mb-6 text-center';
-        ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].forEach(d => calGrid.innerHTML+=`<div class="text-xs font-bold text-[#A1887F] mb-2">${d}</div>`);
-        const firstDay = new Date(year, month, 1).getDay(); const lastDate = new Date(year, month+1, 0).getDate();
-        for(let i=0; i<firstDay; i++) calGrid.innerHTML += `<div></div>`;
-        for(let i=1; i<=lastDate; i++) {
-            const dateStr = `${year}-${(month+1).toString().padStart(2,'0')}-${i.toString().padStart(2,'0')}`;
-            const tasks = appData.daily[dateStr] || [];
-            const doneCount = tasks.filter(t=>t.done).length;
-            const totalCount = tasks.filter(t=>!t.isMessage).length;
-            let contentHtml = `<span class="text-[10px] z-20 relative font-bold text-[#5D4037]">${i}</span>`;
+    
+        // [수정] 복구된 Render Calendar (Achievement)
+        function renderCalendar(container) {
+            const year = calendarDate.getFullYear(); const month = calendarDate.getMonth();
+            const wrapper = document.createElement('div');
+            wrapper.className = 'wood-frame p-5 bg-white min-h-[400px] flex flex-col';
+            wrapper.innerHTML = `<div class="flex justify-between items-center mb-6"><button onclick="moveMonth(-1)" class="text-[#8D6E63]">◀</button><h2 class="font-hand text-2xl text-[#5D4037]">${year}.${month+1}</h2><button onclick="moveMonth(1)" class="text-[#8D6E63]">▶</button></div>`;
             
-            if (totalCount > 0) {
-                const completionRate = doneCount / totalCount;
-                contentHtml += `<div class="absolute bottom-1 w-6 h-6 opacity-80">${SOIL_SVG}</div>`;
-                if (completionRate >= 0.5) {
-                    const flower = getFlowerForDate(dateStr);
-                    contentHtml += `<div class="absolute bottom-2 w-6 h-6 z-10 flower-icon drop-shadow-sm">${flower.svg}</div>`;
+            const calGrid = document.createElement('div');
+            calGrid.className = 'grid grid-cols-7 gap-1 mb-6 text-center';
+            ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].forEach(d => calGrid.innerHTML+=`<div class="text-xs font-bold text-[#A1887F] mb-2">${d}</div>`);
+            const firstDay = new Date(year, month, 1).getDay(); const lastDate = new Date(year, month+1, 0).getDate();
+            for(let i=0; i<firstDay; i++) calGrid.innerHTML += `<div></div>`;
+            for(let i=1; i<=lastDate; i++) {
+                const dateStr = `${year}-${(month+1).toString().padStart(2,'0')}-${i.toString().padStart(2,'0')}`;
+                const tasks = appData.daily[dateStr] || [];
+                const doneCount = tasks.filter(t=>t.done).length;
+                const totalCount = tasks.filter(t=>!t.isMessage).length;
+                let contentHtml = `<span class="text-[10px] z-20 relative font-bold text-[#5D4037]">${i}</span>`;
+                
+                if (totalCount > 0) {
+                    const completionRate = doneCount / totalCount;
+                    contentHtml += `<div class="absolute bottom-1 w-6 h-6 opacity-80">${SOIL_SVG}</div>`;
+                    if (completionRate >= 0.5) {
+                        const flower = getFlowerForDate(dateStr);
+                        contentHtml += `<div class="absolute bottom-2 w-6 h-6 z-10 flower-icon drop-shadow-sm">${flower.svg}</div>`;
+                    }
                 }
+                const cell = document.createElement('div');
+                cell.className = `h-14 rounded-xl flex flex-col items-center justify-start pt-1 cursor-pointer hover:bg-[#F1F8E9] relative ${achievementViewDate===dateStr ? 'bg-[#DCEDC8] border border-[#AED581]' : ''} transition-all`;
+                cell.innerHTML = contentHtml;
+                cell.onclick = () => { achievementViewDate = dateStr; renderApp(); };
+                calGrid.appendChild(cell);
             }
-            const cell = document.createElement('div');
-            cell.className = `h-14 rounded-xl flex flex-col items-center justify-start pt-1 cursor-pointer hover:bg-[#F1F8E9] relative ${achievementViewDate===dateStr ? 'bg-[#DCEDC8] border border-[#AED581]' : ''} transition-all`;
-            cell.innerHTML = contentHtml;
-            cell.onclick = () => { achievementViewDate = dateStr; renderApp(); };
-            calGrid.appendChild(cell);
+            wrapper.appendChild(calGrid);
+            
+            const fbSection = document.createElement('div');
+            fbSection.className = 'mt-auto pt-4 border-t border-[#EFEBE9]';
+            const summary = appData.dailySummaries[achievementViewDate];
+            let details = `<h3 class="font-hand text-lg text-[#5D4037] mb-2">${achievementViewDate}</h3>`;
+            if(summary) {
+                details += `<div class="mb-4 p-4 bg-[#F1F8E9] rounded-xl text-xs text-[#33691E] leading-relaxed font-wando border border-[#AED581] relative text-center"><div class="font-bold mb-2 text-[#556B2F]">~ 오늘의 회고 ~</div>${summary}</div>`;
+            } else {
+                 details += `<button onclick="generateDailySummary('${achievementViewDate}')" class="w-full mb-4 py-2 bg-white border border-[#D7CCC8] rounded-xl text-xs">회고 생성하기</button>`;
+            }
+            fbSection.innerHTML = details;
+            wrapper.appendChild(fbSection);
+            container.appendChild(wrapper);
         }
-        wrapper.appendChild(calGrid);
         
-        const fbSection = document.createElement('div');
-        fbSection.className = 'mt-auto pt-4 border-t border-[#EFEBE9]';
-        const summary = appData.dailySummaries[achievementViewDate];
-        let details = `<h3 class="font-hand text-lg text-[#5D4037] mb-2">${achievementViewDate}</h3>`;
-        if(summary) {
-            details += `<div class="mb-4 p-4 bg-[#F1F8E9] rounded-xl text-xs text-[#33691E] leading-relaxed font-wando border border-[#AED581] relative text-center"><div class="font-bold mb-2 text-[#556B2F]">~ 오늘의 회고 ~</div>${summary}</div>`;
-        } else {
-             details += `<button onclick="generateDailySummary('${achievementViewDate}')" class="w-full mb-4 py-2 bg-white border border-[#D7CCC8] rounded-xl text-xs">회고 생성하기</button>`;
+        // [수정] 복구된 Render Projects
+        function renderProjects(container) {
+             const secProj = document.createElement('section');
+             secProj.innerHTML = `<h3 class="font-hand text-xl text-[#556B2F] mb-3 px-1 flex items-center gap-1">프로젝트 정원</h3>`;
+             const addBtnContainer = document.createElement('div');
+             addBtnContainer.className = 'mb-6';
+             addBtnContainer.innerHTML = `<button onclick="window.openProjectModal()" class="w-full py-4 border-2 border-dashed border-[#A1887F] text-[#8D6E63] font-hand text-xl rounded-2xl bg-white flex items-center justify-center gap-2">+ 프로젝트 심기</button>`;
+             secProj.appendChild(addBtnContainer);
+             
+             const scrollDiv = document.createElement('div');
+             scrollDiv.id = 'projectScrollContainer';
+             scrollDiv.className = 'flex flex-col gap-4 pb-4 px-1 overflow-y-auto max-h-[70vh]';
+             
+             const activeProjects = (appData.projects||[]).filter(p => !p.completed);
+             
+             activeProjects.forEach(p => {
+                 const card = document.createElement('div');
+                 card.className = 'wood-frame p-4 bg-white border border-[#C5E1A5] relative';
+                 const groupedTasks = {};
+                 p.tasks.forEach((t, idx) => {
+                     const d = t.date || '기타';
+                     if (!groupedTasks[d]) groupedTasks[d] = [];
+                     groupedTasks[d].push({...t, originalIndex: idx});
+                 });
+                 const sortedDates = Object.keys(groupedTasks).sort();
+                 
+                 let cardHtml = `<div class="absolute top-2 right-2 flex gap-1 z-10"><button onclick="completeProject('${p.id}', true)">${ICONS.check}</button><button onclick="deleteProject('${p.id}')">${ICONS.closeX}</button></div><div class="mb-3"><p class="text-[10px] text-[#A1887F] font-bold">${p.dateDisplay}</p><h4 class="font-bold text-lg text-[#5D4037]">${p.title}</h4></div>`;
+                 // AI Plan Button
+                 cardHtml += `<div class="border-t border-dashed border-[#C5E1A5] pt-2 mt-2 mb-2 flex justify-between items-center"><span class="text-xs font-bold text-[#556B2F]">Plan</span><button onclick="openProjectPlanModal('${p.id}')" class="text-[10px] bg-[#F1F8E9] text-[#33691E] px-2 py-1 rounded-full border border-[#AED581]">AI 계획 짜기</button></div>`;
+                 
+                 const taskListContainer = document.createElement('div');
+                 taskListContainer.className = 'max-h-80 overflow-y-auto pl-1 text-sm';
+                 taskListContainer.innerHTML = cardHtml;
+                 
+                 sortedDates.forEach(date => {
+                     const dateHeader = document.createElement('div');
+                     dateHeader.className = 'proj-date-header'; dateHeader.innerText = date;
+                     taskListContainer.appendChild(dateHeader);
+                     const ul = document.createElement('ul');
+                     let taskCounter = 1;
+                     groupedTasks[date].forEach(item => {
+                         ul.appendChild(createTaskEl(item, 'project', p.id, item.originalIndex, taskCounter));
+                         if(item.type!=='header' && (!item.depth || item.depth===0)) taskCounter++;
+                     });
+                     taskListContainer.appendChild(ul);
+                 });
+                 card.appendChild(taskListContainer);
+                 scrollDiv.appendChild(card);
+             });
+             secProj.appendChild(scrollDiv);
+             container.appendChild(secProj);
         }
-        fbSection.innerHTML = details;
-        wrapper.appendChild(fbSection);
-        container.appendChild(wrapper);
-    }
     
-    // Legacy Projects Placeholder (Keep original project logic if needed, simplfied here)
-    function renderProjects(container) {
-         const secProj = document.createElement('section');
-         secProj.innerHTML = `<h3 class="font-hand text-xl text-[#556B2F] mb-3 px-1">프로젝트 정원</h3><div id="projectScrollContainer" class="flex flex-col gap-4 pb-4 px-1 overflow-y-auto max-h-[70vh]"><button onclick="openProjectModal()" class="w-full py-4 border-2 border-dashed border-[#A1887F] text-[#8D6E63] font-hand text-xl rounded-2xl bg-white flex items-center justify-center gap-2">+ 프로젝트 심기</button></div>`;
-         
-         const activeProjects = (appData.projects||[]).filter(p => !p.completed);
-         const scrollDiv = secProj.querySelector('#projectScrollContainer');
-         
-         activeProjects.forEach(p => {
-             const card = document.createElement('div');
-             card.className = 'wood-frame p-4 bg-white border border-[#C5E1A5] relative';
-             card.innerHTML = `<div class="absolute top-2 right-2 flex gap-1 z-10"><button onclick="completeProject('${p.id}', true)">${ICONS.check}</button><button onclick="deleteProject('${p.id}')">${ICONS.closeX}</button></div><h4 class="font-bold text-lg text-[#5D4037] mb-2">${p.title}</h4>`;
-             const ul = document.createElement('ul');
-             p.tasks.forEach((t, idx) => ul.appendChild(createTaskEl(t, 'project', p.id, idx)));
-             card.appendChild(ul);
-             scrollDiv.appendChild(card);
-         });
-         container.appendChild(secProj);
-    }
-
-    // INIT
-    window.onload = function() { loadData(); renderApp(); if(!localStorage.getItem(STORAGE_KEY_API)) toggleApiKeyInput(); }
-    
-    // GLOBALS (for HTML callbacks)
-    window.closeModal = (id) => document.getElementById(id).classList.add('hidden');
-    window.saveApiKey = saveApiKey; window.toggleApiKeyInput = toggleApiKeyInput;
-    window.generateSchedule = generateSchedule; window.openGeneratorModal = (m) => { document.getElementById('generatorModal').classList.remove('hidden'); document.getElementById('taskPrompt').value = ''; };
-    window.openWeeklyGenerator = () => window.openGeneratorModal();
-    window.openAddTaskModal = openAddTaskModal; window.closeAddTaskModal = () => closeModal('addTaskModal'); window.confirmTaskAction = confirmTaskAction;
-    window.openProjectModal = () => document.getElementById('projectInputModal').classList.remove('hidden'); window.switchProjMode = (m) => projMode = m; window.confirmCreateProject = () => { /* legacy proj create logic */ }; window.moveProjCal = () => {};
-    window.openInputModal = (t, cb) => { inputCallback=cb; document.getElementById('inputModal').classList.remove('hidden'); }; window.confirmInput = () => { if(inputCallback) inputCallback(document.getElementById('inputModalField').value); closeModal('inputModal'); };
-    window.switchTab = (t) => { currentTab=t; document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('tab-active')); document.getElementById('tab-'+t).classList.add('tab-active'); renderApp(); };
-    window.moveMonth = (d) => { calendarDate.setMonth(calendarDate.getMonth()+d); renderApp(); };
-    window.moveWeek = (d) => { currentWeekBaseDate.setDate(currentWeekBaseDate.getDate() + (d*7)); renderApp(); };
-    window.generateDailySummary = generateDailySummary; window.openEditTimeModal = (t,k,i,task) => { editingTask={type:t, key:k, index:i, task:task}; openAddTaskModal(editingTask); };
-    window.updateTask = (t,k,i,c) => { 
-        if(t==='daily') Object.assign(appData.daily[k][i], c); 
-        else if(t==='weekly') Object.assign(appData.weekly[k].tasks[i], c);
-        else if(t==='project') Object.assign(appData.projects.find(p=>p.id===k).tasks[i], c);
-        saveData(); renderApp(); 
-    };
-    window.deleteTaskItem = (t,k,i) => { if(t==='daily') appData.daily[k].splice(i,1); else if(t==='project') appData.projects.find(p=>p.id===k).tasks.splice(i,1); saveData(); renderApp(); };
-    window.deleteProject = (id) => { if(confirm('삭제?')) { appData.projects=appData.projects.filter(p=>p.id!==id); saveData(); renderApp(); } };
-    window.addManualTask = () => openAddTaskModal(null, 'daily');
-    window.changeDate = (v) => { selectedDate = v; renderApp(); };
-    window.openRoutineModal = () => { document.getElementById('routineModal').classList.remove('hidden'); renderRoutineList(); };
-    window.addRoutine = () => { const v=document.getElementById('newRoutineInput').value; if(v) appData.routines.push({text:v}); saveData(); renderRoutineList(); };
-    window.deleteRoutine = (i) => { appData.routines.splice(i,1); saveData(); renderRoutineList(); };
-    window.completeProject = (id, v) => { appData.projects.find(p=>p.id===id).completed=v; saveData(); renderApp(); };
-    window.linkWeeklyTasks = () => { /* logic skipped for brevity, keeps original */ };
-    function renderRoutineList() { const l=document.getElementById('routineList'); l.innerHTML=''; appData.routines.forEach((r,i)=>l.innerHTML+=`<div>${r.text} <button onclick="deleteRoutine(${i})">x</button></div>`); }
-    function openAddTaskModal(existing) { 
-        document.getElementById('addTaskModal').classList.remove('hidden'); 
-        if(existing) document.getElementById('manualTaskText').value = existing.task.text; 
-        else document.getElementById('manualTaskText').value = '';
-    }
-    function confirmTaskAction() {
-        const text = document.getElementById('manualTaskText').value; if(!text) return;
-        if(editingTask) window.updateTask(editingTask.type, editingTask.key, editingTask.index, {text: text});
-        else { if(!appData.daily[selectedDate]) appData.daily[selectedDate]=[]; appData.daily[selectedDate].push({text:text, done:false}); }
-        saveData(); renderApp(); closeModal('addTaskModal');
-    }
-    function editDailyMessage() { /* daily msg logic */ }
-</script>
+        // INIT
+        window.onload = function() { loadData(); renderApp(); if(!localStorage.getItem(STORAGE_KEY_API)) toggleApiKeyInput(); }
+        
+        // GLOBALS (for HTML callbacks)
+        window.closeModal = (id) => document.getElementById(id).classList.add('hidden');
+        window.saveApiKey = saveApiKey; window.toggleApiKeyInput = toggleApiKeyInput;
+        window.generateSchedule = generateSchedule; 
+        window.openGeneratorModal = (m) => { document.getElementById('generatorModal').classList.remove('hidden'); document.getElementById('taskPrompt').value = ''; };
+        window.openWeeklyGenerator = () => window.openGeneratorModal();
+        // [NEW] Open Modifier Modal
+        window.openModifierModal = (mode) => {
+            currentGenMode = mode;
+            document.getElementById('modifierModal').classList.remove('hidden');
+            document.getElementById('modifyPrompt').value = '';
+        }
+        
+        window.openAddTaskModal = openAddTaskModal; window.closeAddTaskModal = () => closeModal('addTaskModal'); window.confirmTaskAction = confirmTaskAction;
+        window.openProjectModal = () => document.getElementById('projectInputModal').classList.remove('hidden'); window.switchProjMode = (m) => projMode = m; window.confirmCreateProject = confirmCreateProject; window.moveProjCal = moveProjCal;
+        window.openInputModal = (t, cb) => { inputCallback=cb; document.getElementById('inputModal').classList.remove('hidden'); }; window.confirmInput = () => { if(inputCallback) inputCallback(document.getElementById('inputModalField').value); closeModal('inputModal'); };
+        window.switchTab = (t) => { currentTab=t; document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('tab-active')); document.getElementById('tab-'+t).classList.add('tab-active'); renderApp(); };
+        const calendarDate = new Date();
+        window.moveMonth = (d) => { calendarDate.setMonth(calendarDate.getMonth()+d); renderApp(); };
+        window.moveWeek = (d) => { currentWeekBaseDate.setDate(currentWeekBaseDate.getDate() + (d*7)); renderApp(); };
+        window.generateDailySummary = generateDailySummary; 
+        window.openEditTimeModal = (t,k,i,task) => { editingTask={type:t, key:k, index:i, task:task}; openAddTaskModal(editingTask); };
+        window.updateTask = (t,k,i,c) => { 
+            if(t==='daily') Object.assign(appData.daily[k][i], c); 
+            else if(t==='weekly') Object.assign(appData.weekly[k].tasks[i], c);
+            else if(t==='project') Object.assign(appData.projects.find(p=>p.id===k).tasks[i], c);
+            saveData(); renderApp(); 
+        };
+        window.deleteTaskItem = (t,k,i) => { if(t==='daily') appData.daily[k].splice(i,1); else if(t==='project') appData.projects.find(p=>p.id===k).tasks.splice(i,1); saveData(); renderApp(); };
+        window.deleteProject = (id) => { if(confirm('삭제?')) { appData.projects=appData.projects.filter(p=>p.id!==id); saveData(); renderApp(); } };
+        window.addManualTask = () => openAddTaskModal(null, 'daily');
+        window.changeDate = (v) => { selectedDate = v; renderApp(); };
+        window.openRoutineModal = () => { document.getElementById('routineModal').classList.remove('hidden'); renderRoutineList(); };
+        window.addRoutine = () => { const v=document.getElementById('newRoutineInput').value; if(v) appData.routines.push({text:v}); saveData(); renderRoutineList(); };
+        window.deleteRoutine = (i) => { appData.routines.splice(i,1); saveData(); renderRoutineList(); };
+        window.completeProject = (id, v) => { appData.projects.find(p=>p.id===id).completed=v; saveData(); renderApp(); };
+        window.linkWeeklyTasks = () => { /* logic skipped for brevity, keeps original */ };
+        function renderRoutineList() { const l=document.getElementById('routineList'); l.innerHTML=''; appData.routines.forEach((r,i)=>l.innerHTML+=`<div>${r.text} <button onclick="deleteRoutine(${i})">x</button></div>`); }
+        function openAddTaskModal(existing) { 
+            document.getElementById('addTaskModal').classList.remove('hidden'); 
+            if(existing) document.getElementById('manualTaskText').value = existing.task.text; 
+            else document.getElementById('manualTaskText').value = '';
+        }
+        function confirmTaskAction() {
+            const text = document.getElementById('manualTaskText').value; if(!text) return;
+            if(editingTask) window.updateTask(editingTask.type, editingTask.key, editingTask.index, {text: text});
+            else { if(!appData.daily[selectedDate]) appData.daily[selectedDate]=[]; appData.daily[selectedDate].push({text:text, done:false}); }
+            saveData(); renderApp(); closeModal('addTaskModal');
+        }
+        function editDailyMessage(d) { /* logic */ }
+        
+        // Project Create Logic (Restored)
+        function confirmCreateProject() {
+            const title = document.getElementById('projTitle').value; const desc = document.getElementById('projDesc').value;
+            if(!title) return alert('제목 입력');
+            let dateDisplay = '', type = '', dateArray = null, startDate = null, endDate = null;
+            if(projMode === 'range') {
+                const start = document.getElementById('projStart').value; const end = document.getElementById('projEnd').value;
+                if(!start || !end) return alert('기간 설정');
+                dateDisplay = `${start} ~ ${end}`; type = 'range'; startDate = start; endDate = end;
+            } else {
+                if(selectedProjDates.size === 0) return alert('날짜 선택');
+                const sorted = Array.from(selectedProjDates).sort();
+                dateDisplay = `총 ${selectedProjDates.size}일`; type = 'select'; dateArray = sorted; startDate = sorted[0]; endDate = sorted[sorted.length-1];
+            }
+            appData.projects.push({ id: Date.now()+'', title: title, desc: desc, dateDisplay: dateDisplay, dates: type === 'select' ? dateArray : null, startDate: startDate, endDate: endDate, tasks:[], completed: false });
+            saveData(); renderApp(); closeModal('projectInputModal');
+        }
+        function moveProjCal(d) { projCalDate.setMonth(projCalDate.getMonth() + d); renderProjCal(); }
+        function renderProjCal() {
+            const y = projCalDate.getFullYear(); const m = projCalDate.getMonth();
+            document.getElementById('projCalTitle').innerText = `${y}.${m+1}`;
+            const container = document.getElementById('projCalGrid'); container.innerHTML = '<div>일</div><div>월</div><div>화</div><div>수</div><div>목</div><div>금</div><div>토</div>';
+            const firstDay = new Date(y, m, 1).getDay(); const lastDate = new Date(y, m+1, 0).getDate();
+            for(let i=0; i<firstDay; i++) container.innerHTML += '<div></div>';
+            for(let i=1; i<=lastDate; i++) {
+                const dateStr = `${y}-${(m+1).toString().padStart(2,'0')}-${i.toString().padStart(2,'0')}`;
+                const el = document.createElement('div'); el.className = 'mini-cal-cell';
+                if(selectedProjDates.has(dateStr)) el.classList.add('selected');
+                el.innerText = i;
+                el.onclick = () => { if(selectedProjDates.has(dateStr)) selectedProjDates.delete(dateStr); else selectedProjDates.add(dateStr); renderProjCal(); document.getElementById('selectedCount').innerText = selectedProjDates.size; };
+                container.appendChild(el);
+            }
+        }
+        function openProjectPlanModal(pid) { activeProjectId = pid; document.getElementById('projectPlanModal').classList.remove('hidden'); }
+        async function confirmProjectPlan() {
+            const prompt = document.getElementById('projectPlanPrompt').value;
+            if(!prompt) return; showLoading("계획 수립 중...");
+            await callGemini(prompt, (text) => {
+                const lines = text.split('\n');
+                const newTasks = [];
+                let currentDate = '기타';
+                lines.forEach(l => {
+                    const clean = l.trim();
+                    if(!clean) return;
+                    const dateMatch = clean.match(/\[Day\s*\d+:\s*(\d{4}-\d{2}-\d{2})\]/);
+                    if(dateMatch) { currentDate = dateMatch[1]; return; }
+                    const isHeader = clean.startsWith('#') || clean.endsWith(':');
+                    const isTip = clean.includes('[TIP]');
+                    let depth = 0;
+                    if(l.startsWith('  ') || l.startsWith('\t')) depth = 1;
+                    
+                    newTasks.push({ text: clean.replace(/^[-*]\s*/,''), date: currentDate, done: false, type: isHeader?'header':(isTip?'tip':'task'), depth: depth });
+                });
+                const p = appData.projects.find(x=>x.id===activeProjectId);
+                if(p) p.tasks = [...p.tasks, ...newTasks];
+                hideLoading(); closeModal('projectPlanModal'); saveData(); renderApp();
+            });
+        }
+    </script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
