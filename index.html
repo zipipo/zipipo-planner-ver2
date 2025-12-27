@@ -16,6 +16,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Kirang+Haerang&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
+	<script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
     <style>
         /* --- Theme Variables --- */
         :root {
@@ -311,6 +312,44 @@
     opacity: 0;
     margin-top: 0;
     padding: 0;
+
+/* --- [추가됨] 타이머 & 피드백 팝업 스타일 --- */
+.timer-popup {
+    background-color: #FFF9C4; /* 파스텔 노랑 */
+    border: 4px solid #FFF176;
+    color: #5D4037;
+    transition: background-color 0.3s;
+}
+.timer-over {
+    background-color: #FFCCBC; /* 시간 초과 시 붉은 톤 */
+    border-color: #FFAB91;
+}
+
+/* 체크박스 선택 팝업 버튼 디자인 */
+.fb-btn {
+    width: 48px; height: 48px; border-radius: 50%; 
+    font-weight: bold; font-size: 1.2rem;
+    display: flex; align-items: center; justify-content: center; 
+    transition: transform 0.1s;
+}
+.fb-btn:active { transform: scale(0.95); }
+.fb-btn-o { background: #F1F8E9; border: 2px solid #AED581; color: #33691E; }
+.fb-btn-tri { background: #FFF8E1; border: 2px solid #FFD54F; color: #F57F17; }
+.fb-btn-x { background: #FBE9E7; border: 2px solid #FFAB91; color: #D84315; }
+.fb-btn.selected { transform: scale(1.1); box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+
+/* 체크박스 체크 표시(v) 제거 - 요청사항 반영 */
+.custom-checkbox:checked::after { display: none; }
+
+/* 프로젝트 팁 박스 접기 기능 */
+.proj-tip-box {
+    transition: max-height 0.3s ease;
+    overflow: hidden;
+    max-height: 300px; /* 펼쳐졌을 때 최대 높이 */
+}
+.proj-tip-box.collapsed {
+    max-height: 32px; /* 접혔을 때 높이 */
+    cursor: pointer;
 }
     </style>
 </head>
@@ -378,35 +417,10 @@
     </div>
 
     <div class="flex justify-end mb-2 gap-2">
-        <button onclick="document.getElementById('styleOptions').classList.toggle('hidden')" 
-                class="text-[11px] bg-white text-[#8D6E63] px-3 py-1.5 rounded-full border border-[#D7CCC8] hover:bg-[#EFEBE9] transition flex items-center gap-1 font-bold">
-            @ 스타일 선택
-        </button>
         <button onclick="linkWeeklyTasks()" 
                 class="text-[11px] bg-[#F1F8E9] text-[#556B2F] px-3 py-1.5 rounded-full border border-[#DCEDC8] hover:bg-[#AED581] hover:text-white transition flex items-center gap-1 font-bold">
             @ Weekly랑 엮기
         </button>
-    </div>
-    
-    <div id="styleOptions" class="hidden mb-3 p-3 bg-[#FAFAFA] rounded-xl border border-[#EFEBE9]">
-        <div class="text-xs text-[#A1887F] font-bold mb-2 ml-1"> 일정 스타일 선택</div>
-        <div class="flex flex-wrap gap-2" id="preferenceOptions">
-            <label class="cursor-pointer flex items-center gap-1 bg-white border border-[#EFEBE9] px-2 py-1.5 rounded-lg text-xs text-[#5D4037] hover:bg-[#FDFCF5]">
-                <input type="checkbox" value="여유롭게 (휴식 많음)" class="accent-[#8D6E63]"> 여유롭게
-            </label>
-            <label class="cursor-pointer flex items-center gap-1 bg-white border border-[#EFEBE9] px-2 py-1.5 rounded-lg text-xs text-[#5D4037] hover:bg-[#FDFCF5]">
-                <input type="checkbox" value="타이트하게 (몰입)" class="accent-[#8D6E63]"> 타이트하게
-            </label>
-            <label class="cursor-pointer flex items-center gap-1 bg-white border border-[#EFEBE9] px-2 py-1.5 rounded-lg text-xs text-[#5D4037] hover:bg-[#FDFCF5]">
-                <input type="checkbox" value="밤 늦게까지 가능" class="accent-[#8D6E63]"> 올빼미
-            </label>
-            <label class="cursor-pointer flex items-center gap-1 bg-white border border-[#EFEBE9] px-2 py-1.5 rounded-lg text-xs text-[#5D4037] hover:bg-[#FDFCF5]">
-                <input type="checkbox" value="짧게 여러 번 (전환)" class="accent-[#8D6E63]"> 짧은 호흡
-            </label>
-            <label class="cursor-pointer flex items-center gap-1 bg-white border border-[#EFEBE9] px-2 py-1.5 rounded-lg text-xs text-[#5D4037] hover:bg-[#FDFCF5]">
-                <input type="checkbox" value="진득하게 (한 우물)" class="accent-[#8D6E63]"> 진득하게
-            </label>
-        </div>
     </div>
 
     <textarea id="taskPrompt" rows="3" class="w-full p-4 border-2 border-[#EFEBE9] rounded-xl mb-3 resize-none focus:outline-none focus:border-[#D7CCC8] bg-white text-sm placeholder-gray-300" placeholder="예: 공부 2시간 하고 산책하기"></textarea>
@@ -539,7 +553,17 @@
 
     // 2. STATE
     let appData = { daily: {}, weekly: {}, projects: [], dailySummaries: {}, dailyPrompts: {}, weeklyPrompts: {}, routines: [] };
-    let currentTab = 'home';
+    // 기존 appData 선언 아래에 다음 줄들을 추가하세요.
+	appData.pendingTasks = appData.pendingTasks || []; // 미완료(세모,X) 항목 저장소
+	appData.userStyle = appData.userStyle || ""; // 사용자 스타일 기억
+
+	// 타이머 및 피드백 상태 관리 변수
+	let timerInterval;
+	let timerTask = null; 
+	let timerTargetTime = null;
+	let fbTarget = null;
+	let fbStatus = 'O';
+	let currentTab = 'home';
     let selectedDate = new Date().toISOString().split('T')[0];
     let lastKnownToday = new Date().toISOString().split('T')[0]; 
     let currentWeekBaseDate = new Date();
@@ -701,165 +725,146 @@ function getTaskTimeVal(t) {
     }
 
     // 6. LOGIC
- // [수정됨] 6. LOGIC 내 generateSchedule 함수
-    async function generateSchedule(type) {
-        const key = localStorage.getItem(STORAGE_KEY_API);
-        if(!key) return alert('API Key가 필요해요!');
-        const promptText = document.getElementById('taskPrompt').value;
-        if(!promptText) return alert('내용을 입력해주세요');
-        
-        // [추가] 선호도 가져오기
-        const checkedPrefs = Array.from(document.querySelectorAll('#preferenceOptions input:checked')).map(cb => cb.value);
-        const prefString = checkedPrefs.length > 0 ? checkedPrefs.join(', ') : "별도 요청 없음";
-        
-        showLoading("zipipo가 만들고 있어요");
-        document.getElementById('generatorModal').classList.add('hidden');
-        
-        const todayStr = getTodayStr();
-        const now = new Date();
-        const currentTimeStr = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
-        
-        const currSun = getSunday(currentWeekBaseDate);
-        const currSat = new Date(currSun); currSat.setDate(currSat.getDate()+6);
-        const weekRangeStr = `${getLocalDateStr(currSun)} ~ ${getLocalDateStr(currSat)}`;
-        
-        let completedTasks = [];
-        let pendingTasks = [];
-        
-        if (type === 'daily' && appData.daily[selectedDate]) {
-            completedTasks = appData.daily[selectedDate].filter(t => t.done);
-            pendingTasks = appData.daily[selectedDate].filter(t => !t.done && !t.isMessage);
-        }
+async function generateSchedule(type) {
+    const inputEl = document.getElementById('taskPrompt');
+    let promptText = inputEl.value.trim();
+    
+    // [NEW] Weekly 연동 시, 입력창에 값이 이미 있을 수 있음
+    if(!promptText) return alert('내용을 입력해주세요');
+    
+    // [핵심 변경] 체크박스 대신, 입력 텍스트에서 스타일 관련 단어가 보이면 스타일을 업데이트
+    // 예: "좀 빡빡하게 짜줘", "여유로운 스타일로 해줘"
+    if(promptText.includes('하게') || promptText.includes('스타일') || promptText.includes('여유') || promptText.includes('타이트')) {
+        appData.userStyle = promptText; 
+    }
 
-        let contextInfo = "";
+    showLoading("zipipo가 만들고 있어요");
+    document.getElementById('generatorModal').classList.add('hidden');
+    
+    const now = new Date();
+    const currentTimeStr = `${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}`;
+    
+    let context = "";
+    
+    // 1. 미완료(Pending) 항목 반영
+    if (appData.pendingTasks && appData.pendingTasks.length > 0) {
+        const pends = appData.pendingTasks.map(t => `- ${t.text}`).join('\n');
+        context += `\n[이전에 미완료된 항목 (반드시 일정에 포함할 것)]\n${pends}\n`;
+    }
+
+    // 2. 루틴 반영
+    if (appData.routines && appData.routines.length > 0) {
+        context += `\n[고정 루틴]\n${appData.routines.map(r=>r.text).join(', ')}\n`;
+    }
+
+    // 3. 어제 회고 피드백 반영
+    if(type === 'daily') {
+        const prevDate = new Date(selectedDate); prevDate.setDate(prevDate.getDate()-1);
+        const prevDateStr = getLocalDateStr(prevDate); // getLocalDateStr 헬퍼 함수 사용
+        const prevSum = appData.dailySummaries[prevDateStr];
+        if(prevSum && prevSum.includes('계획 조언')) {
+             // 대략적으로 '계획 조언' 이후의 텍스트를 가져옴
+             const advicePart = prevSum.split('계획 조언')[1] || "";
+             context += `\n[어제 회고 피드백 참고]\n${advicePart.substring(0, 150)}...\n`;
+        }
+    }
+
+    // 4. 이미 완료된 일정 필터링 (중복 방지)
+    if (type === 'daily' && appData.daily[selectedDate]) {
+        const done = appData.daily[selectedDate].filter(t=>t.done).map(t=>t.text).join(', ');
+        if(done) context += `\n[이미 완료한 일정 (절대 다시 적지 말 것)]\n${done}\n`;
+    }
+
+    let sysPrompt = "";
+    if (type === 'daily') {
+         appData.dailyPrompts[selectedDate] = promptText;
+         
+         // [핵심 변경] 프롬프트에 기억된 스타일(appData.userStyle) 주입
+         sysPrompt = `역할: 차분하고 꼼꼼한 플래너. 날짜: ${selectedDate}. 현재시각: ${currentTimeStr}.
+         요청: "${promptText}"
+         ${appData.userStyle ? `[사용자가 선호하는 스타일(기억됨)]: "${appData.userStyle}"` : ''}
+         ${context}
+         
+         [규칙]
+         1. 이모지 사용 금지. 담백하고 깔끔하게.
+         2. **현재 시각(${currentTimeStr}) 이후의 일정만 계획.** 시간이 부족하면 요청한 할 일의 시간을 줄여서라도 배치할 것(누락 금지).
+         3. 우선순위 (중요도, 긴급도)와 즐거움을 고려해 균형있게 배치.
+         4. 형식: 'HH:MM~HH:MM 할일 | 꿀팁(괄호없이 내용만)'
+         5. 꿀팁이 없거나 할일과 비슷하면 생략.
+         6. 맨 마지막 줄에 '[MSG] 한마디' (피드백 없이 격려만).
+         `;
+    } else {
+         const wkKey = getWeekKey(currentWeekBaseDate);
+         appData.weeklyPrompts[wkKey] = promptText;
+         
+         sysPrompt = `역할: 주간 보드 플래너. 기간: ${getWeekRangeStr(currentWeekBaseDate)}.
+         요청: "${promptText}"
+         ${context}
+         [규칙]
+         1. 이모지 금지. 할 일만 작성. 꿀팁/피드백 작성 금지.
+         2. 형식: 'YYYY-MM-DD: 할일' (날짜는 해당 주간 내)
+         3. 날짜 지정 없으면 'Anytime: 할일'
+         `;
+    }
+
+    await callGemini(sysPrompt, (text) => {
+        const lines = parseTasks(text);
+        const newTasks = [];
         
-        // [중요 수정] 완료된 일정 처리 강화
-        if (completedTasks.length > 0) {
-            const doneList = completedTasks.map(t => `- ${t.text} (완료됨)`).join('\n');
-            contextInfo += `\n[이미 완료한 일정 (절대 다시 일정에 넣지 마세요. 복습하라는 내용으로도 재생성 금지!)]\n${doneList}\n`;
-        }
-        
-        if (pendingTasks.length > 0) {
-            const pendingList = pendingTasks.map(t => `- ${t.text}`).join('\n');
-            contextInfo += `\n[아직 하지 못한 남은 일정 (이 내용들을 위주로 다시 계획해줘)]\n${pendingList}\n`;
-        }
-
-        if (appData.routines && appData.routines.length > 0) {
-            const routineList = appData.routines.map(r => r.text).join(', ');
-            contextInfo += `\n[사용자의 고정 루틴]\n${routineList}\n`;
-        }
-        
-        // ... (이전 코드와 동일한 context 부분 생략) ...
-        if (type === 'daily') {
-             const prevDate = new Date(selectedDate);
-             prevDate.setDate(prevDate.getDate() - 1);
-             const prevDateStr = getLocalDateStr(prevDate);
-             if (appData.dailySummaries[prevDateStr]) {
-                 contextInfo += `\n[참고: 어제의 회고]\n${appData.dailySummaries[prevDateStr]}\n`;
-             }
-             const wkKey = getWeekKey(new Date(selectedDate));
-             if (appData.weekly[wkKey] && appData.weekly[wkKey].tasks) {
-                 const todaysWeeklyTasks = appData.weekly[wkKey].tasks.filter(t => 
-                     !t.isMessage && (t.specificDate === selectedDate || !t.specificDate)
-                 );
-                 if (todaysWeeklyTasks.length > 0) {
-                     const taskList = todaysWeeklyTasks.map(t => `- ${t.text}`).join('\n');
-                     contextInfo += `\n[참고: 이번 주 할 일 중 오늘(${selectedDate}) 챙길 항목]\n${taskList}\n`;
-                 }
-             }
-        }
-
-        let sysPrompt = "";
-        if (type === 'daily') {
-             appData.dailyPrompts[selectedDate] = promptText;
-             const isTargetToday = selectedDate === todayStr;
-             
-             const timeConstraint = isTargetToday 
-                ? `2. 현재 시각이 ${currentTimeStr}입니다. **반드시 현재 시각 이후의 일정만 계획하세요.**` 
-                : `2. 하루 전체 일정을 계획할 것.`;
-             
-             sysPrompt = `역할: 플래너 (MBTI T). 날짜: ${selectedDate}. 요청: "${promptText}".
-             ${contextInfo}
-             
-             [사용자 선호 스타일 (이 스타일에 맞춰 시간을 배분해줘)]
-             - ${prefString}
-
-             [규칙] 
-             1. 인사말, 제목 절대 금지. 바로 일정 목록만 출력.
-             ${timeConstraint} 
-             3. [아직 하지 못한 남은 일정]이 있다면 포함하되, **[이미 완료한 일정]은 복습/심화 학습의 목적이라도 절대 다시 적지 마.** (완료된 건 완료된 것임).
-             4. 형식: 'HH:MM~HH:MM 할일 | 꿀팁(한 줄)'
-             5. 플래너 한마디는 맨 마지막 줄에 '[MSG]' 태그 붙이고 작성.
-             6. 마크다운 금지.`;
-        } else {
-             const wk = getWeekKey(currentWeekBaseDate);
-             appData.weeklyPrompts[wk] = promptText;
-
-             sysPrompt = `역할: 주간 플래너. 기간: ${weekRangeStr}. 요청: "${promptText}".
-             [선호 스타일]: ${prefString}
-             [규칙]
-             1. 일주일 치 균형 잡힌 계획 수립. 인사말/제목 생략.
-             2. 형식: 'YYYY-MM-DD: 할일 | 꿀팁(한 줄)'
-             3. 위 기간 내의 날짜로만 생성.
-             4. 전체 주간 조언은 맨 마지막에 '[MSG]' 태그 붙이고 작성.`;
-        }
+        lines.forEach(line => {
+            let clean = line.trim();
+            if(!clean) return;
             
-        await callGemini(sysPrompt, (text) => {
-            const lines = parseTasks(text);
-            const newTasks = [];
-            let isMsgSection = false;
-            
-            lines.forEach(line => {
-                let trimLine = line.trim();
-                if(!trimLine) return;
-                if (trimLine.includes('플래닝') || trimLine.includes('현재시각') || trimLine.includes('Timeline')) return;
-
-                if (trimLine.includes('[MSG]')) {
-                    isMsgSection = true;
-                    trimLine = trimLine.replace('[MSG]', '').trim();
-                }
-                if (isMsgSection) {
-                    if(trimLine.length > 0) newTasks.push({ text: trimLine, done: false, isMessage: true });
-                    return;
-                }
-
-                let adviceText = "";
-                let mainText = trimLine;
-
-                if (trimLine.includes('|')) {
-                    const parts = trimLine.split('|');
-                    mainText = parts[0].trim();
-                    adviceText = parts[1].trim();
-                }
-
-                if (/\d{1,2}:\d{2}/.test(mainText)) {
-                    newTasks.push({ text: mainText, done: false, isMessage: false, advice: adviceText });
-                } else if (/\d{4}-\d{2}-\d{2}/.test(mainText)) {
-                    const dateMatch = mainText.match(/(\d{4}-\d{2}-\d{2})[:\s]*(.*)/);
-                    if(dateMatch) {
-                        newTasks.push({ text: dateMatch[2], done: false, isMessage: false, specificDate: dateMatch[1], advice: adviceText });
-                    } else {
-                        newTasks.push({ text: mainText, done: false, isMessage: false, advice: adviceText });
-                    }
-                } else if (mainText.length > 5 && !mainText.includes('---')) {
-                    newTasks.push({ text: mainText, done: false, isMessage: true });
-                }
-            });
-            
-            if (type === 'daily') {
-                appData.daily[selectedDate] = [...completedTasks, ...newTasks];
-                appData.daily[selectedDate].sort((a,b) => getTaskTimeVal(a) - getTaskTimeVal(b));
-            } else {
-                const wk = getWeekKey(currentWeekBaseDate);
-                appData.weekly[wk] = { tasks: newTasks }; 
+            // MSG 파싱
+            if(clean.startsWith('[MSG]')) {
+                const msgText = clean.replace('[MSG]','').trim();
+                if(msgText) newTasks.push({text: msgText, isMessage: true});
+                return;
             }
             
-            document.getElementById('taskPrompt').value = '';
-            hideLoading();
-            saveData();
-            renderApp();
+            // Tip 파싱
+            let advice = "";
+            if(clean.includes('|')) {
+                const parts = clean.split('|');
+                clean = parts[0].trim();
+                advice = parts[1].trim();
+                // 괄호나 '꿀팁' 단어 제거
+                advice = advice.replace('꿀팁','').replace(/[()]/g,'').trim();
+            }
+
+            if(type==='daily') {
+                newTasks.push({ text: clean, done: false, isMessage: false, advice: advice, feedback: null });
+            } else {
+                // Weekly Parsing
+                const dMatch = clean.match(/(\d{4}-\d{2}-\d{2})[:\s]+(.*)/);
+                if(dMatch) newTasks.push({ text: dMatch[2], done:false, specificDate:dMatch[1] });
+                else {
+                    const anyMatch = clean.match(/Anytime[:\s]+(.*)/);
+                    newTasks.push({ text: anyMatch?anyMatch[1]:clean, done:false });
+                }
+            }
         });
-    }
+
+        if(type==='daily') {
+            const existing = appData.daily[selectedDate] || [];
+            const done = existing.filter(t=>t.done);
+            // 완료된 건 유지하고 새 일정 추가, 시간순 정렬
+            appData.daily[selectedDate] = [...done, ...newTasks].sort((a,b)=>getTaskTimeVal(a)-getTaskTimeVal(b));
+            // 일정에 반영되었으므로 미완료 보관함 비우기
+            appData.pendingTasks = [];
+        } else {
+            const wk = getWeekKey(currentWeekBaseDate);
+            appData.weekly[wk] = { tasks: newTasks };
+        }
+        
+        // 입력창 초기화 (새로운 맥락을 받기 위해)
+        inputEl.value = ''; 
+        
+        saveData();
+        hideLoading();
+        renderApp();
+    });
+}
 	// [수정됨] Weekly 일정을 가져와서 입력창에 넣어주는 함수
     window.linkWeeklyTasks = function() {
         console.log("Weekly 연동 시작..."); // 디버깅용 로그
@@ -1788,201 +1793,107 @@ ${dateContext}
         container.appendChild(wrapper);
     }
 	
-// [수정] createTaskEl 함수: 회색 박스 제거, 버튼 숨김 로직 적용
 function createTaskEl(task, type, key, index, numberPrefix = null) {
     const li = document.createElement('li');
-    // completed 클래스는 팁 박스 접기용으로만 유지 (CSS 수정 필요)
     li.className = `timeline-container flex flex-col mb-4 todo-item ${task.done ? 'completed' : ''}`;
     
-    const isProject = type === 'project';
-    if (!isProject) {
-        const dot = document.createElement('div');
-        dot.className = 'timeline-dot';
-        const line = document.createElement('div');
-        line.className = 'timeline-line';
-        li.appendChild(line);
-        li.appendChild(dot);
+    // 타임라인 선 그리기 (프로젝트가 아닐 때만)
+    if (type !== 'project') {
+        const dot = document.createElement('div'); dot.className = 'timeline-dot';
+        const line = document.createElement('div'); line.className = 'timeline-line';
+        li.appendChild(line); li.appendChild(dot);
+    } else {
+        li.style.paddingLeft = '0'; li.style.marginBottom = '0.5rem';
     }
 
     const content = document.createElement('div');
-    content.className = 'relative z-10 w-full';
-    if (isProject) { 
-        li.style.paddingLeft = '0';
-        li.style.marginBottom = '0.5rem';
-    }
+    content.className = 'relative z-10 w-full pl-2';
 
-    let displayTimeRaw = ''; 
-    let durationText = '';
+    // 1. 시간 파싱 (기존 로직 유지)
+    let displayTimeRaw = '';
     let displayText = task.text;
-    
-    if (isProject && numberPrefix) {
-        if (task.depth && task.depth > 0) displayText = `- ${displayText}`;
-        else displayText = `${numberPrefix}. ${displayText}`;
+    if (type === 'project' && numberPrefix) {
+        if (!task.depth || task.depth === 0) displayText = `${numberPrefix}. ${displayText}`;
     }
     
-    // --- 시간 파싱 ---
+    // 시간 텍스트 추출 로직
     if (type === 'daily') {
-        const timeRangeMatch = displayText.match(/(\d{1,2}:\d{2})\s*[~-]\s*(\d{1,2}:\d{2})/);
-        const simpleTimeMatch = displayText.match(/^(\d{1,2}:\d{2})/);
-        
-        if (task.manualTimeRange) {
-            displayTimeRaw = task.manualTimeRange;
-        } else if (timeRangeMatch) {
-            displayTimeRaw = `${timeRangeMatch[1]}~${timeRangeMatch[2]}`;
-            displayText = displayText.replace(timeRangeMatch[0], '').trim();
-        } else if (simpleTimeMatch) {
-            displayTimeRaw = simpleTimeMatch[1];
-            displayText = displayText.replace(simpleTimeMatch[0], '').trim();
-        }
-        displayText = displayText.replace(/^[:\-\s]+/, '');
-        
-        if (displayTimeRaw && displayTimeRaw.includes('~')) {
-             const parts = displayTimeRaw.split('~');
-             const startParts = parts[0].trim().split(':');
-             const endParts = parts[1].trim().split(':');
-             if(startParts.length===2 && endParts.length===2) {
-                 const sMin = parseInt(startParts[0])*60 + parseInt(startParts[1]);
-                 const eMin = parseInt(endParts[0])*60 + parseInt(endParts[1]);
-                 const diff = eMin - sMin;
-                 if (diff > 0) durationText = `(${diff}분)`;
-             }
+        if(task.manualTimeRange) displayTimeRaw = task.manualTimeRange;
+        else {
+            const timeMatch = displayText.match(/(\d{1,2}:\d{2})\s*[~-]\s*(\d{1,2}:\d{2})/);
+            if(timeMatch) { displayTimeRaw = timeMatch[0]; displayText = displayText.replace(timeMatch[0],'').trim(); }
         }
     }
+    if (displayTimeRaw) content.innerHTML += `<div class="task-time-label">${displayTimeRaw}</div>`;
 
-    if (type === 'daily' && displayTimeRaw) {
-        const timeDiv = document.createElement('div');
-        timeDiv.className = 'task-time-label';
-        timeDiv.innerText = displayTimeRaw; 
-        content.appendChild(timeDiv);
-    }
-
-    const actionGroup = document.createElement('div');
-    actionGroup.className = 'flex items-start gap-2 justify-between';
+    // 2. 내용 및 버튼 영역
+    const row = document.createElement('div');
+    row.className = 'flex justify-between items-start';
 
     const leftCol = document.createElement('div');
-    leftCol.className = 'flex-1';
-    
-    // 괄호 텍스트 추출
-    let subText = "";
-    const parenMatch = displayText.match(/\(([^)]+)\)/);
-    if (parenMatch) {
-        const contentInside = parenMatch[1];
-        if(!contentInside.includes('분') && !contentInside.includes('시간')) {
-            subText = contentInside;
-            displayText = displayText.replace(parenMatch[0], '').trim();
-        } else {
-            displayText = displayText.replace(parenMatch[0], '').trim();
+    leftCol.className = 'flex-1 todo-text text-sm leading-relaxed cursor-pointer hover:text-[#8D6E63]';
+    // 괄호 팁 등 텍스트 정리 로직은 간소화하여 표시
+    leftCol.innerText = displayText;
+    leftCol.onclick = () => window.openEditTimeModal(type, key, index, task);
+    row.appendChild(leftCol);
+
+    const rightCol = document.createElement('div');
+    rightCol.className = 'flex items-center gap-2 shrink-0';
+
+    // [변경됨] Start 버튼 -> 타이머 팝업 연동
+    if(type === 'daily' && !task.done) {
+        if(!task.actualStartTime) {
+            const btn = document.createElement('button');
+            btn.className = 'text-[10px] bg-[#FFF9C4] text-[#FBC02D] px-2 py-0.5 rounded-full font-bold hover:bg-[#FFF59D] font-hand';
+            btn.innerText = 'start !';
+            btn.onclick = (e) => { e.stopPropagation(); openTimerModal({type, key, index, task}); };
+            rightCol.appendChild(btn);
+        } else if (task.actualStartTime && !task.actualEndTime) {
+             const btn = document.createElement('button');
+             btn.className = 'text-[10px] bg-[#FFCCBC] text-[#D84315] px-2 py-0.5 rounded-full font-bold animate-pulse font-hand';
+             btn.innerText = 'ing...'; // 진행중 표시
+             btn.onclick = (e) => { e.stopPropagation(); openTimerModal({type, key, index, task}); };
+             rightCol.appendChild(btn);
         }
     }
 
-    const title = document.createElement('div');
-    title.className = 'text-sm cursor-pointer hover:text-[#8D6E63] transition leading-relaxed todo-text';
-    title.innerHTML = displayText;
-    title.onclick = () => window.openEditTimeModal(type, key, index, task);
-    leftCol.appendChild(title);
-
-    if (subText) {
-        const subDiv = document.createElement('div');
-        subDiv.className = 'task-sub-text';
-        subDiv.innerText = subText;
-        leftCol.appendChild(subDiv);
-    }
-    
-    actionGroup.appendChild(leftCol);
-    const rightCol = document.createElement('div');
-    rightCol.className = 'flex items-center gap-1 shrink-0';
-    if (durationText) {
-        const timeSpan = document.createElement('span');
-        timeSpan.className = 'text-xs text-[#A1887F] mr-1 font-mono';
-        timeSpan.innerText = durationText;
-        rightCol.appendChild(timeSpan);
-    }
-
-    // 피드백 버튼 (완료되면 숨김)
-    if (!task.feedback && !task.done) { 
-        const fbBtn = document.createElement('button');
-        fbBtn.className = 'text-[#BCAAA4] hover:text-[#8D6E63] mx-1';
-        fbBtn.innerHTML = ICONS.speech;
-        fbBtn.onclick = (e) => {
-            e.stopPropagation();
-            window.openInputModal('한줄 피드백', (val) => window.updateTask(type, key, index, {feedback: val}));
-        };
-        rightCol.appendChild(fbBtn);
-    }
-
+    // [변경됨] 체크박스 -> 클릭 시 피드백 팝업 오픈
     const chk = document.createElement('input');
     chk.type = 'checkbox';
     chk.className = 'custom-checkbox';
     chk.checked = task.done;
-    
-    // ★ 클릭 로직 수정: 이동 기능 제거, 상태만 변경
     chk.onclick = (e) => { 
+        e.preventDefault(); // 체크되는 기본 동작 막고
         e.stopPropagation();
-        // UI 즉시 반영을 위해 클래스 토글
-        if(chk.checked) li.classList.add('completed');
-        else li.classList.remove('completed');
-        
-        window.updateTask(type, key, index, {done: chk.checked}); 
+        openFeedbackModal({type, key, index, task}); // 팝업 열기
     };
+    
+    // 프로젝트 소제목(depth 0) 등에는 체크박스 숨기기 (요청사항)
+    if(type === 'project' && (!task.depth || task.depth === 0)) {
+        chk.style.display = 'none';
+    }
+
     rightCol.appendChild(chk);
+    row.appendChild(rightCol);
+    content.appendChild(row);
 
-    actionGroup.appendChild(rightCol);
-    content.appendChild(actionGroup); 
-
-    if (task.advice) {
+    // [변경됨] 팁 박스: 괄호/단어 제거하고 내용만 깔끔하게
+    if (task.advice && !task.done) {
         const adviceDiv = document.createElement('div');
-        adviceDiv.className = 'tip-box text-[11px] text-[#8D6E63] mt-1.5 opacity-90 font-sans bg-[#EFEBE9]/50 px-2 py-1 rounded block w-full leading-snug';
-        adviceDiv.innerHTML = `💡 ${task.advice}`;
+        adviceDiv.className = 'mt-1 text-[11px] text-[#A1887F] bg-[#EFEBE9]/30 px-2 py-1 rounded block';
+        adviceDiv.innerText = task.advice; // 이미 꿀팁 단어 제거된 상태로 가정
         content.appendChild(adviceDiv);
+    }
+    
+    // 피드백 표시
+    if(task.feedback) {
+         const fb = document.createElement('div');
+         fb.className = 'mt-1 text-[10px] text-[#8D6E63] italic';
+         fb.innerText = `💬 ${task.feedback}`;
+         content.appendChild(fb);
     }
 
     li.appendChild(content);
-
-    // ★ 하단 버튼 영역 (Start/Stop)
-    if(type === 'daily') {
-        const timerRow = document.createElement('div');
-        timerRow.className = 'flex items-center gap-2 mt-1 pl-1 min-h-[24px]'; // 높이 확보
-        
-        // 1. 실제 수행 시간 기록(타임스탬프)은 언제나 표시
-        if (task.actualStartTime && task.actualEndTime) {
-            const s = new Date(task.actualStartTime);
-            const e = new Date(task.actualEndTime);
-            const diff = Math.floor((e - s) / (1000 * 60)); 
-            const timeStr = `${formatTimeSimple(task.actualStartTime)}~${formatTimeSimple(task.actualEndTime)} (${diff}m)`;
-            const displaySpan = document.createElement('span');
-            displaySpan.className = 'text-xs text-[#5D4037] font-bold bg-[#F1F8E9] px-2 py-1 rounded border border-[#C5E1A5]';
-            displaySpan.innerText = timeStr;
-            timerRow.appendChild(displaySpan);
-        } else {
-            // 2. Start/Stop 버튼은 "완료되지 않았을 때만" 표시
-            if (!task.done) {
-                if(!task.actualStartTime) {
-                    const btn = document.createElement('button');
-                    btn.className = 'font-hand text-sm text-[#A1887F] hover:text-[#FF8A65] border border-[#D7CCC8] px-2 py-0.5 rounded-full bg-white';
-                    btn.textContent = 'start !';
-                    btn.onclick = () => window.updateTask(type, key, index, {actualStartTime: new Date().toISOString()});
-                    timerRow.appendChild(btn);
-                } else if (!task.actualEndTime) {
-                    const btn = document.createElement('button');
-                    btn.className = 'font-hand text-sm text-white bg-[#FFAB91] hover:bg-[#FF8A65] px-2 py-0.5 rounded-full';
-                    btn.textContent = 'stop !';
-                    btn.onclick = () => window.updateTask(type, key, index, {actualEndTime: new Date().toISOString()});
-                    timerRow.appendChild(btn);
-                }
-            }
-        }
-
-        if (task.feedback) {
-            const fb = document.createElement('span');
-            fb.className = 'text-xs text-[#8D6E63] bg-[#FDFCF5] px-2 py-1 rounded border border-[#EFEBE9] ml-1';
-            fb.innerText = `"${task.feedback}"`;
-            timerRow.appendChild(fb);
-        }
-        
-        // 내용이 있을 때만 추가
-        if(timerRow.hasChildNodes()) li.appendChild(timerRow);
-    }
-    
     return li;
 }
     // --- Init ---
@@ -2072,10 +1983,127 @@ function createTaskEl(task, type, key, index, numberPrefix = null) {
         saveData();
         renderRoutineList();
     }
+/* --- [추가됨] 타이머 & 피드백 관련 함수들 --- */
 
+function openTimerModal(taskObj) {
+    timerTask = taskObj;
+    const now = new Date();
+    
+    // 시간 파싱 (HH:MM ~ HH:MM)
+    const timeMatch = taskObj.task.text.match(/(\d{1,2}):(\d{2})\s*~\s*(\d{1,2}):(\d{2})/);
+    let durationMin = 60; // 기본 60분
+    if (timeMatch) {
+        const sVal = parseInt(timeMatch[1])*60 + parseInt(timeMatch[2]);
+        let eVal = parseInt(timeMatch[3])*60 + parseInt(timeMatch[4]);
+        if(eVal < sVal) eVal += 24*60;
+        durationMin = eVal - sVal;
+    }
+    
+    timerTargetTime = new Date(now.getTime() + durationMin * 60000);
+    
+    document.getElementById('timerTaskName').innerText = taskObj.task.text;
+    document.getElementById('timerModal').classList.remove('hidden');
+    document.getElementById('timerCard').classList.remove('timer-over');
+    
+    // 시작 시간 기록 (없을 때만)
+    if(!taskObj.task.actualStartTime) {
+        updateTask(taskObj.type, taskObj.key, taskObj.index, {actualStartTime: now.toISOString()});
+    }
+
+    updateTimerDisplay();
+    if(timerInterval) clearInterval(timerInterval);
+    timerInterval = setInterval(updateTimerDisplay, 1000);
+}
+
+function updateTimerDisplay() {
+    const now = new Date();
+    let diff = timerTargetTime - now;
+    const isOver = diff < 0;
+    
+    if (isOver) {
+         document.getElementById('timerCard').classList.add('timer-over'); // 붉은색 변경
+         diff = Math.abs(diff); // 카운트 업
+    }
+    
+    const h = Math.floor(diff / 3600000);
+    const m = Math.floor((diff % 3600000) / 60000);
+    const s = Math.floor((diff % 60000) / 1000);
+    
+    document.getElementById('timerDisplay').innerText = 
+        `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
+}
+
+function finishTimer() {
+    clearInterval(timerInterval);
+    document.getElementById('timerModal').classList.add('hidden');
+    if(timerTask && !timerTask.task.actualEndTime) {
+         updateTask(timerTask.type, timerTask.key, timerTask.index, {actualEndTime: new Date().toISOString()});
+         // 타이머 끝나면 바로 피드백 팝업 열기
+         setTimeout(() => openFeedbackModal(timerTask), 300);
+    }
+}
+
+// 피드백 팝업 로직
+function openFeedbackModal(taskObj) {
+    fbTarget = taskObj;
+    selectFbStatus('O'); // 기본 O
+    document.getElementById('fbTaskTitle').innerText = taskObj.task.text;
+    document.getElementById('fbTextInput').value = taskObj.task.feedback || '';
+    document.getElementById('feedbackModal').classList.remove('hidden');
+}
+
+function selectFbStatus(s) {
+    fbStatus = s;
+    ['O','Tri','X'].forEach(k => document.getElementById(`btnFb${k}`).classList.remove('selected'));
+    // 버튼 스타일 활성화
+    const btnMap = { 'O': 'btnFbO', 'TRI': 'btnFbTri', 'X': 'btnFbX' };
+    document.getElementById(btnMap[s]).classList.add('selected');
+}
+
+function submitFeedback() {
+    if(!fbTarget) return;
+    const fbText = document.getElementById('fbTextInput').value;
+    const isDone = (fbStatus === 'O'); // O일 때만 완료 처리
+    
+    updateTask(fbTarget.type, fbTarget.key, fbTarget.index, { feedback: fbText, done: isDone });
+
+    // 세모(TRI)나 X면 미완료 보관함(pendingTasks)에 추가
+    if(fbStatus !== 'O') {
+        let cleanText = fbTarget.task.text.replace(/\d{1,2}:\d{2}.*/, '').trim(); // 시간 제거
+        if(!appData.pendingTasks.some(t => t.text === cleanText)) {
+            appData.pendingTasks.push({ text: cleanText, date: selectedDate });
+        }
+    }
+    closeModal('feedbackModal');
+}
+
+// 회고 이미지 저장
+function saveSummaryImage(dateStr) {
+    const summary = appData.dailySummaries[dateStr];
+    if(!summary) return alert("저장할 회고 내용이 없습니다.");
+    
+    const capture = document.getElementById('captureContainer');
+    capture.innerHTML = `
+        <div class="bg-[#FDFCF5] border-4 border-[#A1887F] p-8 rounded-3xl" style="width: 340px;">
+            <h2 class="font-hand text-3xl text-[#5D4037] text-center mb-6">${dateStr}</h2>
+            <div class="text-xs text-[#33691E] bg-[#F1F8E9] p-5 rounded-2xl leading-relaxed font-sans mb-6 border-2 border-[#DCEDC8]">
+                ${summary.replace(/\n/g, '<br>')}
+            </div>
+            <div class="text-center text-[10px] text-[#BCAAA4] font-bold tracking-widest">ZIPIPO PLANNER</div>
+        </div>
+    `;
+    
+    html2canvas(capture.querySelector('div'), {scale: 2, backgroundColor:null}).then(canvas => {
+        const link = document.createElement('a');
+        link.download = `zipipo_${dateStr}.png`;
+        link.href = canvas.toDataURL();
+        link.click();
+    });
+}
 </script>
 </body>
 </html>
+
 
 
 
