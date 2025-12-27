@@ -568,7 +568,44 @@
             </div>
         </div>
     </div>
+<div id="timerModal" class="fixed inset-0 bg-black/20 z-[80] hidden flex items-center justify-center backdrop-blur-[2px]">
+    <div id="timerCard" class="timer-popup w-72 p-6 rounded-full aspect-square flex flex-col items-center justify-center shadow-lg relative transition-colors duration-500">
+         <div class="text-xs font-bold opacity-60 mb-2 tracking-widest text-[#5D4037]">NOW FOCUSING</div>
+         <div id="timerTaskName" class="text-sm font-bold text-center mb-4 px-4 line-clamp-2 text-[#5D4037]"></div>
+         <div id="timerDisplay" class="text-4xl font-mono font-bold mb-6 tracking-wider text-[#5D4037]">00:00:00</div>
+         <button onclick="finishTimer()" class="bg-white border border-[#D7CCC8] px-6 py-2 rounded-full text-sm font-bold hover:bg-[#EFEBE9] text-[#5D4037]">마무리</button>
+    </div>
+</div>
 
+<div id="feedbackModal" class="fixed inset-0 bg-black/20 z-[90] hidden flex items-center justify-center backdrop-blur-[1px]">
+    <div class="bg-white p-6 rounded-2xl shadow-lg w-80 wood-frame modal-content text-center">
+        <h3 class="font-hand text-xl text-[#8D6E63] mb-4">일정 마무리</h3>
+        <div class="text-sm text-[#5D4037] mb-6 font-bold truncate px-4" id="fbTaskTitle"></div>
+        
+        <div class="flex justify-center gap-4 mb-4">
+            <button onclick="selectFbStatus('O')" id="btnFbO" class="fb-btn fb-btn-o">O</button>
+            <button onclick="selectFbStatus('TRI')" id="btnFbTri" class="fb-btn fb-btn-tri">△</button>
+            <button onclick="selectFbStatus('X')" id="btnFbX" class="fb-btn fb-btn-x">X</button>
+        </div>
+
+        <div id="fbPendingOption" class="hidden mb-4 transition-all duration-300">
+            <label class="flex items-center justify-center gap-2 text-xs text-[#5D4037] cursor-pointer bg-[#FDFCF5] py-2 rounded-lg border border-[#EFEBE9] hover:bg-[#FFF8E1]">
+                <input type="checkbox" id="chkAddToPending" class="accent-[#8D6E63] w-3.5 h-3.5">
+                <span>미완료 보관함에 담기 (나중에 하기)</span>
+            </label>
+        </div>
+
+        <textarea id="fbTextInput" rows="2" class="w-full border border-[#EFEBE9] rounded-xl p-3 text-xs mb-4 resize-none focus:outline-none" placeholder="피드백 남기기 (선택)"></textarea>
+        
+        <div class="flex gap-2 justify-center">
+            <button onclick="closeModal('feedbackModal')" class="px-4 py-2 bg-gray-100 rounded-lg text-xs text-gray-500 hover:bg-gray-200">취소</button>
+            <button onclick="submitFeedback()" class="px-4 py-2 bg-[#8D6E63] text-white rounded-lg text-xs font-bold hover:bg-[#6D4C41]">확인</button>
+        </div>
+    </div>
+</div>
+
+<div id="captureContainer" class="fixed top-0 left-0 -z-50 opacity-0 pointer-events-none bg-[#FDFCF5] p-6 w-[360px]"></div>
+	
 <script>
     // 1. CONSTANTS
     const STORAGE_KEY_API = 'zipipo_v2_apikey';
@@ -705,19 +742,25 @@ function getTaskTimeVal(t) {
     return 999999; 
 }
     // 4. DATA MANAGEMENT
-    function loadData() {
-        const json = localStorage.getItem(STORAGE_KEY_DATA);
-        if (json) {
-            try { appData = JSON.parse(json); } catch(e) { console.error(e); }
-        }
-        if (!appData.daily) appData.daily = {};
-        if (!appData.weekly) appData.weekly = {};
-        if (!appData.projects) appData.projects = [];
-        if (!appData.dailySummaries) appData.dailySummaries = {};
-        if (!appData.dailyPrompts) appData.dailyPrompts = {};
-        if (!appData.weeklyPrompts) appData.weeklyPrompts = {};
-        if (!appData.routines) appData.routines = [];
+function loadData() {
+    const json = localStorage.getItem(STORAGE_KEY_DATA);
+    if (json) {
+        try { appData = JSON.parse(json); } catch(e) { console.error(e); }
     }
+    
+    // 데이터 무결성 검사 및 초기화
+    if (!appData.daily) appData.daily = {};
+    if (!appData.weekly) appData.weekly = {};
+    if (!appData.projects) appData.projects = [];
+    if (!appData.dailySummaries) appData.dailySummaries = {};
+    if (!appData.dailyPrompts) appData.dailyPrompts = {};
+    if (!appData.weeklyPrompts) appData.weeklyPrompts = {};
+    if (!appData.routines) appData.routines = [];
+    
+    // [중요] 새로 추가된 기능용 데이터 초기화 (이게 없으면 에러남)
+    if (!appData.pendingTasks) appData.pendingTasks = []; 
+    if (!appData.userStyle) appData.userStyle = ""; 
+}
     function saveData() {
         localStorage.setItem(STORAGE_KEY_DATA, JSON.stringify(appData));
         const toast = document.getElementById('saveToast');
@@ -762,21 +805,18 @@ async function generateSchedule(type) {
     const inputEl = document.getElementById('taskPrompt');
     let promptText = inputEl.value.trim();
     
-    // [NEW] Weekly 연동 시, 입력창에 값이 이미 있을 수 있음
     if(!promptText) return alert('내용을 입력해주세요');
     
-    // [핵심 변경] 체크박스 대신, 입력 텍스트에서 스타일 관련 단어가 보이면 스타일을 업데이트
-    // 예: "좀 빡빡하게 짜줘", "여유로운 스타일로 해줘"
+    // [스타일 감지]
     if(promptText.includes('하게') || promptText.includes('스타일') || promptText.includes('여유') || promptText.includes('타이트')) {
         appData.userStyle = promptText; 
     }
 
-    showLoading("zipipo가 만들고 있어요");
+    showLoading("zipipo가 생각 중");
     document.getElementById('generatorModal').classList.add('hidden');
     
     const now = new Date();
     const currentTimeStr = `${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}`;
-    
     let context = "";
     
     // 1. 미완료(Pending) 항목 반영
@@ -790,38 +830,48 @@ async function generateSchedule(type) {
         context += `\n[고정 루틴]\n${appData.routines.map(r=>r.text).join(', ')}\n`;
     }
 
-    // 3. 어제 회고 피드백 반영
+    // 3. 어제 회고 피드백 반영 (Daily인 경우)
     if(type === 'daily') {
         const prevDate = new Date(selectedDate); prevDate.setDate(prevDate.getDate()-1);
-        const prevDateStr = getLocalDateStr(prevDate); // getLocalDateStr 헬퍼 함수 사용
+        const prevDateStr = getLocalDateStr(prevDate);
         const prevSum = appData.dailySummaries[prevDateStr];
         if(prevSum && prevSum.includes('계획 조언')) {
-             // 대략적으로 '계획 조언' 이후의 텍스트를 가져옴
              const advicePart = prevSum.split('계획 조언')[1] || "";
              context += `\n[어제 회고 피드백 참고]\n${advicePart.substring(0, 150)}...\n`;
         }
     }
 
-    // 4. 이미 완료된 일정 필터링 (중복 방지)
+    // 4. 이미 완료된 일정 필터링
     if (type === 'daily' && appData.daily[selectedDate]) {
         const done = appData.daily[selectedDate].filter(t=>t.done).map(t=>t.text).join(', ');
-        if(done) context += `\n[이미 완료한 일정 (절대 다시 적지 말 것)]\n${done}\n`;
+        if(done) context += `\n[이미 완료한 일정 (중복 생성 금지)]\n${done}\n`;
     }
 
     let sysPrompt = "";
+    
     if (type === 'daily') {
-         appData.dailyPrompts[selectedDate] = promptText;
+         // [핵심 로직] 기존 프롬프트 내역(History)에 새로운 요청을 누적 저장
+         const oldHistory = appData.dailyPrompts[selectedDate] || "";
+         const combinedHistory = oldHistory ? `${oldHistory}\n[추가 요청(${currentTimeStr})]: ${promptText}` : promptText;
          
-         // [핵심 변경] 프롬프트에 기억된 스타일(appData.userStyle) 주입
+         // 저장 (다음 번 수정을 위해 누적)
+         appData.dailyPrompts[selectedDate] = combinedHistory;
+         
          sysPrompt = `역할: 차분하고 꼼꼼한 플래너. 날짜: ${selectedDate}. 현재시각: ${currentTimeStr}.
-         요청: "${promptText}"
-         ${appData.userStyle ? `[사용자가 선호하는 스타일(기억됨)]: "${appData.userStyle}"` : ''}
+         
+         [요청 히스토리 (위에서부터 순서대로 반영)]:
+         ${combinedHistory}
+         
+         [현재 사용자의 핵심 요청]:
+         "${promptText}"
+         
+         ${appData.userStyle ? `[선호 스타일]: "${appData.userStyle}"` : ''}
          ${context}
          
          [규칙]
-         1. 이모지 사용 금지. 담백하고 깔끔하게.
-         2. **현재 시각(${currentTimeStr}) 이후의 일정만 계획.** 시간이 부족하면 요청한 할 일의 시간을 줄여서라도 배치할 것(누락 금지).
-         3. 우선순위 (중요도, 긴급도)와 즐거움을 고려해 균형있게 배치.
+         1. 이모지 금지. 담백하고 깔끔하게.
+         2. **현재 시각(${currentTimeStr}) 이후의 일정만 계획.** (완료된 일은 제외)
+         3. 물리적 시간이 부족하면 요청한 일의 시간을 줄여서라도 배치(누락 금지).
          4. 형식: 'HH:MM~HH:MM 할일 | 꿀팁(괄호없이 내용만)'
          5. 꿀팁이 없거나 할일과 비슷하면 생략.
          6. 맨 마지막 줄에 '[MSG] 한마디' (피드백 없이 격려만).
@@ -834,7 +884,7 @@ async function generateSchedule(type) {
          요청: "${promptText}"
          ${context}
          [규칙]
-         1. 이모지 금지. 할 일만 작성. **꿀팁, 조언, 피드백 절대 작성 금지.**
+         1. 이모지 금지. 할 일만 작성. **꿀팁, 조언 금지.**
          2. 형식: 'YYYY-MM-DD: 할일' (날짜는 해당 주간 내)
          3. 날짜 지정 없으면 'Anytime: 할일'
          `;
@@ -848,27 +898,23 @@ async function generateSchedule(type) {
             let clean = line.trim();
             if(!clean) return;
             
-            // MSG 파싱
             if(clean.startsWith('[MSG]')) {
                 const msgText = clean.replace('[MSG]','').trim();
                 if(msgText) newTasks.push({text: msgText, isMessage: true});
                 return;
             }
             
-            // Tip 파싱
             let advice = "";
             if(clean.includes('|')) {
                 const parts = clean.split('|');
                 clean = parts[0].trim();
                 advice = parts[1].trim();
-                // 괄호나 '꿀팁' 단어 제거
                 advice = advice.replace('꿀팁','').replace(/[()]/g,'').trim();
             }
 
             if(type==='daily') {
                 newTasks.push({ text: clean, done: false, isMessage: false, advice: advice, feedback: null });
             } else {
-                // Weekly Parsing
                 const dMatch = clean.match(/(\d{4}-\d{2}-\d{2})[:\s]+(.*)/);
                 if(dMatch) newTasks.push({ text: dMatch[2], done:false, specificDate:dMatch[1] });
                 else {
@@ -890,9 +936,7 @@ async function generateSchedule(type) {
             appData.weekly[wk] = { tasks: newTasks };
         }
         
-        // 입력창 초기화 (새로운 맥락을 받기 위해)
         inputEl.value = ''; 
-        
         saveData();
         hideLoading();
         renderApp();
@@ -1367,19 +1411,16 @@ ${dateContext}
         closeModal('projectInputModal');
     }
 
-    function openGeneratorModal(mode) {
-        document.getElementById('generatorModal').classList.remove('hidden');
-        const txt = document.getElementById('taskPrompt');
-        
-        if (mode === 'new') {
-            txt.value = '';
-        } else if (mode === 'daily') {
-            txt.value = appData.dailyPrompts[selectedDate] || '';
-        } else if (mode === 'weekly') {
-            const wk = getWeekKey(currentWeekBaseDate);
-            txt.value = appData.weeklyPrompts[wk] || '';
-        }
-    }
+function openGeneratorModal(mode) {
+    document.getElementById('generatorModal').classList.remove('hidden');
+    const txt = document.getElementById('taskPrompt');
+    
+    // [핵심 변경] 모드가 무엇이든 입력창은 항상 비워둡니다 (새로운 요청을 받기 위해)
+    txt.value = ''; 
+    txt.focus();
+
+    // (참고: 기존 맥락 데이터는 generateSchedule 함수에서 내부적으로 합쳐집니다)
+}
     
     function openWeeklyGenerator() {
         const wk = getWeekKey(currentWeekBaseDate);
@@ -1777,46 +1818,56 @@ function renderCalendar(container) {
     container.appendChild(wrapper);
 }
 	
+// 1. 색상 생성 헬퍼 (createTaskEl 바로 위에 추가)
+function stringToPastelColor(str) {
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) hash = str.charCodeAt(i) + ((hash << 5) - hash);
+    const h = Math.abs(hash) % 360; 
+    return `hsl(${h}, 70%, 90%)`; 
+}
+
+// 2. createTaskEl 함수 (위클리 색상 + 타이머/체크박스 로직 통합)
 function createTaskEl(task, type, key, index, numberPrefix = null) {
     const li = document.createElement('li');
     li.className = `timeline-container flex flex-col mb-4 todo-item ${task.done ? 'completed' : ''}`;
     
-    // 타임라인 선 그리기 (프로젝트가 아닐 때만)
-    if (type !== 'project') {
+    // [위클리 가시성 개선]
+    if (type === 'weekly') {
+        li.classList.add('weekly-item');
+        li.classList.add('task-group-border'); 
+        const coreText = task.text.replace(/\d{1,2}:\d{2}.*/, '').trim();
+        li.style.borderColor = stringToPastelColor(coreText); 
+    } else if (type !== 'project') {
         const dot = document.createElement('div'); dot.className = 'timeline-dot';
         const line = document.createElement('div'); line.className = 'timeline-line';
         li.appendChild(line); li.appendChild(dot);
     } else {
-        li.style.paddingLeft = '0'; li.style.marginBottom = '0.5rem';
+        li.style.paddingLeft='0'; li.style.marginBottom='0.5rem';
     }
 
     const content = document.createElement('div');
     content.className = 'relative z-10 w-full pl-2';
 
-    // 1. 시간 파싱 (기존 로직 유지)
-    let displayTimeRaw = '';
+    let displayTime = '';
     let displayText = task.text;
-    if (type === 'project' && numberPrefix) {
-        if (!task.depth || task.depth === 0) displayText = `${numberPrefix}. ${displayText}`;
-    }
     
-    // 시간 텍스트 추출 로직
-    if (type === 'daily') {
-        if(task.manualTimeRange) displayTimeRaw = task.manualTimeRange;
+    if(type === 'project' && numberPrefix) {
+         if (!task.depth || task.depth === 0) displayText = `${numberPrefix}. ${displayText}`;
+    }
+    if(type === 'daily') {
+        if(task.manualTimeRange) displayTime = task.manualTimeRange;
         else {
-            const timeMatch = displayText.match(/(\d{1,2}:\d{2})\s*[~-]\s*(\d{1,2}:\d{2})/);
-            if(timeMatch) { displayTimeRaw = timeMatch[0]; displayText = displayText.replace(timeMatch[0],'').trim(); }
+            const m = displayText.match(/(\d{1,2}:\d{2})\s*[~-]\s*(\d{1,2}:\d{2})/);
+            if(m) { displayTime = m[0]; displayText = displayText.replace(m[0], '').trim(); }
         }
     }
-    if (displayTimeRaw) content.innerHTML += `<div class="task-time-label">${displayTimeRaw}</div>`;
+    if(displayTime) content.innerHTML += `<div class="task-time-label">${displayTime}</div>`;
 
-    // 2. 내용 및 버튼 영역
     const row = document.createElement('div');
     row.className = 'flex justify-between items-start';
 
     const leftCol = document.createElement('div');
     leftCol.className = 'flex-1 todo-text text-sm leading-relaxed cursor-pointer hover:text-[#8D6E63]';
-    // 괄호 팁 등 텍스트 정리 로직은 간소화하여 표시
     leftCol.innerText = displayText;
     leftCol.onclick = () => window.openEditTimeModal(type, key, index, task);
     row.appendChild(leftCol);
@@ -1824,58 +1875,45 @@ function createTaskEl(task, type, key, index, numberPrefix = null) {
     const rightCol = document.createElement('div');
     rightCol.className = 'flex items-center gap-2 shrink-0';
 
-    // [변경됨] Start 버튼 -> 타이머 팝업 연동
+    // Start / Ing 버튼
     if(type === 'daily' && !task.done) {
         if(!task.actualStartTime) {
             const btn = document.createElement('button');
-            btn.className = 'text-[10px] bg-[#FFF9C4] text-[#FBC02D] px-2 py-0.5 rounded-full font-bold hover:bg-[#FFF59D] font-hand';
-            btn.innerText = 'start !';
+            btn.className = 'text-[10px] bg-[#FFF9C4] text-[#FBC02D] px-2 py-0.5 rounded-full font-bold hover:bg-[#FFF59D] font-hand border border-[#FFF59D]';
+            btn.innerText = 'Start';
             btn.onclick = (e) => { e.stopPropagation(); openTimerModal({type, key, index, task}); };
             rightCol.appendChild(btn);
         } else if (task.actualStartTime && !task.actualEndTime) {
              const btn = document.createElement('button');
-             btn.className = 'text-[10px] bg-[#FFCCBC] text-[#D84315] px-2 py-0.5 rounded-full font-bold animate-pulse font-hand';
-             btn.innerText = 'ing...'; // 진행중 표시
+             btn.className = 'text-[10px] bg-[#FFCCBC] text-[#D84315] px-2 py-0.5 rounded-full font-bold animate-pulse font-hand border border-[#FFAB91]';
+             btn.innerText = 'Ing...';
              btn.onclick = (e) => { e.stopPropagation(); openTimerModal({type, key, index, task}); };
              rightCol.appendChild(btn);
         }
     }
 
-    // [변경됨] 체크박스 -> 클릭 시 피드백 팝업 오픈
+    // 체크박스
     const chk = document.createElement('input');
     chk.type = 'checkbox';
     chk.className = 'custom-checkbox';
     chk.checked = task.done;
     chk.onclick = (e) => { 
-        e.preventDefault(); // 체크되는 기본 동작 막고
-        e.stopPropagation();
-        openFeedbackModal({type, key, index, task}); // 팝업 열기
+        e.preventDefault(); 
+        e.stopPropagation(); 
+        openFeedbackModal({type, key, index, task});
     };
     
-    // 프로젝트 소제목(depth 0) 등에는 체크박스 숨기기 (요청사항)
-    if(type === 'project' && (!task.depth || task.depth === 0)) {
-        chk.style.display = 'none';
-    }
-
+    if(type === 'project' && (!task.depth || task.depth === 0)) chk.style.display = 'none';
     rightCol.appendChild(chk);
     row.appendChild(rightCol);
     content.appendChild(row);
 
-    // [변경됨] 팁 박스: 괄호/단어 제거하고 내용만 깔끔하게
-    if (task.advice && !task.done) {
-        const adviceDiv = document.createElement('div');
-        adviceDiv.className = 'mt-1 text-[11px] text-[#A1887F] bg-[#EFEBE9]/30 px-2 py-1 rounded block';
-        adviceDiv.innerText = task.advice; // 이미 꿀팁 단어 제거된 상태로 가정
-        content.appendChild(adviceDiv);
+    // 팁 표시 (위클리는 제외)
+    if (type !== 'weekly' && task.advice && !task.done) {
+        content.innerHTML += `<div class="mt-1 text-[11px] text-[#A1887F] bg-[#EFEBE9]/30 px-2 py-1 rounded block">${task.advice}</div>`;
     }
     
-    // 피드백 표시
-    if(task.feedback) {
-         const fb = document.createElement('div');
-         fb.className = 'mt-1 text-[10px] text-[#8D6E63] italic';
-         fb.innerText = `💬 ${task.feedback}`;
-         content.appendChild(fb);
-    }
+    if(task.feedback) content.innerHTML += `<div class="mt-1 text-[10px] text-[#8D6E63] italic">💬 ${task.feedback}</div>`;
 
     li.appendChild(content);
     return li;
@@ -2077,9 +2115,69 @@ function saveSummaryImage(dateStr) {
         link.click();
     });
 }
+// 1. 팝업 열기 (초기화 로직 추가)
+function openFeedbackModal(taskObj) {
+    fbTarget = taskObj;
+    
+    // UI 초기화
+    document.getElementById('fbTaskTitle').innerText = taskObj.task.text;
+    document.getElementById('fbTextInput').value = taskObj.task.feedback || '';
+    
+    // 체크박스 상태 리셋 (기본은 해제 상태로)
+    const chk = document.getElementById('chkAddToPending');
+    if(chk) chk.checked = false;
+    
+    selectFbStatus('O'); // 기본 상태는 O
+    document.getElementById('feedbackModal').classList.remove('hidden');
+}
+
+// 2. 상태 선택 (O가 아닐 때만 체크박스 보이기)
+function selectFbStatus(s) {
+    fbStatus = s;
+    ['O','Tri','X'].forEach(k => document.getElementById(`btnFb${k}`).classList.remove('selected'));
+    
+    let targetId = 'btnFbO';
+    if(s === 'TRI') targetId = 'btnFbTri';
+    if(s === 'X') targetId = 'btnFbX';
+    
+    document.getElementById(targetId).classList.add('selected');
+
+    // [로직 추가] O(완료)가 아니면 '미완료 보관함 담기' 옵션 표시
+    const optionDiv = document.getElementById('fbPendingOption');
+    if (optionDiv) {
+        if (s !== 'O') optionDiv.classList.remove('hidden');
+        else optionDiv.classList.add('hidden');
+    }
+}
+
+// 3. 완료 처리 (체크박스가 켜져있을 때만 보관함 이동)
+function submitFeedback() {
+    if(!fbTarget) return;
+    const fbText = document.getElementById('fbTextInput').value;
+    const isDone = (fbStatus === 'O');
+    
+    // 상태 업데이트
+    updateTask(fbTarget.type, fbTarget.key, fbTarget.index, { feedback: fbText, done: isDone });
+
+    // [로직 추가] 상태가 O가 아니고 + 체크박스에 체크했을 때만 -> pendingTasks에 추가
+    if(fbStatus !== 'O') {
+        const chk = document.getElementById('chkAddToPending');
+        if (chk && chk.checked) {
+            // 시간 표시(12:00~) 등을 제거하고 순수 텍스트만 저장
+            let cleanText = fbTarget.task.text.replace(/\d{1,2}:\d{2}.*/, '').trim();
+            
+            // 중복 방지 후 추가
+            if(!appData.pendingTasks.some(t => t.text === cleanText)) {
+                appData.pendingTasks.push({ text: cleanText, date: selectedDate });
+            }
+        }
+    }
+    closeModal('feedbackModal');
+}
 </script>
 </body>
 </html>
+
 
 
 
